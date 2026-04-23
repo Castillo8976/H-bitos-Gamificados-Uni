@@ -1,0 +1,11 @@
+const express=require('express');
+const app=express();
+app.use(express.json());
+app.use('/api/tareas',require('./routes/tareaRoutes'));
+app.use('/api/tipos-tarea',require('./routes/tipoTareaRoutes'));
+app.use('/api/etiquetas',require('./routes/etiquetaRoutes'));
+app.use('/api/niveles',require('./routes/nivelRoutes'));
+app.use('/api/estudiantes',require('./routes/estudianteRoutes'));
+app.use('/api/notificaciones',require('./routes/notificacionRoutes'));
+app.get('/',(req,res)=>res.json({mensaje:'API funcionando ✅'}));
+module.exports=app;
