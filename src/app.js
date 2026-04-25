@@ -1,11 +1,26 @@
-const express=require('express');
-const app=express();
-app.use(express.json());
-app.use('/api/tareas',require('./routes/tareaRoutes'));
-app.use('/api/tipos-tarea',require('./routes/tipoTareaRoutes'));
-app.use('/api/etiquetas',require('./routes/etiquetaRoutes'));
-app.use('/api/niveles',require('./routes/nivelRoutes'));
-app.use('/api/estudiantes',require('./routes/estudianteRoutes'));
-app.use('/api/notificaciones',require('./routes/notificacionRoutes'));
-app.get('/',(req,res)=>res.json({mensaje:'API funcionando ✅'}));
-module.exports=app;
+const sequelize = require('./database');
+require('./models/Cuenta');
+require('./models/Materia');
+require('./models/Tarea');
+require('./models/PreferenciaVisual');
+require('./models/SesionEstudio');
+require('./models/Insignia');
+require('./models/CuentaInsignia');
+require('./models/Punto');
+require('./models/Reto');
+require('./models/Meta');
+require('./models/Recordatorio');
+require('./models/Reporte');
+
+async function iniciar() {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Conexión a SQLite exitosa');
+    await sequelize.sync({ force: false });
+    console.log('✅ Tablas sincronizadas');
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+  }
+}
+
+iniciar();
