@@ -1,0 +1,202 @@
+
+<style>
+#cd { width:100%; overflow-x:auto; }
+#cd svg { min-width:900px; font-family: var(--font-sans) !important; }
+</style>
+<div id="cd"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    classText: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#2e2c4e' : '#EEEDFE',
+    primaryBorderColor: dark ? '#7F77DD' : '#534AB7',
+    primaryTextColor: dark ? '#c2c0b6' : '#26215C',
+    secondaryColor: dark ? '#042C53' : '#E6F1FB',
+    secondaryBorderColor: dark ? '#378ADD' : '#185FA5',
+    secondaryTextColor: dark ? '#B5D4F4' : '#042C53',
+    tertiaryColor: dark ? '#04342C' : '#E1F5EE',
+    tertiaryBorderColor: dark ? '#1D9E75' : '#0F6E56',
+    tertiaryTextColor: dark ? '#9FE1CB' : '#04342C',
+    noteBkgColor: dark ? '#2C2C2A' : '#F1EFE8',
+    noteTextColor: dark ? '#c2c0b6' : '#3d3d3a',
+    edgeLabelBackground: dark ? '#1e1e1c' : '#fff',
+  },
+  classDiagram: { useMaxWidth: false }
+});
+
+const diagram = `classDiagram
+  class Cuenta {
+    -id_cuenta : String
+    +nombre : String
+    +correo : String
+    -contrasenaHash : String
+    +fechaRegistro : Date
+    +activa : Boolean
+    +registrar()
+    +iniciarSesion()
+    +cerrarSesion()
+    +cifrarContrasena()
+    +obtenerPerfil()
+    +actualizarDatos()
+  }
+  class Materia {
+    -id_materia : String
+    +nombre : String
+    +horario : String
+    +activa : Boolean
+    +registrar()
+    +listar()
+    +obtener(id)
+    +desactivar()
+  }
+  class Tarea {
+    -id_tarea : String
+    +nombre : String
+    +fechaEntrega : Date
+    +prioridad : Prioridad
+    +estado : Estado
+    ~fechaCompletada : Date
+    +crear()
+    +editar()
+    +eliminar()
+    +marcarCompletada()
+    +filtrar(criterio)
+  }
+  class SesionEstudio {
+    -id_sesion : String
+    +fecha : Date
+    +duracionMinutos : Integer
+    +modoEnfoque : Boolean
+    +iniciar()
+    +pausar()
+    +detener()
+    +obtenerDuracion()
+    +activarModoEnfoque()
+  }
+  class Insignia {
+    -id_insignia : String
+    +nombre : String
+    +descripcion : String
+    +condicion : String
+    +icono : String
+    +verificarCondicion(cuenta)
+    +desbloquear(cuenta)
+    +listar()
+  }
+  class CuentaInsignia {
+    -id_cuenta : String
+    -id_insignia : String
+    +fechaObtenida : Date
+  }
+  class Punto {
+    -id_punto : String
+    +cantidad : Integer
+    +origen : OrigenPunto
+    +fecha : Date
+    +otorgar(cuenta, cantidad, origen)
+    +calcularTotal(cuenta)
+  }
+  class Reto {
+    -id_reto : String
+    +descripcion : String
+    +condicion : String
+    +puntosRecompensa : Integer
+    +semana : String
+    +progreso : Integer
+    +completado : Boolean
+    +generar(cuenta)
+    +actualizarProgreso()
+    +completar()
+  }
+  class Meta {
+    -id_meta : String
+    +descripcion : String
+    +valorObjetivo : Integer
+    +valorActual : Integer
+    +cumplida : Boolean
+    +sugerir(cuenta)
+    +actualizar()
+    +evaluar()
+  }
+  class Recordatorio {
+    -id_recordatorio : String
+    +fechaProgramada : Date
+    +mensaje : String
+    +enviado : Boolean
+    +activo : Boolean
+    +programar(tarea)
+    +cancelar()
+    +toggleActivo()
+  }
+  class Reporte {
+    -id_reporte : String
+    +semana : String
+    +tareasCompletadas : Integer
+    +horasEstudiadas : Decimal
+    +puntosObtenidos : Integer
+    +generar(cuenta, semana)
+    +obtenerEstadisticas()
+    +exportar()
+  }
+  class PreferenciaVisual {
+    -id_preferencia : String
+    +tema : String
+    +modoOscuro : Boolean
+    +avatar : String
+    +guardar()
+    +cargar()
+    +aplicarTema()
+  }
+  class Prioridad {
+    <<enumeration>>
+    Alta
+    Media
+    Baja
+  }
+  class Estado {
+    <<enumeration>>
+    Pendiente
+    EnProgreso
+    Completada
+    Vencida
+    Eliminada
+  }
+  class OrigenPunto {
+    <<enumeration>>
+    Tarea
+    Reto
+    Sesion
+  }
+
+  Cuenta "1" *-- "1..*" Materia : contiene
+  Cuenta "1" *-- "1..*" Tarea : posee
+  Cuenta "1" *-- "0..*" SesionEstudio : registra
+  Cuenta "1" *-- "0..*" Punto : acumula
+  Cuenta "1" *-- "0..*" Reto : tiene
+  Cuenta "1" *-- "0..*" Meta : recibe
+  Cuenta "1" *-- "0..*" Reporte : genera
+  Cuenta "1" *-- "1" PreferenciaVisual : configura
+  Cuenta "1" -- "0..*" CuentaInsignia : obtiene
+  Insignia "1" -- "0..*" CuentaInsignia : otorgada en
+  Materia "1" o-- "0..*" Tarea : agrupa
+  Tarea "1" *-- "0..*" Recordatorio : programa
+  Tarea "0..*" -- "0..*" SesionEstudio : vinculada a
+  Tarea ..> Prioridad : usa
+  Tarea ..> Estado : usa
+  Punto ..> OrigenPunto : usa
+`;
+
+const { svg } = await mermaid.render('cd-svg', diagram);
+document.getElementById('cd').innerHTML = svg;
+</script>
