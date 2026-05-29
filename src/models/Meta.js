@@ -152,6 +152,10 @@ const Meta = sequelize.define('meta', {
   timestamps: false
 });
 
+// Agregar en las opciones del modelo (mismo nivel que tableName)
+indexes: [
+  { unique: true, fields: ['id_cuenta', 'semana'] }
+]
 
 // ─────────────────────────────────────────
 // ASOCIACIONES 1:N (One-to-Many)
