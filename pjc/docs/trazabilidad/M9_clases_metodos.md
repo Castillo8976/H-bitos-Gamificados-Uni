@@ -24,3 +24,8 @@
 | `Reporte` | `generar`, `obtenerEstadisticas` | CU05 | RF11 |
 | `Reporte` | `exportar` | CU09 | RF14 |
 | `PreferenciaVisual` | `guardar`, `cargar`, `aplicarTema` | CU08 | RF13, RNF04 |
+| `NivelCuenta` | `crearNivel`, `listarNiveles`, `actualizarNivel`, `eliminarNivel`, `sembrarNiveles` | CU06 | RF07 |
+| `NivelCuenta` | `evaluarNivelCuenta(totalPuntos)` | CU03, CU06 | RF07 |
+| `Notificacion` | `crearNotificacion`, `listarNotificaciones`, `marcarNotificacionLeida`, `marcarTodasLeidas`, `eliminarNotificacion`, `limpiarNotificacionesLeidas` | CU10 | RF04, RNF15 |
+
+> **Nota de corrección (agosto 2026):** se agregaron `NivelCuenta` y `Notificacion` porque ambas existen como modelos y CRUD completos en `/src` (`nivelCuentaCrud.js`, `notificacionCrud.js`) pero no aparecían en esta matriz ni en el Diagrama de Clases (`DiagramaClases.png`). **Pendiente:** actualizar el diagrama de clases UML (imagen) para incluir estas dos clases con su relación hacia `Cuenta`.
