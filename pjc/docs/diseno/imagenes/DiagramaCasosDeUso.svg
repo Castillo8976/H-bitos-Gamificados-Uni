@@ -1,0 +1,107 @@
+<svg viewBox="0 0 1000 720" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <rect width="1000" height="720" fill="#ffffff"/>
+
+  <!-- System boundary -->
+  <rect x="230" y="30" width="620" height="660" rx="8" fill="none" stroke="#534AB7" stroke-width="2"/>
+  <text x="540" y="20" text-anchor="middle" font-size="16" font-weight="bold" fill="#2C2C2A">Plataforma Web Gamificada de Hábitos de Estudio</text>
+
+  <!-- Actor: Estudiante -->
+  <g transform="translate(80,340)">
+    <circle cx="0" cy="-40" r="12" fill="none" stroke="#2C2C2A" stroke-width="2"/>
+    <line x1="0" y1="-28" x2="0" y2="10" stroke="#2C2C2A" stroke-width="2"/>
+    <line x1="-20" y1="-10" x2="20" y2="-10" stroke="#2C2C2A" stroke-width="2"/>
+    <line x1="0" y1="10" x2="-18" y2="40" stroke="#2C2C2A" stroke-width="2"/>
+    <line x1="0" y1="10" x2="18" y2="40" stroke="#2C2C2A" stroke-width="2"/>
+    <text x="0" y="60" text-anchor="middle" font-size="13" fill="#2C2C2A">Estudiante</text>
+  </g>
+
+  <!-- Actor: Sistema de Notificaciones (secondary actor) -->
+  <g transform="translate(920,120)">
+    <circle cx="0" cy="-40" r="12" fill="none" stroke="#0F6E56" stroke-width="2"/>
+    <line x1="0" y1="-28" x2="0" y2="10" stroke="#0F6E56" stroke-width="2"/>
+    <line x1="-20" y1="-10" x2="20" y2="-10" stroke="#0F6E56" stroke-width="2"/>
+    <line x1="0" y1="10" x2="-18" y2="40" stroke="#0F6E56" stroke-width="2"/>
+    <line x1="0" y1="10" x2="18" y2="40" stroke="#0F6E56" stroke-width="2"/>
+    <text x="0" y="60" text-anchor="middle" font-size="12" fill="#0F6E56">Notifications API</text>
+    <text x="0" y="74" text-anchor="middle" font-size="12" fill="#0F6E56">(navegador)</text>
+  </g>
+
+  <!-- Use case ellipses -->
+  <!-- CU01 -->
+  <ellipse cx="380" cy="80" rx="120" ry="32" fill="#EEEDFE" stroke="#534AB7"/>
+  <text x="380" y="76" text-anchor="middle" font-size="12" fill="#2C2C2A">CU01 Registrar cuenta</text>
+  <text x="380" y="90" text-anchor="middle" font-size="12" fill="#2C2C2A">y materias</text>
+
+  <!-- CU02 -->
+  <ellipse cx="380" cy="160" rx="120" ry="32" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="380" y="156" text-anchor="middle" font-size="12" fill="#2C2C2A">CU02 Gestionar tareas</text>
+  <text x="380" y="170" text-anchor="middle" font-size="12" fill="#2C2C2A">académicas</text>
+
+  <!-- CU03 -->
+  <ellipse cx="650" cy="160" rx="130" ry="32" fill="#FDF3E3" stroke="#854F0B"/>
+  <text x="650" y="156" text-anchor="middle" font-size="12" fill="#2C2C2A">CU03 Completar tarea y</text>
+  <text x="650" y="170" text-anchor="middle" font-size="12" fill="#2C2C2A">recibir recompensa</text>
+
+  <!-- CU04 -->
+  <ellipse cx="380" cy="240" rx="120" ry="32" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="380" y="236" text-anchor="middle" font-size="12" fill="#2C2C2A">CU04 Sesión de estudio</text>
+  <text x="380" y="250" text-anchor="middle" font-size="12" fill="#2C2C2A">Pomodoro</text>
+
+  <!-- CU05 -->
+  <ellipse cx="650" cy="240" rx="120" ry="32" fill="#EAF2FA" stroke="#185FA5"/>
+  <text x="650" y="236" text-anchor="middle" font-size="12" fill="#2C2C2A">CU05 Ver reportes y</text>
+  <text x="650" y="250" text-anchor="middle" font-size="12" fill="#2C2C2A">progreso semanal</text>
+
+  <!-- CU06 -->
+  <ellipse cx="380" cy="320" rx="120" ry="32" fill="#FDF3E3" stroke="#854F0B"/>
+  <text x="380" y="316" text-anchor="middle" font-size="12" fill="#2C2C2A">CU06 Gestionar insignias</text>
+  <text x="380" y="330" text-anchor="middle" font-size="12" fill="#2C2C2A">y retos</text>
+
+  <!-- CU07 -->
+  <ellipse cx="650" cy="320" rx="120" ry="32" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="650" y="316" text-anchor="middle" font-size="12" fill="#2C2C2A">CU07 Filtrar y buscar</text>
+  <text x="650" y="330" text-anchor="middle" font-size="12" fill="#2C2C2A">tareas</text>
+
+  <!-- CU08 -->
+  <ellipse cx="380" cy="400" rx="120" ry="32" fill="#EAF2FA" stroke="#185FA5"/>
+  <text x="380" y="396" text-anchor="middle" font-size="12" fill="#2C2C2A">CU08 Personalizar</text>
+  <text x="380" y="410" text-anchor="middle" font-size="12" fill="#2C2C2A">configuración visual</text>
+
+  <!-- CU09 -->
+  <ellipse cx="650" cy="400" rx="120" ry="32" fill="#EAF2FA" stroke="#185FA5"/>
+  <text x="650" y="396" text-anchor="middle" font-size="12" fill="#2C2C2A">CU09 Exportar datos</text>
+  <text x="650" y="410" text-anchor="middle" font-size="12" fill="#2C2C2A">personales</text>
+
+  <!-- CU10 -->
+  <ellipse cx="380" cy="480" rx="120" ry="32" fill="#FCEBE6" stroke="#993C1D"/>
+  <text x="380" y="476" text-anchor="middle" font-size="12" fill="#2C2C2A">CU10 Gestionar</text>
+  <text x="380" y="490" text-anchor="middle" font-size="12" fill="#2C2C2A">recordatorios</text>
+
+  <!-- Extras: editar/eliminar entidades (HU16-19) -->
+  <ellipse cx="650" cy="480" rx="150" ry="32" fill="#F1EFE8" stroke="#2C2C2A"/>
+  <text x="650" y="476" text-anchor="middle" font-size="12" fill="#2C2C2A">Editar / eliminar materia,</text>
+  <text x="650" y="490" text-anchor="middle" font-size="12" fill="#2C2C2A">meta, reto, tarea (HU16-19)</text>
+
+  <!-- Actor lines to each use case -->
+  <line x1="80" y1="300" x2="380" y2="90" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="380" y2="160" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="650" y2="160" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="380" y2="240" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="650" y2="240" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="380" y2="320" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="650" y2="320" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="380" y2="400" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="650" y2="400" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="380" y2="480" stroke="#999" stroke-width="1"/>
+  <line x1="80" y1="300" x2="650" y2="480" stroke="#999" stroke-width="1"/>
+
+  <!-- Secondary actor connection -->
+  <line x1="920" y1="180" x2="380" y2="480" stroke="#0F6E56" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="750" y="330" font-size="10" fill="#0F6E56">&lt;&lt;include&gt;&gt; dispara notificación</text>
+
+  <!-- Include relationship example -->
+  <line x1="500" y1="150" x2="530" y2="170" stroke="#854F0B" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="500" y="200" font-size="10" fill="#854F0B">&lt;&lt;include&gt;&gt;</text>
+
+  <text x="500" y="700" text-anchor="middle" font-size="11" fill="#666">Diagrama de Casos de Uso (vista general UML) — generado en revisión de agosto 2026, complementa las tablas CU01-CU10 de 07-casos-de-uso.md</text>
+</svg>

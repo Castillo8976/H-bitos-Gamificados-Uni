@@ -36,12 +36,14 @@ Sistema de notificaciones personalizadas sobre entregas, sesiones programadas y 
 
 | Aspecto | Descripción |
 |---|---|
-| **Tipo de aplicación** | Aplicación web estática (HTML, CSS, JavaScript) |
-| **Almacenamiento** | `localStorage` del navegador — sin base de datos externa |
-| **Servidor** | Sin servidor propio — desplegada en GitHub Pages |
-| **Conectividad** | Funciona 100 % offline tras la primera carga |
+| **Tipo de aplicación** | Aplicación web con backend propio (Node.js + Express) y frontend HTML/CSS/JavaScript |
+| **Almacenamiento** | Base de datos relacional **SQLite**, gestionada mediante el ORM **Sequelize** |
+| **Servidor** | Servidor Node.js/Express que expone el CRUD de cada entidad; no se usa GitHub Pages para la versión con backend |
+| **Conectividad** | Requiere que el servidor Node.js esté en ejecución; no funciona 100 % offline |
 | **Exportación** | Datos exportables en formato JSON mediante Blob/Download API |
-| **Notificaciones** | API nativa del navegador (Notifications API) |
+| **Notificaciones** | API nativa del navegador (Notifications API), respaldada por el modelo `Notificacion` en el servidor |
+
+> **Nota de corrección (revisión de agosto 2026):** la versión inicial de este documento describía una aplicación estática con `localStorage` y despliegue en GitHub Pages. Esa descripción correspondía a una etapa temprana del proyecto. La implementación actual (ver `/src`) usa Node.js, Express, Sequelize y SQLite con persistencia real en base de datos y CRUD del lado del servidor para las 14 entidades del sistema. Esta tabla se actualizó para reflejar la arquitectura real construida.
 
 ---
 

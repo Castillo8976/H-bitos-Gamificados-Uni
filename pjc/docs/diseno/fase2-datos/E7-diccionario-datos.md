@@ -11,7 +11,9 @@
 
 ## Descripción general
 
-Define las **12 entidades** del dominio con sus atributos, tipos de datos, restricciones de integridad y reglas de negocio. Cada entidad está vinculada a sus Requisitos Funcionales (RF) y es trazable al MER Conceptual, Modelo Relacional y DDL.
+Define las **14 entidades** del dominio con sus atributos, tipos de datos, restricciones de integridad y reglas de negocio. Cada entidad está vinculada a sus Requisitos Funcionales (RF) y es trazable al MER Conceptual, Modelo Relacional y DDL.
+
+> **Nota de corrección (agosto 2026):** este documento originalmente listaba 12 entidades. Se agregaron `nivel_cuenta` y `notificacion` (entradas 13 y 14), que ya existían como modelos Sequelize y CRUD completos en `/src` pero no estaban documentadas aquí ni en el MER/DDL. **Pendiente:** actualizar `E8-modelo-entidad-relacion.md`, `E9-modelo-relacional.md` y `E11-script-DDL-v2.sql` para incluir estas dos tablas.
 
 ---
 
@@ -197,6 +199,36 @@ Define las **12 entidades** del dominio con sus atributos, tipos de datos, restr
 
 ---
 
+## 13. `nivel_cuenta` — Nivel de progreso gamificado `RF07`
+
+| Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
+|---|---|---|---|
+| **id_nivel (PK)** | VARCHAR(36) | No | UUID generado automáticamente. |
+| **nombre** | VARCHAR(60) | No | Nombre visible del nivel. UNIQUE. Ej: 'Principiante', 'Experto'. |
+| **descripcion** | VARCHAR(200) | No | Descripción del nivel y sus beneficios. |
+| **puntos_minimos** | INTEGER | No | Umbral mínimo de puntos para alcanzar el nivel. DEFAULT 0. |
+| **orden** | INTEGER | No | Orden jerárquico del nivel (1 = básico). DEFAULT 1. |
+| **icono** | VARCHAR(50) | Sí | Nombre del archivo de ícono. Nullable. |
+
+> **Reglas:** catálogo global (tabla maestra, sin FK) · una cuenta alcanza un nivel evaluando `SUM(punto.cantidad)` contra `puntos_minimos` (método `evaluarNivelCuenta`) · relación conceptual 1:1 con `cuenta` (una cuenta tiene un nivel activo en un momento dado).
+
+---
+
+## 14. `notificacion` — Notificación in-app del sistema `RF04 · RNF15`
+
+| Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
+|---|---|---|---|
+| **id_notificacion (PK)** | VARCHAR(36) | No | UUID generado automáticamente. |
+| **id_cuenta (FK→cuenta)** | VARCHAR(36) | No | Destinataria. ON DELETE CASCADE. Cardinalidad N:1 con cuenta. |
+| **tipo** | VARCHAR(20) | No | CHECK IN ('Insignia','Reto','Meta','Nivel','Sistema'). |
+| **mensaje** | VARCHAR(200) | No | Texto mostrado al usuario. |
+| **leida** | BOOLEAN/INT | No | TRUE = ya vista. DEFAULT FALSE. Alimenta el contador de no leídas. |
+| **fecha** | DATE | No | Fecha de generación. DEFAULT CURRENT_DATE. |
+
+> **Reglas:** entidad transaccional, distinta de `recordatorio` (que está ligado a una `tarea` específica) · se genera ante eventos de insignia, reto, meta o subida de nivel · `leida = false` por defecto hasta que el usuario la marque.
+
+---
+
 ## Resumen de entidades
 
 | # | Entidad | Tipo | RF principal |
@@ -213,3 +245,5 @@ Define las **12 entidades** del dominio con sus atributos, tipos de datos, restr
 | 10 | recordatorio | Débil | RF04, RNF15 |
 | 11 | reporte | Débil | RF11 |
 | 12 | preferencia_visual | Débil (1:1) | RF13, RNF04 |
+| 13 | nivel_cuenta | Fuerte (catálogo) | RF07 |
+| 14 | notificacion | Débil | RF04, RNF15 |

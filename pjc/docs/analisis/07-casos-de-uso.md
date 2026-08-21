@@ -168,3 +168,9 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 | HU13 | Como Estudiante, quiero personalizar el tema de color y activar el modo oscuro de la plataforma. | RF13, RNF04 |
 | HU14 | Como Estudiante, quiero exportar todos mis datos en formato JSON, para hacer un respaldo de mi información académica. | RF14 |
 | HU15 | Como Estudiante, quiero recibir una meta semanal sugerida con base en mi historial, para tener un objetivo alcanzable. | RF15 |
+| HU16 | Como Estudiante, quiero editar o eliminar una materia registrada, para corregir datos o dar de baja asignaturas que ya no curso. | RF01 |
+| HU17 | Como Estudiante, quiero editar o eliminar una meta semanal, para ajustar el objetivo si cambian mis prioridades. | RF15 |
+| HU18 | Como Estudiante, quiero editar o eliminar un reto activo, para corregir su descripción o descartarlo si ya no aplica. | RF06 |
+| HU19 | Como Estudiante, quiero eliminar una tarea que ya no es relevante, para mantener mi lista de pendientes organizada. | RF02 |
+
+> **Nota de corrección (agosto 2026):** HU16–HU19 se agregaron porque el CRUD de `materiaCrud.js`, `metaCrud.js`, `retoCrud.js` y `tareaCrud.js` ya implementa `actualizar*` y `eliminar*` para estas entidades, pero no existían historias de usuario explícitas que los sustentaran — solo aparecían como flujos alternativos dentro de otros casos de uso.

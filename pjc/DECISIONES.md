@@ -15,7 +15,7 @@ Usar **SQLite como motor de base de datos** en lugar de PostgreSQL o MySQL.
 SQLite no requiere instalar ni configurar un servidor de base de datos separado. El archivo `.sqlite` es portátil, vive en el mismo directorio del proyecto y funciona en cualquier máquina sin pasos adicionales de instalación. Para el alcance de este módulo académico (un solo estudiante como usuario por sesión, sin concurrencia real), SQLite cubre todos los requisitos funcionales. Además, es compatible con Sequelize sin cambios en el código de los modelos, lo que permitiría migrar a PostgreSQL en el futuro simplemente cambiando la configuración de conexión en `database.js`.
 
 **¿Qué artefacto de diseño respalda esta decisión?**  
-**Entregable 6 — Diagrama de Despliegue UML**: define una arquitectura de nodo único donde la aplicación web y el almacenamiento de datos residen en el mismo entorno, sin servidor de BD externo. El diagrama especifica explícitamente el uso de SQLite/localStorage como mecanismo de persistencia local, alineado con el alcance del proyecto definido en la sección de Alcance del documento de requisitos.
+**Entregable 6 — Diagrama de Despliegue UML**: define una arquitectura de nodo único donde la aplicación web (Node.js/Express) y el almacenamiento de datos (SQLite) residen en el mismo entorno, sin servidor de BD externo. Esto está alineado con la sección de Alcance del documento de requisitos (actualizada en agosto de 2026 para reflejar el backend Node.js/Express/Sequelize/SQLite realmente implementado, en lugar de la versión estática con `localStorage` planteada al inicio del proyecto).
 
 ---
 
