@@ -1,0 +1,22 @@
+# Dependencias — se reinstalan con `npm install`, no deben versionarse
+node_modules/
+
+# Variables de entorno / credenciales locales
+.env
+.env.local
+
+# Logs
+npm-debug.log*
+*.log
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Base de datos local (se recrea con sequelize.sync())
+# Descomenta la siguiente línea si NO quieres versionar los datos de prueba:
+# database.sqlite
