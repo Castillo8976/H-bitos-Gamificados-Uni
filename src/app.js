@@ -60,6 +60,8 @@ require('./models/Punto');            // 8. Depende de Cuenta (FK: id_cuenta)
 require('./models/Reto');             // 9. Depende de Cuenta (FK: id_cuenta)
 require('./models/Meta');             // 10. Depende de Cuenta (FK: id_cuenta)
 require('./models/Recordatorio');     // 11. Depende de Cuenta y Tarea (FK: id_cuenta, id_tarea)
+require('./models/NivelCuenta');      // 12. Catálogo global: sin FK a otros modelos
+require('./models/Notificacion');     // 13. Depende de Cuenta (FK: id_cuenta)
 
 
 // ─────────────────────────────────────────
