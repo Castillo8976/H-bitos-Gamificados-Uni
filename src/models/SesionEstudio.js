@@ -6,7 +6,7 @@
  *
  * Cada sesión representa un intervalo de estudio cronometrado, que puede
  * estar vinculado opcionalmente a una tarea específica. Las sesiones son
- * la fuente de datos para calcular `horas_estudiadas` en el modelo Reporte
+ * la fuente de datos para calcular `horas_estudiadas` mediante consultas SUM en tiempo real
  * y generan puntos con `origen: 'Sesion'` en el modelo Punto.
  *
  * Relaciones:
@@ -53,7 +53,7 @@ const Tarea = require('./Tarea');            // Modelo asociado en la relación 
  * Cada fila es un registro inmutable de un bloque de estudio completado.
  * La duración se almacena en minutos (INTEGER) para facilitar operaciones
  * aritméticas; la conversión a horas se realiza en el controlador o en
- * las consultas al generar reportes:
+ * las consultas de estadísticas en tiempo real:
  * ```
  *   horas = SUM(duracion_minutos) / 60
  * ```
@@ -112,7 +112,7 @@ const SesionEstudio = sequelize.define('sesion_estudio', {
    * Fecha en que se realizó la sesión de estudio.
    * Se asigna automáticamente con la fecha actual del servidor al registrar la sesión.
    * Usa DATEONLY para almacenar solo YYYY-MM-DD, sin componente de hora.
-   * Permite agrupar sesiones por día, semana o mes en los reportes.
+   * Permite agrupar sesiones por día, semana o mes en las estadísticas del tablero.
    *
    * @example '2026-05-08'
    */
@@ -127,7 +127,7 @@ const SesionEstudio = sequelize.define('sesion_estudio', {
    * Se almacena en minutos en lugar de horas para evitar pérdida de precisión
    * con números decimales en sesiones cortas (ej: 25 min, 45 min).
    *
-   * Para calcular horas al generar reportes:
+   * Para calcular horas en las estadísticas del tablero:
    * ```
    *   horas = SUM(duracion_minutos) / 60
    * ```
@@ -186,11 +186,11 @@ const SesionEstudio = sequelize.define('sesion_estudio', {
  *
  * Habilita consultas como:
  * @example
- * // Calcular horas estudiadas en la semana para el Reporte
+ * // Calcular horas estudiadas en la semana (estadística en tiempo real)
  * const minutos = await SesionEstudio.sum('duracion_minutos', {
  *   where: { id_cuenta: id, fecha: { [Op.between]: [inicioSemana, finSemana] } }
  * });
- * const horas = minutos / 60; // → valor para Reporte.horas_estudiadas
+ * const horas = minutos / 60; // → valor mostrado en el Tablero de Avance Personal
  */
 Cuenta.hasMany(SesionEstudio, {
   foreignKey: 'id_cuenta', // FK en sesion_estudio que referencia a Cuenta
@@ -218,7 +218,7 @@ SesionEstudio.belongsTo(Cuenta, {
  * `hasMany` con `onDelete: 'SET NULL'`: si se elimina la Tarea, el campo
  * `id_tarea` de todas sus sesiones se establece en null en lugar de eliminar
  * las filas. Esto preserva el historial de tiempo estudiado aunque la tarea
- * ya no exista, garantizando que los reportes de horas no pierdan datos.
+ * ya no exista, garantizando que las estadísticas de horas no pierdan datos históricos de sesión.
  *
  * Habilita consultas como:
  * @example

@@ -11,9 +11,9 @@
 
 ## Descripción general
 
-Define las **14 entidades** del dominio con sus atributos, tipos de datos, restricciones de integridad y reglas de negocio. Cada entidad está vinculada a sus Requisitos Funcionales (RF) y es trazable al MER Conceptual, Modelo Relacional y DDL.
+Define las **13 entidades** del dominio con sus atributos, tipos de datos, restricciones de integridad y reglas de negocio. Cada entidad está vinculada a sus Requisitos Funcionales (RF) y es trazable al MER Conceptual, Modelo Relacional y DDL.
 
-> **Nota de corrección (agosto 2026):** este documento originalmente listaba 12 entidades. Se agregaron `nivel_cuenta` y `notificacion` (entradas 13 y 14), que ya existían como modelos Sequelize y CRUD completos en `/src` pero no estaban documentadas aquí ni en el MER/DDL. **Pendiente:** actualizar `E8-modelo-entidad-relacion.md`, `E9-modelo-relacional.md` y `E11-script-DDL-v2.sql` para incluir estas dos tablas.
+> **Nota de corrección (agosto 2026):** este documento pasó por dos correcciones. Primero se agregaron `nivel_cuenta` y `notificacion` (llegando a 14 entidades). Después se **eliminó `reporte`** por decisión del equipo: sus datos son 100% calculables en tiempo real (ver nota al final de la sección `recordatorio`), por lo que mantenerlos como tabla propia era una redundancia innecesaria. El conteo final es 13 entidades.
 
 ---
 
@@ -74,7 +74,7 @@ Define las **14 entidades** del dominio con sus atributos, tipos de datos, restr
 | **duracion_minutos** | INTEGER | No | Duración en minutos. CHECK > 0. |
 | **modo_enfoque** | BOOLEAN/INT | No | TRUE = sesión Pomodoro. FALSE = cronómetro libre. |
 
-> **Reglas:** duración > 0 · se usa para calcular horas en reportes (RF11) · modo_enfoque bloquea notificaciones durante la sesión (RF12).
+> **Reglas:** duración > 0 · se usa para calcular horas en el Tablero de Avance Personal en tiempo real (RF11) · modo_enfoque bloquea notificaciones durante la sesión (RF12).
 
 ---
 
@@ -168,23 +168,11 @@ Define las **14 entidades** del dominio con sus atributos, tipos de datos, restr
 
 ---
 
-## 11. `reporte` — Resumen semanal histórico de rendimiento `RF11`
-
-| Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
-|---|---|---|---|
-| **id_reporte (PK)** | VARCHAR(36) | No | Identificador único del reporte. |
-| **id_cuenta (FK→cuenta)** | VARCHAR(36) | No | Cuenta propietaria. ON DELETE CASCADE. |
-| **semana** | VARCHAR(10) | No | Formato YYYY-WNN. UNIQUE por cuenta. |
-| **tareas_completadas** | INTEGER | No | Cantidad de tareas completadas en la semana. CHECK >= 0. |
-| **horas_estudiadas** | DECIMAL(5,2) | No | Total de horas en sesiones de la semana. CHECK >= 0. |
-| **puntos_obtenidos** | INTEGER | No | Total de puntos ganados en la semana. CHECK >= 0. |
-| **fecha_generado** | DATE | No | Fecha de generación del reporte. DEFAULT CURRENT_DATE. |
-
-> **Reglas:** 1 reporte por semana · campos son snapshot histórico deliberado (desnormalización justificada por RNF02 — respuesta ≤2s) · se generan automáticamente al cierre de semana.
+> **Nota de corrección (agosto 2026):** la entidad `reporte` (antes entrada 11) fue **eliminada por decisión del equipo**: era un snapshot semanal redundante, ya que sus tres campos (`tareas_completadas`, `horas_estudiadas`, `puntos_obtenidos`) se pueden calcular en tiempo real con `COUNT`/`SUM` sobre `tarea`, `sesion_estudio` y `punto` respectivamente. El "Tablero de Avance Personal" (módulo 4 del alcance) ahora consulta estos totales directamente en cada carga, sin persistir un snapshot. Esto elimina la Excepción 3 de 3FN documentada anteriormente en `E10-normalizacion-3FN.md` (el motivo de esa excepción — evitar recalcular en cada lectura por RNF02 — se reevaluó y se decidió aceptar el costo de la consulta agregada a cambio de eliminar la redundancia de datos).
 
 ---
 
-## 12. `preferencia_visual` — Configuración de interfaz (relación 1:1 con cuenta) `RF13 · RNF04`
+## 11. `preferencia_visual` — Configuración de interfaz (relación 1:1 con cuenta) `RF13 · RNF04`
 
 | Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
 |---|---|---|---|
@@ -199,7 +187,7 @@ Define las **14 entidades** del dominio con sus atributos, tipos de datos, restr
 
 ---
 
-## 13. `nivel_cuenta` — Nivel de progreso gamificado `RF07`
+## 12. `nivel_cuenta` — Nivel de progreso gamificado `RF07`
 
 | Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
 |---|---|---|---|
@@ -214,7 +202,7 @@ Define las **14 entidades** del dominio con sus atributos, tipos de datos, restr
 
 ---
 
-## 14. `notificacion` — Notificación in-app del sistema `RF04 · RNF15`
+## 13. `notificacion` — Notificación in-app del sistema `RF04 · RNF15`
 
 | Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
 |---|---|---|---|
@@ -243,7 +231,6 @@ Define las **14 entidades** del dominio con sus atributos, tipos de datos, restr
 | 8 | reto | Débil | RF06 |
 | 9 | meta | Débil | RF15 |
 | 10 | recordatorio | Débil | RF04, RNF15 |
-| 11 | reporte | Débil | RF11 |
-| 12 | preferencia_visual | Débil (1:1) | RF13, RNF04 |
-| 13 | nivel_cuenta | Fuerte (catálogo) | RF07 |
-| 14 | notificacion | Débil | RF04, RNF15 |
+| 11 | preferencia_visual | Débil (1:1) | RF13, RNF04 |
+| 12 | nivel_cuenta | Fuerte (catálogo) | RF07 |
+| 13 | notificacion | Débil | RF04, RNF15 |

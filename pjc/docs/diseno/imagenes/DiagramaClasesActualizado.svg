@@ -1,0 +1,264 @@
+<svg viewBox="0 0 1400 1150" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <rect width="1400" height="1150" fill="#ffffff"/>
+  <text x="700" y="28" text-anchor="middle" font-size="18" font-weight="bold" fill="#2C2C2A">Diagrama de Clases — Plataforma Web Gamificada (13 entidades)</text>
+
+  <text x="700" y="48" text-anchor="middle" font-size="11" fill="#666">Actualizado agosto 2026: incluye NivelCuenta y Notificacion; la clase Reporte fue eliminada (ver E7-diccionario-datos.md)</text>
+
+  <!-- CUENTA (raíz) -->
+  <g transform="translate(560,70)">
+    <rect width="220" height="150" fill="#EEEDFE" stroke="#534AB7" stroke-width="1.5"/>
+    <rect width="220" height="24" fill="#534AB7"/>
+    <text x="110" y="17" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">Cuenta</text>
+    <line x1="0" y1="24" x2="220" y2="24" stroke="#534AB7"/>
+    <text x="8" y="40" font-size="10">- id_cuenta: string</text>
+    <text x="8" y="53" font-size="10">- nombre: string</text>
+    <text x="8" y="66" font-size="10">- correo: string</text>
+    <text x="8" y="79" font-size="10">- contrasena_hash: string</text>
+    <text x="8" y="92" font-size="10">- activa: boolean</text>
+    <line x1="0" y1="98" x2="220" y2="98" stroke="#534AB7"/>
+    <text x="8" y="112" font-size="10">+ registrar()</text>
+    <text x="8" y="125" font-size="10">+ autenticar()</text>
+    <text x="8" y="138" font-size="10">+ actualizar() / eliminar()</text>
+  </g>
+
+  <!-- MATERIA -->
+  <g transform="translate(90,260)">
+    <rect width="190" height="120" fill="#EEEDFE" stroke="#534AB7" stroke-width="1.2"/>
+    <rect width="190" height="22" fill="#534AB7"/>
+    <text x="95" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Materia</text>
+    <line x1="0" y1="22" x2="190" y2="22" stroke="#534AB7"/>
+    <text x="8" y="37" font-size="9">- id_materia: string</text>
+    <text x="8" y="49" font-size="9">- nombre: string</text>
+    <text x="8" y="61" font-size="9">- horario: string</text>
+    <text x="8" y="73" font-size="9">- activa: boolean</text>
+    <line x1="0" y1="79" x2="190" y2="79" stroke="#534AB7"/>
+    <text x="8" y="92" font-size="9">+ crear/listar()</text>
+    <text x="8" y="104" font-size="9">+ actualizar()/eliminar() HU16</text>
+  </g>
+
+  <!-- TAREA -->
+  <g transform="translate(340,260)">
+    <rect width="200" height="150" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
+    <rect width="200" height="22" fill="#0F6E56"/>
+    <text x="100" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Tarea</text>
+    <line x1="0" y1="22" x2="200" y2="22" stroke="#0F6E56"/>
+    <text x="8" y="37" font-size="9">- id_tarea: string</text>
+    <text x="8" y="49" font-size="9">- nombre: string</text>
+    <text x="8" y="61" font-size="9">- fecha_entrega: date</text>
+    <text x="8" y="73" font-size="9">- prioridad: string</text>
+    <text x="8" y="85" font-size="9">- estado: string</text>
+    <line x1="0" y1="91" x2="200" y2="91" stroke="#0F6E56"/>
+    <text x="8" y="104" font-size="9">+ crear/completar()</text>
+    <text x="8" y="116" font-size="9">+ filtrar() CU07</text>
+    <text x="8" y="128" font-size="9">+ actualizar()/eliminar() HU19</text>
+  </g>
+
+  <!-- SESION_ESTUDIO -->
+  <g transform="translate(600,260)">
+    <rect width="200" height="130" fill="#E1F5EE" stroke="#0F6E56" stroke-width="1.2"/>
+    <rect width="200" height="22" fill="#0F6E56"/>
+    <text x="100" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">SesionEstudio</text>
+    <line x1="0" y1="22" x2="200" y2="22" stroke="#0F6E56"/>
+    <text x="8" y="37" font-size="9">- id_sesion: string</text>
+    <text x="8" y="49" font-size="9">- duracion_minutos: int</text>
+    <text x="8" y="61" font-size="9">- modo_enfoque: boolean</text>
+    <line x1="0" y1="67" x2="200" y2="67" stroke="#0F6E56"/>
+    <text x="8" y="80" font-size="9">+ iniciar()</text>
+    <text x="8" y="92" font-size="9">+ pausar()/finalizar()</text>
+    <text x="8" y="104" font-size="9">+ obtenerEstadisticasSemana()</text>
+  </g>
+
+  <!-- PUNTO -->
+  <g transform="translate(870,260)">
+    <rect width="190" height="120" fill="#FDF3E3" stroke="#854F0B" stroke-width="1.2"/>
+    <rect width="190" height="22" fill="#854F0B"/>
+    <text x="95" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Punto</text>
+    <line x1="0" y1="22" x2="190" y2="22" stroke="#854F0B"/>
+    <text x="8" y="37" font-size="9">- id_punto: string</text>
+    <text x="8" y="49" font-size="9">- cantidad: int (&gt;0)</text>
+    <text x="8" y="61" font-size="9">- origen: string</text>
+    <line x1="0" y1="67" x2="190" y2="67" stroke="#854F0B"/>
+    <text x="8" y="80" font-size="9">+ otorgarPuntos() RN08</text>
+    <text x="8" y="92" font-size="9">+ calcularTotal() RN09</text>
+    <text x="8" y="104" font-size="9">+ calcularTotalSemana() RN14</text>
+  </g>
+
+  <!-- NIVEL_CUENTA (nuevo) -->
+  <g transform="translate(1110,260)">
+    <rect width="220" height="130" fill="#FDF3E3" stroke="#B33A00" stroke-width="2"/>
+    <rect width="220" height="22" fill="#B33A00"/>
+    <text x="110" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">NivelCuenta ★nuevo</text>
+    <line x1="0" y1="22" x2="220" y2="22" stroke="#B33A00"/>
+    <text x="8" y="37" font-size="9">- id_nivel: string</text>
+    <text x="8" y="49" font-size="9">- nombre: string</text>
+    <text x="8" y="61" font-size="9">- puntos_minimos: int</text>
+    <text x="8" y="73" font-size="9">- orden: int</text>
+    <line x1="0" y1="79" x2="220" y2="79" stroke="#B33A00"/>
+    <text x="8" y="92" font-size="9">+ evaluarNivelCuenta(total)</text>
+    <text x="8" y="104" font-size="9">+ crear/actualizar/eliminar()</text>
+    <text x="8" y="116" font-size="9">+ sembrarNiveles()</text>
+  </g>
+
+  <!-- RETO -->
+  <g transform="translate(90,450)">
+    <rect width="190" height="130" fill="#FDF3E3" stroke="#854F0B" stroke-width="1.2"/>
+    <rect width="190" height="22" fill="#854F0B"/>
+    <text x="95" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Reto</text>
+    <line x1="0" y1="22" x2="190" y2="22" stroke="#854F0B"/>
+    <text x="8" y="37" font-size="9">- id_reto: string</text>
+    <text x="8" y="49" font-size="9">- condicion: string</text>
+    <text x="8" y="61" font-size="9">- progreso: int</text>
+    <text x="8" y="73" font-size="9">- completado: boolean</text>
+    <line x1="0" y1="79" x2="190" y2="79" stroke="#854F0B"/>
+    <text x="8" y="92" font-size="9">+ completarReto() RN10</text>
+    <text x="8" y="104" font-size="9">+ actualizar()/eliminar() HU18</text>
+  </g>
+
+  <!-- META -->
+  <g transform="translate(320,450)">
+    <rect width="190" height="130" fill="#EAF2FA" stroke="#185FA5" stroke-width="1.2"/>
+    <rect width="190" height="22" fill="#185FA5"/>
+    <text x="95" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Meta</text>
+    <line x1="0" y1="22" x2="190" y2="22" stroke="#185FA5"/>
+    <text x="8" y="37" font-size="9">- id_meta: string</text>
+    <text x="8" y="49" font-size="9">- valor_objetivo: int</text>
+    <text x="8" y="61" font-size="9">- valor_actual: int</text>
+    <text x="8" y="73" font-size="9">- cumplida: boolean</text>
+    <line x1="0" y1="79" x2="190" y2="79" stroke="#185FA5"/>
+    <text x="8" y="92" font-size="9">+ actualizarProgresoMeta() RN12</text>
+    <text x="8" y="104" font-size="9">+ actualizar()/eliminar() HU17</text>
+  </g>
+
+  <!-- INSIGNIA -->
+  <g transform="translate(550,450)">
+    <rect width="190" height="110" fill="#FCEBE6" stroke="#993C1D" stroke-width="1.2"/>
+    <rect width="190" height="22" fill="#993C1D"/>
+    <text x="95" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Insignia</text>
+    <line x1="0" y1="22" x2="190" y2="22" stroke="#993C1D"/>
+    <text x="8" y="37" font-size="9">- id_insignia: string</text>
+    <text x="8" y="49" font-size="9">- nombre: string</text>
+    <text x="8" y="61" font-size="9">- condicion: string</text>
+    <line x1="0" y1="67" x2="190" y2="67" stroke="#993C1D"/>
+    <text x="8" y="80" font-size="9">+ crear/listar()</text>
+    <text x="8" y="92" font-size="9">+ evaluarCondicion() RN11</text>
+  </g>
+
+  <!-- CUENTA_INSIGNIA (asociación) -->
+  <g transform="translate(780,450)">
+    <rect width="210" height="90" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1.2" stroke-dasharray="3,2"/>
+    <rect width="210" height="22" fill="#2C2C2A"/>
+    <text x="105" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">CuentaInsignia «assoc»</text>
+    <line x1="0" y1="22" x2="210" y2="22" stroke="#2C2C2A"/>
+    <text x="8" y="37" font-size="9">- id_cuenta, id_insignia (PK)</text>
+    <text x="8" y="49" font-size="9">- fecha_obtenida: date</text>
+    <line x1="0" y1="55" x2="210" y2="55" stroke="#2C2C2A"/>
+    <text x="8" y="68" font-size="9">+ desbloquear()</text>
+  </g>
+
+  <!-- EXPORTADOR DE DATOS (nuevo, reemplaza responsabilidad de exportar de Reporte) -->
+  <g transform="translate(1030,450)">
+    <rect width="220" height="90" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1.2"/>
+    <rect width="220" height="22" fill="#2C2C2A"/>
+    <text x="110" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">ExportadorDatos ★nuevo</text>
+    <line x1="0" y1="22" x2="220" y2="22" stroke="#2C2C2A"/>
+    <text x="8" y="37" font-size="9">(utilitaria, sin tabla propia)</text>
+    <line x1="0" y1="43" x2="220" y2="43" stroke="#2C2C2A"/>
+    <text x="8" y="56" font-size="9">+ exportarDatosPersonales() CU09</text>
+  </g>
+
+  <!-- RECORDATORIO -->
+  <g transform="translate(320,610)">
+    <rect width="200" height="120" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1.2"/>
+    <rect width="200" height="22" fill="#2C2C2A"/>
+    <text x="100" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Recordatorio</text>
+    <line x1="0" y1="22" x2="200" y2="22" stroke="#2C2C2A"/>
+    <text x="8" y="37" font-size="9">- id_recordatorio: string</text>
+    <text x="8" y="49" font-size="9">- fecha_programada: date</text>
+    <text x="8" y="61" font-size="9">- enviado: boolean</text>
+    <line x1="0" y1="67" x2="200" y2="67" stroke="#2C2C2A"/>
+    <text x="8" y="80" font-size="9">+ programar() RN05</text>
+    <text x="8" y="92" font-size="9">+ marcarEnviado() RN18</text>
+  </g>
+
+  <!-- NOTIFICACION (nuevo) -->
+  <g transform="translate(570,610)">
+    <rect width="200" height="130" fill="#F1EFE8" stroke="#B33A00" stroke-width="2"/>
+    <rect width="200" height="22" fill="#B33A00"/>
+    <text x="100" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Notificacion ★nuevo</text>
+    <line x1="0" y1="22" x2="200" y2="22" stroke="#B33A00"/>
+    <text x="8" y="37" font-size="9">- id_notificacion: string</text>
+    <text x="8" y="49" font-size="9">- tipo: string</text>
+    <text x="8" y="61" font-size="9">- mensaje: string</text>
+    <text x="8" y="73" font-size="9">- leida: boolean</text>
+    <line x1="0" y1="79" x2="200" y2="79" stroke="#B33A00"/>
+    <text x="8" y="92" font-size="9">+ crear/listar()</text>
+    <text x="8" y="104" font-size="9">+ marcarLeida()/marcarTodas() RN17</text>
+  </g>
+
+  <!-- PREFERENCIA_VISUAL -->
+  <g transform="translate(820,610)">
+    <rect width="190" height="110" fill="#EAF2FA" stroke="#185FA5" stroke-width="1.2"/>
+    <rect width="190" height="22" fill="#185FA5"/>
+    <text x="95" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">PreferenciaVisual</text>
+    <line x1="0" y1="22" x2="190" y2="22" stroke="#185FA5"/>
+    <text x="8" y="37" font-size="9">- tema: string</text>
+    <text x="8" y="49" font-size="9">- modo_oscuro: boolean</text>
+    <text x="8" y="61" font-size="9">- avatar: string</text>
+    <line x1="0" y1="67" x2="190" y2="67" stroke="#185FA5"/>
+    <text x="8" y="80" font-size="9">+ guardar()/cargar()</text>
+    <text x="8" y="92" font-size="9">+ aplicarTema()</text>
+  </g>
+
+  <!-- Relationships from Cuenta, top row -->
+  <line x1="600" y1="220" x2="185" y2="260" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="380" y="235" font-size="9" fill="#534AB7">1..N</text>
+  <line x1="640" y1="220" x2="440" y2="260" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="540" y="235" font-size="9" fill="#534AB7">1..N</text>
+  <line x1="700" y1="220" x2="700" y2="260" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="705" y="240" font-size="9" fill="#534AB7">1..N</text>
+  <line x1="740" y1="220" x2="960" y2="260" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="850" y="235" font-size="9" fill="#534AB7">1..N</text>
+  <line x1="780" y1="150" x2="1200" y2="260" stroke="#B33A00" stroke-width="1.3" stroke-dasharray="4,3"/>
+  <text x="980" y="200" font-size="9" fill="#B33A00">N..1 derivada (RN15)</text>
+
+  <!-- Cuenta -> Reto, Meta, Insignia, CuentaInsignia -->
+  <line x1="600" y1="220" x2="185" y2="450" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="360" y="400" font-size="9" fill="#534AB7">1..N</text>
+  <line x1="640" y1="220" x2="415" y2="450" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="520" y="400" font-size="9" fill="#534AB7">1..N</text>
+  <line x1="700" y1="220" x2="700" y2="450" stroke="#534AB7" stroke-width="1.3" stroke-dasharray="2,2"/>
+  <text x="705" y="400" font-size="9" fill="#534AB7">1..1</text>
+  <line x1="740" y1="220" x2="885" y2="450" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="800" y="400" font-size="9" fill="#534AB7">1..N</text>
+
+  <!-- Cuenta -> Recordatorio, Notificacion, PreferenciaVisual -->
+  <line x1="620" y1="220" x2="420" y2="610" stroke="#534AB7" stroke-width="1.3"/>
+  <text x="500" y="500" font-size="9" fill="#534AB7">1..N</text>
+  <line x1="640" y1="220" x2="670" y2="610" stroke="#B33A00" stroke-width="1.3"/>
+  <text x="670" y="500" font-size="9" fill="#B33A00">1..N</text>
+  <line x1="660" y1="220" x2="915" y2="610" stroke="#534AB7" stroke-width="1.3" stroke-dasharray="2,2"/>
+  <text x="820" y="500" font-size="9" fill="#534AB7">1..1</text>
+
+  <!-- Materia -> Tarea -->
+  <line x1="280" y1="320" x2="340" y2="320" stroke="#0F6E56" stroke-width="1.3"/>
+  <text x="290" y="315" font-size="9" fill="#0F6E56">1..N (opt)</text>
+
+  <!-- Tarea -> SesionEstudio -->
+  <line x1="540" y1="320" x2="600" y2="320" stroke="#0F6E56" stroke-width="1.3"/>
+  <text x="545" y="315" font-size="9" fill="#0F6E56">1..N (opt)</text>
+
+  <!-- Tarea -> Recordatorio -->
+  <line x1="420" y1="410" x2="420" y2="610" stroke="#0F6E56" stroke-width="1.3"/>
+  <text x="425" y="500" font-size="9" fill="#0F6E56">1..N</text>
+
+  <!-- Insignia <-> CuentaInsignia -->
+  <line x1="740" y1="500" x2="780" y2="495" stroke="#993C1D" stroke-width="1.3"/>
+  <text x="740" y="490" font-size="9" fill="#993C1D">1..N</text>
+
+  <!-- SesionEstudio/Tarea/Punto -> ExportadorDatos (dependencia funcional, no persistente) -->
+  <line x1="700" y1="390" x2="1140" y2="450" stroke="#2C2C2A" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="950" y="430" font-size="9" fill="#2C2C2A">&lt;&lt;usa&gt;&gt;</text>
+
+  <text x="700" y="1090" text-anchor="middle" font-size="11" fill="#666">Basado en los modelos Sequelize de /src/models y en M9_clases_metodos.md.</text>
+  <text x="700" y="1108" text-anchor="middle" font-size="11" fill="#666">Recuadros con borde naranja (★nuevo) = clases agregadas en agosto 2026. La clase Reporte fue eliminada por decisión del equipo.</text>
+</svg>

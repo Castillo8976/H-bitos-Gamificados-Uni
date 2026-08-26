@@ -28,7 +28,7 @@
 | **RN11** | Una insignia ya obtenida por una cuenta no puede duplicarse; solo se suman los puntos correspondientes sin repetir el desbloqueo. | `insignia`, `cuenta_insignia` | RF05 / CU03 (A1), CU06 (A1) | Restricción de unicidad en `cuenta_insignia (id_cuenta, id_insignia)` |
 | **RN12** | Una meta se marca como `cumplida = true` automáticamente cuando `valor_actual >= valor_objetivo`, y una vez cumplida no se vuelve a evaluar. | `meta` | RF15 / CU05 | `metaCrud.actualizarProgresoMeta()` |
 | **RN13** | El campo `cumplida` de una meta no se recalcula dinámicamente al leer el registro: se mantiene como estaba en el momento en que se evaluó, para preservar el historial aunque cambie `valor_objetivo` después. | `meta` | RF15 | Excepción de 3FN documentada en `E10-normalizacion-3FN.md` (Excepción 2) |
-| **RN14** | Un reporte semanal es un **snapshot histórico**: sus campos (`tareas_completadas`, `horas_estudiadas`, `puntos_obtenidos`) se calculan una vez al generarse y no se recalculan después, aunque se agreguen nuevos datos a `tarea`, `sesion_estudio` o `punto`. | `reporte` | RF08, RF11 / CU05 | `reporteCrud.generarReporteSemanal()` — Excepción 3 en `E10-normalizacion-3FN.md`, justificada por RNF02 |
+| **RN14** | El Tablero de Avance Personal **no persiste** un snapshot: `tareas_completadas`, `horas_estudiadas` y `puntos_obtenidos` de cualquier semana se calculan en el momento de la consulta con `COUNT`/`SUM` sobre `tarea`, `sesion_estudio` y `punto`. | `tarea`, `sesion_estudio`, `punto` | RF08, RF11 / CU05 | Reemplaza a `reporteCrud.generarReporteSemanal()`, eliminado en agosto 2026 |
 | **RN15** | El nivel de una cuenta se determina evaluando el total de puntos acumulados contra la tabla de niveles (`nivel_cuenta`), ordenada por `orden`. | `nivel_cuenta`, `punto` | RF07 / CU06 | `nivelCuentaCrud.evaluarNivelCuenta(totalPuntos)` |
 | **RN16** | Cada notificación pertenece a exactamente una cuenta y se elimina en cascada si la cuenta se elimina. | `notificacion`, `cuenta` | RF04 / CU10 | `Notificacion.belongsTo(Cuenta)`, `onDelete: 'CASCADE'` |
 | **RN17** | Una notificación queda marcada `leida = false` por defecto; solo cambia a `true` cuando el usuario la marca explícitamente o usa "marcar todas como leídas". | `notificacion` | RF04 | `notificacionCrud.marcarNotificacionLeida()`, `marcarTodasLeidas()` |
@@ -41,8 +41,8 @@
 
 Varias reglas de negocio existen específicamente para cumplir un RNF, no solo un RF:
 
-- **RN07, RN09** (ledger de puntos) sostienen la trazabilidad histórica exigida implícitamente por los reportes semanales.
-- **RN14** (snapshot de reporte) existe explícitamente por **RNF02** (tiempo de respuesta ≤ 2 segundos), ya que recalcular agregados en cada lectura violaría ese requisito.
+- **RN07, RN09** (ledger de puntos) sostienen la trazabilidad histórica que necesita el Tablero de Avance Personal para calcular totales por semana.
+- **RN14** (cálculo en tiempo real del tablero) reemplaza al antiguo snapshot de `reporte`. El equipo aceptó el costo de la consulta agregada en cada carga a cambio de eliminar la redundancia de datos; si en el futuro esto violara RNF02 (respuesta ≤ 2 segundos) con muchos usuarios, sería el momento de reconsiderar un caché o snapshot.
 - **RN02** (contraseña cifrada) cumple **RNF12** (seguridad de credenciales).
 - **RN06, RN16** (eliminación en cascada) sostienen la integridad referencial exigida implícitamente por el diseño relacional (E9, E11).
 

@@ -140,7 +140,7 @@ const Reto = sequelize.define('reto', {
   /**
    * Identificador de la semana académica a la que pertenece el reto.
    * Se recomienda el formato ISO 8601 (`YYYY-Www`) para garantizar
-   * consistencia con los modelos Meta y Reporte que usan el mismo campo,
+   * consistencia con el modelo Meta que usa el mismo campo,
    * facilitando el cruce de datos entre las tres tablas.
    *
    * @example '2026-W19', '2026-W20', '2026-W01'

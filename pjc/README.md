@@ -8,7 +8,7 @@
 
 ## ¿Qué módulo implementas?
 
-Módulo de **Gamificación y Gestión Académica**: permite a estudiantes universitarios registrar tareas, sesiones de estudio y metas semanales, obteniendo puntos, insignias y niveles como recompensa por sus hábitos académicos. Incluye recordatorios automáticos, reportes semanales y configuración visual personalizada.
+Módulo de **Gamificación y Gestión Académica**: permite a estudiantes universitarios registrar tareas, sesiones de estudio y metas semanales, obteniendo puntos, insignias y niveles como recompensa por sus hábitos académicos. Incluye recordatorios automáticos, un Tablero de Avance Personal con estadísticas calculadas en tiempo real y configuración visual personalizada.
 
 ---
 
@@ -37,7 +37,6 @@ El módulo gestiona **14 entidades** distribuidas en dos categorías:
 | `meta` | Objetivos semanales de rendimiento |
 | `cuenta_insignia` | Resolución N:M de insignias desbloqueadas |
 | `recordatorio` | Alertas automáticas vinculadas a tareas |
-| `reporte` | Resumen semanal consolidado de rendimiento |
 | `notificacion` | Historial de notificaciones in-app |
 
 ---
@@ -94,7 +93,6 @@ plataforma-gamificada/
 │   ├── Reto.js
 │   ├── Meta.js
 │   ├── Recordatorio.js
-│   ├── Reporte.js
 │   ├── NivelCuenta.js
 │   ├── Notificacion.js
 │   └── PreferenciaVisual.js

@@ -22,7 +22,7 @@ La tabla de contexto define el sistema central y todas las entidades externas qu
 | E1 | Estudiante / Persona con discapacidad física | Usuario principal | Actor central. Crea cuenta, registra materias, gestiona tareas y recibe recompensas gamificadas. Interfaz accesible (fuente 14px, responsive). |
 | E2 | Usuario registrado | Usuario secundario | Persona registrada con acceso a tareas, filtros, recordatorios, personalización visual y exportación de datos. |
 | E3 | Colaborador | Entidad par | Aporta retos, metas sugeridas y frases motivacionales. No gestiona usuarios ni tiene acceso administrativo. |
-| E4 | Revisor institucional | Sistema superior | Docente o coordinador con acceso de solo lectura a reportes de progreso y métricas de uso. |
+| E4 | Revisor institucional | Sistema superior | Docente o coordinador con acceso de solo lectura al Tablero de Avance Personal y métricas de uso, calculadas en tiempo real. |
 | E5 | Administrador del sistema | Sistema superior | Acceso total. Gestiona cuentas, configura insignias y retos, supervisa integridad y seguridad. |
 | E6 | Notifications API del navegador | Sistema subordinado | API nativa del navegador. Lanza alertas locales sin servidor. Activable/desactivable desde configuración. |
 | E7 | localStorage del navegador | Sistema subordinado | Almacena datos JSON en el dispositivo del usuario. Sin base de datos externa. Funciona 100 % offline. |
@@ -40,7 +40,7 @@ La tabla de contexto define el sistema central y todas las entidades externas qu
   │  └─────────────┘  └──────────────┘  └────────────┘  │
   │  ┌─────────────┐  ┌──────────────┐  ┌────────────┐  │
   │  │  Módulo     │  │   Módulo     │  │  Módulo    │  │
-  │  │Gamificación │  │  Reportes    │  │  Config.   │  │
+  │  │Gamificación │  │  Tablero     │  │  Config.   │  │
   │  └─────────────┘  └──────────────┘  └────────────┘  │
   └──────────────────────────────────────────────────────┘
        ▲            ▲            ▲             ▲

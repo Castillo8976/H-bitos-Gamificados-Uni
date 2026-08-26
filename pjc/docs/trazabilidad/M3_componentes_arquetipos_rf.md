@@ -16,6 +16,6 @@
 | Módulo de agenda | Materia | RF01, RF09 | `registrarMateria`, `listarMaterias`, `obtenerMateria` |
 | Módulo de recompensas | Punto, Insignia | RF03, RF05, RF07, RF08 | `sumarPuntos`, `verificarInsignia`, `mostrarMensaje` |
 | Módulo de retos | Reto, Meta | RF06, RF15 | `generarRetoSemanal`, `actualizarProgreso`, `sugerirMeta` |
-| Módulo de reportes | Reporte | RF11 | `generarReporteSemanal`, `obtenerEstadisticas`, `exportarDatos` |
+| Tablero de Avance Personal | Tarea, SesionEstudio, Punto | RF11 | `obtenerEstadisticasSemana` (cálculo en tiempo real), `exportarDatos` |
 | Módulo de notificaciones | Recordatorio | RF04, RNF15 | `solicitarPermiso`, `programarAlerta`, `toggleNotificaciones` |
 | Módulo de almacenamiento | localStorage | RNF01, RNF04, RF14 | `guardar`, `leer`, `eliminar`, `exportarJSON` |

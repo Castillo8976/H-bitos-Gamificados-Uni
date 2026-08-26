@@ -19,11 +19,11 @@
 | P08 | Panel de gamificación | Estudiante | CU06 | RF05, RF06, RF07 | W05 |
 | P09 | Insignias obtenidas | Estudiante | CU06 | RF05 | — |
 | P10 | Reto semanal activo | Estudiante | CU06 | RF06 | — |
-| P11 | Reportes semanales | Estudiante | CU05 | RF08, RF11, RF15 | — |
+| P11 | Tablero de Avance Personal | Estudiante | CU05 | RF08, RF11, RF15 | — |
 | P12 | Filtros y búsqueda de tareas | Estudiante | CU07 | RF09 | — |
 | P13 | Configuración / Preferencias | Estudiante | CU08 | RF13, RNF04 | W06 |
 | P14 | Exportar datos | Estudiante | CU09 | RF14 | — |
 | P15 | Panel de administración | Administrador | — | RF01, RF05, RF06, RNF12 | — |
 | P16 | Gestión de usuarios | Administrador | — | RF01, RNF12 | — |
 | P17 | Gestión de insignias y retos | Administrador | — | RF05, RF06 | — |
-| P18 | Reportes institucionales | Revisor institucional | CU05 | RF11 | — |
+| P18 | Tablero institucional (solo lectura) | Revisor institucional | CU05 | RF11 | — |

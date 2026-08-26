@@ -1,0 +1,58 @@
+<svg viewBox="0 0 650 720" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+  <rect width="650" height="720" fill="#ffffff"/>
+  <text x="325" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#2C2C2A">Act-04 — Sesión de estudio Pomodoro (CU04 / sesionEstudioCrud)</text>
+
+  <circle cx="325" cy="65" r="12" fill="#2C2C2A"/>
+
+  <polygon points="325,100 400,140 325,180 250,140" fill="#F1EFE8" stroke="#2C2C2A"/>
+  <text x="325" y="136" text-anchor="middle" font-size="10">¿Modo Pomodoro</text>
+  <text x="325" y="149" text-anchor="middle" font-size="10">o libre?</text>
+  <line x1="325" y1="77" x2="325" y2="100" stroke="#2C2C2A"/>
+
+  <rect x="90" y="210" width="180" height="35" rx="18" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="180" y="232" text-anchor="middle" font-size="11">Iniciar ciclo 25min enfoque</text>
+  <line x1="250" y1="140" x2="180" y2="210" stroke="#2C2C2A"/>
+  <text x="195" y="185" font-size="10">Pomodoro</text>
+
+  <rect x="400" y="210" width="180" height="35" rx="18" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="490" y="232" text-anchor="middle" font-size="11">Iniciar cronómetro libre</text>
+  <line x1="400" y1="140" x2="490" y2="210" stroke="#2C2C2A"/>
+  <text x="460" y="185" font-size="10">libre</text>
+
+  <rect x="90" y="270" width="180" height="35" rx="18" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="180" y="292" text-anchor="middle" font-size="11">Bloquear notificaciones (modo_enfoque)</text>
+  <line x1="180" y1="245" x2="180" y2="270" stroke="#2C2C2A"/>
+
+  <polygon points="180,330 250,370 180,410 110,370" fill="#F1EFE8" stroke="#2C2C2A"/>
+  <text x="180" y="366" text-anchor="middle" font-size="10">¿Usuario</text>
+  <text x="180" y="379" text-anchor="middle" font-size="10">pausó?</text>
+  <line x1="180" y1="305" x2="180" y2="330" stroke="#2C2C2A"/>
+
+  <rect x="30" y="430" width="160" height="35" rx="18" fill="#FDF3E3" stroke="#854F0B"/>
+  <text x="110" y="452" text-anchor="middle" font-size="10">Pausar / reanudar</text>
+  <line x1="110" y1="370" x2="110" y2="430" stroke="#2C2C2A"/>
+  <text x="60" y="405" font-size="10">sí</text>
+  <line x1="110" y1="465" x2="180" y2="410" stroke="#2C2C2A" stroke-dasharray="2,2"/>
+
+  <rect x="90" y="480" width="180" height="35" rx="18" fill="#E1F5EE" stroke="#0F6E56"/>
+  <text x="180" y="502" text-anchor="middle" font-size="11">Descanso corto (5min)</text>
+  <line x1="180" y1="410" x2="180" y2="480" stroke="#2C2C2A"/>
+  <text x="150" y="450" font-size="10">no</text>
+
+  <!-- merge from libre branch -->
+  <line x1="490" y1="245" x2="490" y2="550" stroke="#2C2C2A"/>
+  <line x1="180" y1="515" x2="325" y2="580" stroke="#2C2C2A"/>
+  <line x1="490" y1="550" x2="325" y2="580" stroke="#2C2C2A"/>
+
+  <rect x="205" y="580" width="240" height="35" rx="18" fill="#EAF2FA" stroke="#185FA5"/>
+  <text x="325" y="602" text-anchor="middle" font-size="11">Guardar sesión (duración, fecha)</text>
+
+  <rect x="205" y="630" width="240" height="35" rx="18" fill="#EAF2FA" stroke="#185FA5"/>
+  <text x="325" y="652" text-anchor="middle" font-size="11">Tablero de Avance refleja horas (tiempo real) RF11</text>
+  <line x1="325" y1="615" x2="325" y2="630" stroke="#2C2C2A"/>
+
+  <line x1="325" y1="665" x2="325" y2="685" stroke="#2C2C2A"/>
+  <circle cx="325" cy="700" r="14" fill="none" stroke="#2C2C2A" stroke-width="2"/>
+  <circle cx="325" cy="700" r="8" fill="#2C2C2A"/>
+
+</svg>

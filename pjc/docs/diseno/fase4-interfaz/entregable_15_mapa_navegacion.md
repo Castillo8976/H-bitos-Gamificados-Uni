@@ -29,14 +29,14 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | P08 | Panel de gamificación | Estudiante | Gamificación | W05 |
 | P09 | Insignias obtenidas | Estudiante | Gamificación | — |
 | P10 | Reto semanal activo | Estudiante | Gamificación | — |
-| P11 | Reportes semanales | Estudiante | Reportes | — |
+| P11 | Tablero de Avance Personal | Estudiante | Tablero | — |
 | P12 | Filtros y búsqueda de tareas | Estudiante | Tareas | — |
 | P13 | Configuración / Preferencias | Estudiante | Configuración | W06 |
 | P14 | Exportar datos | Estudiante | Configuración | — |
 | P15 | Panel de administración | Administrador | Administración | — |
 | P16 | Gestión de usuarios | Administrador | Administración | — |
 | P17 | Gestión de insignias y retos | Administrador | Administración | — |
-| P18 | Reportes institucionales | Revisor institucional | Reportes | — |
+| P18 | Tablero institucional | Revisor institucional | Tablero | — |
 
 ---
 
@@ -55,7 +55,7 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 │        (registro exitoso)                                           │
 │                                                                     │
 │   [P15 Panel admin]  ◄── URL directa /admin     (Administrador)    │
-│   [P18 Reportes instit.] ◄── URL directa /revisor (Revisor inst.)  │
+│   [P18 Tablero instit.] ◄── URL directa /revisor (Revisor inst.)  │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 
@@ -76,8 +76,8 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 │     └──►[P12] │              │              │                       │
 │        Filtros│              │              │                       │
 ├───────────────┴──────────────┴──────────────┴───────────────────────┤
-│  Módulo AGENDA          │  Módulo REPORTES                          │
-│  [P07] Agenda materias  │  [P11] Reportes semanales                 │
+│  Módulo AGENDA          │  Módulo TABLERO                          │
+│  [P07] Agenda materias  │  [P11] Tablero de Avance Personal                 │
 └─────────────────────────┴───────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -85,7 +85,7 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 │                                                                     │
 │  [P15 Panel admin] ──► [P16 Gestión usuarios]                       │
 │                    └──► [P17 Gestión insignias y retos]             │
-│                    └──► [P18 Reportes institucionales]  ◄── Revisor │
+│                    └──► [P18 Tablero institucional]  ◄── Revisor │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -112,7 +112,7 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | P03 Dashboard | Botón "Iniciar ▶" sesión | P06 Pomodoro | Slide vertical ↑ | CU04 | RF10 |
 | P03 Dashboard | Sección "Mis logros" / tab 🏆 | P08 Gamificación | Slide → | CU06 | RF05, RF06 |
 | P03 Dashboard | Ícono engranaje ⚙ | P13 Configuración | Panel desde la derecha | CU08 | RF13 |
-| P03 Dashboard | Sección "Reportes" | P11 Reportes | Slide → | CU05 | RF11 |
+| P03 Dashboard | Sección "Tablero" | P11 Tablero | Slide → | CU05 | RF11 |
 | P03 Dashboard | Sección "Agenda" | P07 Agenda | Slide → | CU01 | RF01 |
 
 ### 3.3 Flujo módulo Tareas
@@ -154,12 +154,12 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | P13 Configuración | Botón "← Atrás" (sin guardar) | P03 Dashboard | Panel cierra desde la derecha | CU08 | — |
 | P14 Exportar datos | Botón "← Atrás" | P13 Configuración | Slide ← | — | — |
 
-### 3.7 Flujo módulo Reportes
+### 3.7 Flujo módulo Tablero
 
 | Desde | Elemento | Hacia | Transición | CU | RF |
 |-------|----------|-------|------------|----|----|
-| P11 Reportes | Navegación entre semanas | P11 (mismo) | Actualización inline | CU05 | RF11 |
-| P11 Reportes | Botón "← Atrás" | P03 Dashboard | Slide ← | — | — |
+| P11 Tablero | Navegación entre semanas | P11 (mismo) | Actualización inline | CU05 | RF11 |
+| P11 Tablero | Botón "← Atrás" | P03 Dashboard | Slide ← | — | — |
 
 ### 3.8 Flujo módulo Administración (acceso restringido)
 
@@ -168,7 +168,7 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | URL `/admin` | Acceso directo | P15 Panel admin | Carga directa | Administrador |
 | P15 Panel admin | Sección "Usuarios" | P16 Gestión usuarios | Slide → | Administrador |
 | P15 Panel admin | Sección "Gamificación" | P17 Gestión insignias y retos | Slide → | Administrador |
-| URL `/revisor` | Acceso directo | P18 Reportes institucionales | Carga directa | Revisor institucional |
+| URL `/revisor` | Acceso directo | P18 Tablero institucional | Carga directa | Revisor institucional |
 
 ### 3.9 Regla global — botón "Atrás"
 
@@ -218,12 +218,12 @@ P03 Dashboard
               └──► P10 Reto semanal activo  (tab switch)
 ```
 
-### Módulo Reportes
+### Módulo Tablero
 ```
 P03 Dashboard
-    └──► P11 Reportes semanales
+    └──► P11 Tablero de Avance Personal
 P15 Panel admin
-    └──► P18 Reportes institucionales  (solo Revisor)
+    └──► P18 Tablero institucional  (solo Revisor)
 ```
 
 ### Módulo Configuración
@@ -241,7 +241,7 @@ URL /admin
               └──► P17 Gestión de insignias y retos
 
 URL /revisor
-    └──► P18 Reportes institucionales
+    └──► P18 Tablero institucional
 ```
 
 ---
@@ -278,14 +278,14 @@ URL /revisor
 | P08 Gamificación | Estudiante | CU06 | RF05, RF06, RF07 | W05 |
 | P09 Insignias | Estudiante | CU06 | RF05 | — |
 | P10 Reto semanal | Estudiante | CU06 | RF06 | — |
-| P11 Reportes | Estudiante | CU05 | RF08, RF11, RF15 | — |
+| P11 Tablero | Estudiante | CU05 | RF08, RF11, RF15 | — |
 | P12 Filtros | Estudiante | CU07 | RF09 | — |
 | P13 Configuración | Estudiante | CU08 | RF13, RNF04 | W06 |
 | P14 Exportar datos | Estudiante | CU09 | RF14 | — |
 | P15 Panel admin | Administrador | — | RF01, RF05, RF06, RNF12 | — |
 | P16 Gestión usuarios | Administrador | — | RF01, RNF12 | — |
 | P17 Gestión insignias/retos | Administrador | — | RF05, RF06 | — |
-| P18 Reportes instit. | Revisor institucional | CU05 | RF11 | — |
+| P18 Tablero instit. | Revisor institucional | CU05 | RF11 | — |
 
 ### RF y RNF cubiertos por este entregable
 

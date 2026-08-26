@@ -20,7 +20,7 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 | CU02 | Gestionar tareas académicas | RF02, RF04, RF09 |
 | CU03 | Completar tarea y recibir recompensa | RF03, RF05, RF06, RF07, RF11 |
 | CU04 | Realizar sesión de estudio Pomodoro | RF10, RF12 |
-| CU05 | Ver reportes y progreso semanal | RF08, RF11, RF15 |
+| CU05 | Ver Tablero de Avance Personal | RF08, RF11, RF15 |
 | CU06 | Gestionar insignias y retos | RF05, RF06 |
 | CU07 | Filtrar y buscar tareas | RF09 |
 | CU08 | Personalizar configuración visual | RF13, RNF04 |
@@ -59,9 +59,9 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 |---|---|
 | **Actores** | Estudiante |
 | **Precondición** | Existe al menos una tarea con estado "Pendiente" o "En progreso". |
-| **Flujo normal** | 1. El estudiante activa el checkbox de la tarea. 2. El sistema cambia el estado a "Completada" y registra la fecha. 3. El sistema suma los puntos correspondientes. 4. Verifica si se cumple alguna condición de insignia. 5. Si se desbloquea una insignia, muestra animación de celebración. 6. Actualiza el reporte semanal y el panel de progreso. |
+| **Flujo normal** | 1. El estudiante activa el checkbox de la tarea. 2. El sistema cambia el estado a "Completada" y registra la fecha. 3. El sistema suma los puntos correspondientes. 4. Verifica si se cumple alguna condición de insignia. 5. Si se desbloquea una insignia, muestra animación de celebración. 6. Actualiza el panel de progreso (cálculo en tiempo real, sin tabla de reporte). |
 | **Flujos alternativos** | A1: Insignia ya obtenida → solo suma puntos sin mostrar animación. A2: Progreso del reto semanal completado → el sistema otorga los puntos del reto. |
-| **Postcondición** | La tarea queda en estado "Completada", los puntos se acumulan y el reporte semanal se actualiza. |
+| **Postcondición** | La tarea queda en estado "Completada" y los puntos se acumulan; el Tablero de Avance Personal reflejará el cambio en su próxima consulta. |
 
 ---
 
@@ -71,21 +71,23 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 |---|---|
 | **Actores** | Estudiante |
 | **Precondición** | El estudiante tiene una sesión activa en el sistema. |
-| **Flujo normal** | 1. El estudiante pulsa "Iniciar sesión de estudio". 2. Opcionalmente vincula la sesión a una tarea. 3. El cronómetro inicia en modo Pomodoro (25 min enfoque). 4. El sistema muestra el banner "Modo enfoque activo — notificaciones bloqueadas". 5. Al terminar el ciclo, muestra notificación de descanso. 6. El estudiante pulsa "Detener y guardar". 7. El sistema guarda la sesión con su duración y actualiza el reporte. |
+| **Flujo normal** | 1. El estudiante pulsa "Iniciar sesión de estudio". 2. Opcionalmente vincula la sesión a una tarea. 3. El cronómetro inicia en modo Pomodoro (25 min enfoque). 4. El sistema muestra el banner "Modo enfoque activo — notificaciones bloqueadas". 5. Al terminar el ciclo, muestra notificación de descanso. 6. El estudiante pulsa "Detener y guardar". 7. El sistema guarda la sesión con su duración; sus horas quedan disponibles para el cálculo en tiempo real del Tablero de Avance Personal. |
 | **Flujos alternativos** | A1: El estudiante cancela sin guardar → la sesión se descarta. A2: El estudiante pausa → el cronómetro se detiene y puede reanudarse. A3: Modo cronómetro libre → el estudiante define su propio tiempo. |
-| **Postcondición** | La sesión queda guardada y las horas aparecen en el reporte semanal. |
+| **Postcondición** | La sesión queda guardada y las horas aparecen en el Tablero de Avance Personal. |
 
 ---
 
-## CU05 — Ver reportes y progreso semanal
+## CU05 — Ver Tablero de Avance Personal
 
 | Campo | Descripción |
 |---|---|
 | **Actores** | Estudiante, Usuario registrado |
 | **Precondición** | El usuario tiene al menos una tarea o sesión registrada. |
-| **Flujo normal** | 1. El usuario accede a la sección "Reportes". 2. El sistema genera el reporte de la semana actual. 3. Muestra tareas completadas, horas estudiadas, puntos obtenidos y barra de progreso de la meta. 4. El usuario puede navegar entre reportes de semanas anteriores. 5. El sistema muestra un mensaje motivacional si el progreso es inferior al 50 %. |
+| **Flujo normal** | 1. El usuario accede al Tablero de Avance Personal. 2. El sistema calcula en tiempo real (COUNT/SUM sobre `tarea`, `sesion_estudio` y `punto`) las tareas completadas, horas estudiadas y puntos obtenidos de la semana actual. 3. Muestra estas estadísticas junto con la barra de progreso de la meta activa. 4. El usuario puede filtrar por semanas anteriores usando los mismos datos históricos ya almacenados en `tarea`/`sesion_estudio`/`punto`. 5. El sistema muestra un mensaje motivacional si el progreso es inferior al 50 %. |
 | **Flujos alternativos** | A1: Sin actividad en la semana → muestra "0 tareas, 0h, 0 pts" con mensaje motivador. A2: Meta cumplida → el sistema muestra mensaje de felicitación. |
 | **Postcondición** | El estudiante visualiza su progreso semanal actualizado. |
+
+> **Nota de corrección (agosto 2026):** este caso de uso se llamaba "Ver reportes y progreso semanal" y dependía de una tabla `reporte` que guardaba un snapshot. El equipo decidió eliminar esa tabla por ser redundante — los mismos datos ya existen en `tarea`, `sesion_estudio` y `punto` — así que ahora el tablero calcula todo en el momento de la consulta, sin persistir nada adicional.
 
 ---
 
@@ -160,10 +162,10 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 | HU05 | Como Estudiante, quiero desbloquear insignias al cumplir metas específicas, para sentir reconocimiento por mi esfuerzo. | RF05 |
 | HU06 | Como Estudiante, quiero participar en retos semanales generados automáticamente, para tener un desafío adicional que me motive. | RF06, RF07 |
 | HU07 | Como Estudiante, quiero ver mi total de puntos acumulados e historial de recompensas, para conocer mi progreso gamificado. | RF07, RF08 |
-| HU08 | Como Estudiante, quiero ver un reporte semanal con tareas completadas, horas estudiadas y puntos obtenidos. | RF08, RF11 |
+| HU08 | Como Estudiante, quiero ver en mi Tablero de Avance Personal las tareas completadas, horas estudiadas y puntos obtenidos de la semana. | RF08, RF11 |
 | HU09 | Como Estudiante, quiero filtrar mis tareas por materia, prioridad o estado, para encontrar rápidamente lo que necesito gestionar. | RF09 |
 | HU10 | Como Estudiante, quiero usar un cronómetro Pomodoro vinculado a una tarea, para concentrarme en bloques de tiempo definidos. | RF10, RF12 |
-| HU11 | Como Estudiante, quiero consultar reportes de semanas anteriores, para revisar mi evolución histórica. | RF11 |
+| HU11 | Como Estudiante, quiero consultar mi progreso de semanas anteriores en el Tablero de Avance Personal, para revisar mi evolución histórica. | RF11 |
 | HU12 | Como Estudiante, quiero activar el modo enfoque durante una sesión Pomodoro, para bloquear notificaciones no esenciales. | RF12, RNF13 |
 | HU13 | Como Estudiante, quiero personalizar el tema de color y activar el modo oscuro de la plataforma. | RF13, RNF04 |
 | HU14 | Como Estudiante, quiero exportar todos mis datos en formato JSON, para hacer un respaldo de mi información académica. | RF14 |

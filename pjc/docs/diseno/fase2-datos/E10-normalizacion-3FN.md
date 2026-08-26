@@ -11,7 +11,9 @@
 
 ## Descripción general
 
-Todas las tablas del sistema cumplen **1FN, 2FN y 3FN**. Se documentan tres excepciones marcadas como **desnormalizaciones deliberadas**, justificadas por requisitos no funcionales de rendimiento y consistencia histórica.
+Todas las **13 tablas** del sistema cumplen **1FN, 2FN y 3FN**. Se documentan dos excepciones marcadas como **desnormalizaciones deliberadas**, justificadas por requisitos no funcionales de rendimiento y consistencia histórica.
+
+> **Nota de corrección (agosto 2026):** este documento pasó por dos revisiones. Primero se agregó el análisis de `nivel_cuenta` y `notificacion` (14 tablas). Después se **eliminó la tabla `reporte`** por decisión del equipo — sus campos eran 100% calculables en tiempo real, así que la Excepción 3 (antes documentada aquí) desapareció junto con la tabla. Total final: 13 tablas, 2 excepciones.
 
 ---
 
@@ -59,8 +61,9 @@ No existe dependencia parcial. Las demás tablas tienen PK simple (UUID), por lo
 | **reto** | Valores atómicos. | PK simple → 2FN trivial. | ⚠️ **EXCEPCIÓN:** `completado` podría derivarse de `progreso`. Se mantiene explícito para rendimiento (desnormalización controlada). |
 | **meta** | Valores atómicos. | PK simple → 2FN trivial. | ⚠️ **EXCEPCIÓN:** `cumplida` podría derivarse de `valor_actual >= valor_objetivo`. Se mantiene para consistencia histórica. |
 | **recordatorio** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
-| **reporte** | Valores atómicos. | PK simple → 2FN trivial. | ⚠️ **EXCEPCIÓN:** `tareas_completadas`, `horas_estudiadas` y `puntos_obtenidos` podrían calcularse. Snapshot histórico deliberado por RNF02. |
 | **preferencia_visual** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
+| **nivel_cuenta** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. Es un catálogo global: ningún atributo depende de otro atributo no clave (`puntos_minimos` y `orden` son independientes entre sí). |
+| **notificacion** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. `tipo` y `mensaje` dependen directamente de `id_notificacion`; no hay dependencia transitiva entre ellos. |
 
 ---
 
@@ -94,6 +97,28 @@ El nombre de la materia **no está** en `tarea` (solo el FK `id_materia`). Se ob
 ```
 No existe ningún atributo que dependa solo de `id_cuenta` ni solo de `id_insignia`. **Cumple 2FN y 3FN.**
 
+### Tabla `nivel_cuenta`
+
+```
+id_nivel → nombre            ✓ dependencia directa de PK
+id_nivel → descripcion       ✓ dependencia directa de PK
+id_nivel → puntos_minimos    ✓ dependencia directa de PK
+id_nivel → orden             ✓ dependencia directa de PK
+id_nivel → icono             ✓ dependencia directa de PK
+```
+`orden` y `puntos_minimos` podrían parecer relacionados entre sí (a mayor orden, mayor puntos_minimos), pero no es una dependencia funcional: ambos son atributos independientes que el administrador del catálogo define por separado, no uno derivado del otro. **Cumple 3FN sin excepciones.**
+
+### Tabla `notificacion`
+
+```
+id_notificacion → id_cuenta   ✓ FK, no un atributo derivado
+id_notificacion → tipo        ✓ dependencia directa de PK
+id_notificacion → mensaje     ✓ dependencia directa de PK
+id_notificacion → leida       ✓ dependencia directa de PK
+id_notificacion → fecha       ✓ dependencia directa de PK
+```
+`mensaje` no depende de `tipo` (dos notificaciones del mismo `tipo` pueden tener mensajes distintos), por lo que no hay dependencia transitiva entre atributos no clave. **Cumple 3FN sin excepciones.**
+
 ---
 
 ## Desnormalizaciones deliberadas documentadas
@@ -118,15 +143,7 @@ No existe ningún atributo que dependa solo de `id_cuenta` ni solo de `id_insign
 | **Tipo de desnormalización** | Controlada — justificada por consistencia histórica |
 | **RF** | RF15 |
 
-### EXCEPCIÓN 3 — Tabla `reporte` (campos calculables)
-
-| Aspecto | Detalle |
-|---|---|
-| **Atributos** | `tareas_completadas`, `horas_estudiadas`, `puntos_obtenidos` |
-| **Posible derivación** | Podrían calcularse con queries sobre `tarea`, `sesion_estudio` y `punto` respectivamente |
-| **Justificación** | **Snapshot histórico deliberado** — son reportes semanales cerrados. Si se recalcularan dinámicamente, cambiarían al agregarse nuevos datos. Además, RNF02 exige respuesta ≤ 2 segundos, lo que prohíbe queries agregadas en tiempo real |
-| **Tipo de desnormalización** | Controlada — justificada por RNF02 (rendimiento) y por la semántica de un reporte histórico |
-| **RF** | RF11 |
+> **Nota (agosto 2026):** este documento tenía una tercera excepción para la tabla `reporte` (campos `tareas_completadas`, `horas_estudiadas`, `puntos_obtenidos` mantenidos como snapshot). Esa tabla fue **eliminada** — ver `E7-diccionario-datos.md` — por lo que la excepción ya no aplica. El sistema ahora calcula esos valores en tiempo real con `COUNT`/`SUM`, que es precisamente la alternativa que esta misma sección había descartado antes por RNF02; el equipo decidió aceptar el costo de la consulta agregada a cambio de eliminar la redundancia de datos.
 
 ---
 
@@ -134,8 +151,8 @@ No existe ningún atributo que dependa solo de `id_cuenta` ni solo de `id_insign
 
 | Forma Normal | Tablas conformes | Excepciones documentadas |
 |---|---|---|
-| **1FN** | 12/12 | 0 |
-| **2FN** | 12/12 | 0 |
-| **3FN** | 9/12 | 3 (deliberadas y documentadas) |
+| **1FN** | 13/13 | 0 |
+| **2FN** | 13/13 | 0 |
+| **3FN** | 11/13 | 2 (deliberadas y documentadas) |
 
-> **Conclusión:** El modelo cumple 3FN. Las tres excepciones son **desnormalizaciones deliberadas**, documentadas con su justificación técnica y de negocio. No representan errores de diseño sino decisiones arquitectónicas conscientes.
+> **Conclusión:** El modelo cumple 3FN. Las dos excepciones restantes (`reto.completado` y `meta.cumplida`) son **desnormalizaciones deliberadas**, documentadas con su justificación técnica y de negocio. No representan errores de diseño sino decisiones arquitectónicas conscientes.

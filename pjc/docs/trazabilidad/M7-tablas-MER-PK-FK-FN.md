@@ -29,7 +29,6 @@ Esta matriz conecta cada tabla del Modelo Relacional (E9) con su entidad de orig
 | **reto** | Débil | id_reto VARCHAR(36) | id_cuenta → cuenta | CASCADE | ✅ | ✅ | ⚠️ | completado podría derivarse de progreso. Se mantiene explícito por rendimiento. |
 | **meta** | Débil | id_meta VARCHAR(36) | id_cuenta → cuenta | CASCADE | ✅ | ✅ | ⚠️ | cumplida podría derivarse de valor_actual >= valor_objetivo. Se mantiene por consistencia histórica. |
 | **recordatorio** | Débil | id_recordatorio VARCHAR(36) | id_tarea → tarea CASCADE · id_cuenta → cuenta CASCADE | CASCADE · CASCADE | ✅ | ✅ | ✅ | — |
-| **reporte** | Débil | id_reporte VARCHAR(36) | id_cuenta → cuenta | CASCADE | ✅ | ✅ | ⚠️ | tareas_completadas, horas_estudiadas y puntos_obtenidos son snapshot histórico (RNF02). |
 
 ---
 
@@ -48,7 +47,6 @@ Esta matriz conecta cada tabla del Modelo Relacional (E9) con su entidad de orig
 | reto | (id_cuenta, semana) | puntos_recompensa > 0, progreso >= 0, completado IN (0,1) | progreso = 0, completado = 0 |
 | meta | (id_cuenta, semana) | valor_objetivo > 0, valor_actual >= 0, cumplida IN (0,1) | valor_actual = 0, cumplida = 0 |
 | recordatorio | — | enviado IN (0,1), activo IN (0,1) | enviado = 0, activo = 1 |
-| reporte | (id_cuenta, semana) | tareas_completadas >= 0, horas_estudiadas >= 0, puntos_obtenidos >= 0 | todos = 0, fecha_generado = DATE('now') |
 
 ---
 

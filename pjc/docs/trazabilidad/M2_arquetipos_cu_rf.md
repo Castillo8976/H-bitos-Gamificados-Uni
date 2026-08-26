@@ -17,7 +17,6 @@
 | Punto | Gamificación | CU03, CU06 | RF03, RF07 |
 | Insignia | Gamificación | CU06 | RF05 |
 | Reto | Gamificación | CU06 | RF06 |
-| Reporte | Seguimiento | CU05 | RF11 |
 | Recordatorio | Seguimiento | CU10 | RF04, RNF15 |
 | Meta | Seguimiento | CU05 | RF15 |
 | Preferencia visual | Seguimiento | CU08 | RF13, RNF04 |

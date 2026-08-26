@@ -157,7 +157,7 @@ async function eliminarSesionEstudio(id) {
  * Calcula el total de horas estudiadas por una cuenta en un rango de fechas.
  *
  * Esta función implementa la lógica de negocio para calcular las
- * horas_estudiadas del Reporte semanal (RF-11).
+ * horas estudiadas acumuladas, calculadas en tiempo real (RF-11).
  *
  * Fórmula: horas = SUM(duracion_minutos) / 60
  *

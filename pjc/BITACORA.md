@@ -48,3 +48,18 @@ Los modelos `NivelCuenta.js` y `Notificacion.js` tenían rutas de importación i
 Corregí las rutas en ambos archivos: `require('../../database')` → `require('../database')` en `NivelCuenta.js`, y en `Notificacion.js` la misma corrección más `require('../models/Cuenta')` → `require('./Cuenta')`. También aproveché para agregar los índices compuestos `UNIQUE(id_cuenta, semana)` faltantes en los modelos `Reto`, `Meta` y `Reporte`, que sí estaban definidos en el DDL del diseño pero no habían sido trasladados a los modelos Sequelize.
 
 **¿Usé IA?** Sí — Usé IA para hacer una revisión cruzada entre los modelos, los CRUDs y el DDL del documento de diseño, identificando las inconsistencias de rutas y los índices faltantes. Los ajustes los apliqué directamente en los archivos después de entender el problema.
+
+---
+
+## Entrada #04 — Agosto 2026 (revisión final)
+
+**¿Qué hice?**  
+Eliminé por completo la entidad `reporte` (modelo, CRUD, tabla del DDL, y todas sus referencias en la documentación de diseño y trazabilidad). Me informaron que un reporte semanal como tabla independiente era innecesario: es información que el sistema puede calcular internamente en el momento, sin necesidad de guardarla ni mostrarla como una sección aparte para el usuario. Las estadísticas que antes vivían en `reporte` (tareas completadas, horas estudiadas, puntos obtenidos) ahora se calculan en tiempo real con `COUNT`/`SUM` sobre `tarea`, `sesion_estudio` y `punto`, directamente en el Tablero de Avance Personal.
+
+**¿Qué problema encontré?**  
+`reporte` estaba mencionado en más de 25 archivos distintos (código, diccionario de datos, MER, DDL, casos de uso, reglas de negocio, matrices de trazabilidad, diagramas). No era un cambio aislado — tocaba prácticamente toda la fase de diseño de datos.
+
+**¿Cómo lo resolví?**  
+Fui archivo por archivo: primero el código (`Reporte.js`, `reporteCrud.js`, referencias en `app.js` y otros CRUDs), después los documentos de diseño de datos (E7 a E11), luego los casos de uso y reglas de negocio, y finalmente las matrices de trazabilidad y diagramas. Dejé nota explícita en cada archivo donde el cambio no era obvio, para que quede constancia de por qué `reporte` ya no aparece.
+
+**¿Usé IA?** Sí — usé IA para hacer el barrido completo del repositorio en busca de todas las menciones a `reporte` y aplicar la eliminación de forma consistente en cada archivo.

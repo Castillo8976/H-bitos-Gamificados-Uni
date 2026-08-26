@@ -161,7 +161,7 @@ async function calcularTotalPuntos(id_cuenta) {
 
 /**
  * Calcula los puntos acumulados por una cuenta en un rango de fechas.
- * Se usa para calcular puntos_obtenidos en el Reporte semanal (RF-11).
+ * Se usa para calcular el total de puntos acumulados en tiempo real (RF-07).
  *
  * // CU-05 | RF-11 | E12 - calcularPuntosSemana()
  *

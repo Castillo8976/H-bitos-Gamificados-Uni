@@ -6,7 +6,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS preferencia_visual;
-DROP TABLE IF EXISTS reporte;
+DROP TABLE IF EXISTS notificacion;
 DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS recordatorio;
 DROP TABLE IF EXISTS reto;
@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS insignia;
 DROP TABLE IF EXISTS sesion_estudio;
 DROP TABLE IF EXISTS tarea;
 DROP TABLE IF EXISTS materia;
+DROP TABLE IF EXISTS nivel_cuenta;
 DROP TABLE IF EXISTS cuenta;
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -30,6 +31,20 @@ CREATE TABLE cuenta (
   activa         TINYINT(1)   NOT NULL DEFAULT 1,
   CONSTRAINT pk_cuenta PRIMARY KEY (idcuenta),
   CONSTRAINT uq_correo UNIQUE (correo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- TABLA nivel_cuenta | RF07 — catálogo global de niveles
+CREATE TABLE nivel_cuenta (
+  idnivel       VARCHAR(36)  NOT NULL,
+  nombre        VARCHAR(60)  NOT NULL,
+  descripcion   VARCHAR(200) NOT NULL,
+  puntosminimos INT          NOT NULL DEFAULT 0,
+  orden         INT          NOT NULL DEFAULT 1,
+  icono         VARCHAR(50),
+  CONSTRAINT pk_nivel PRIMARY KEY (idnivel),
+  CONSTRAINT uq_nivel_nombre UNIQUE (nombre),
+  CONSTRAINT ck_nivel_puntos CHECK (puntosminimos >= 0),
+  CONSTRAINT ck_nivel_orden CHECK (orden > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- TABLA preferencia_visual | RF13 — relación 1:1
@@ -174,18 +189,21 @@ CREATE TABLE recordatorio (
     REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- TABLA reporte | RF11
-CREATE TABLE reporte (
-  idreporte         VARCHAR(36)  NOT NULL,
-  idcuenta          VARCHAR(36)  NOT NULL,
-  semana            VARCHAR(10)  NOT NULL,
-  tareascompletadas INT          NOT NULL DEFAULT 0,
-  horasestudiadas   DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-  puntosobtenidos   INT          NOT NULL DEFAULT 0,
-  fechagenerado     DATE         NOT NULL,
-  CONSTRAINT pk_reporte PRIMARY KEY (idreporte),
-  CONSTRAINT uq_rep_semana UNIQUE (idcuenta, semana),
-  CONSTRAINT fk_rep_cuenta FOREIGN KEY (idcuenta)
+-- Nota (agosto 2026): la tabla `reporte` fue eliminada por decisión del equipo.
+-- Sus estadísticas se calculan en tiempo real con SUM/COUNT sobre tarea,
+-- sesion_estudio y punto — ver justificación en E7-diccionario-datos.md.
+
+-- TABLA notificacion | RF04, RNF15
+CREATE TABLE notificacion (
+  idnotificacion VARCHAR(36)  NOT NULL,
+  idcuenta       VARCHAR(36)  NOT NULL,
+  tipo           VARCHAR(20)  NOT NULL,
+  mensaje        VARCHAR(200) NOT NULL,
+  leida          TINYINT(1)   NOT NULL DEFAULT 0,
+  fecha          DATE         NOT NULL,
+  CONSTRAINT pk_notificacion PRIMARY KEY (idnotificacion),
+  CONSTRAINT ck_not_tipo CHECK (tipo IN ('Insignia','Reto','Meta','Nivel','Sistema')),
+  CONSTRAINT fk_not_cuenta FOREIGN KEY (idcuenta)
     REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -199,7 +217,7 @@ CREATE INDEX idx_sesion_fecha    ON sesion_estudio(idcuenta, fecha);
 CREATE INDEX idx_punto_cuenta    ON punto(idcuenta);
 CREATE INDEX idx_reto_semana     ON reto(idcuenta, semana);
 CREATE INDEX idx_rec_pendiente   ON recordatorio(activo, enviado, fechaprogramada);
-CREATE INDEX idx_rep_semana      ON reporte(idcuenta, semana);
+CREATE INDEX idx_not_cuenta      ON notificacion(idcuenta, leida, fecha);
 
 -- ============================================================
 -- DATOS SEMILLA — Insignias
@@ -210,3 +228,12 @@ INSERT INTO insignia VALUES
 ('ins-003','Racha de 5','5 tareas completadas seguidas','5_tareas_seguidas','lightning.svg'),
 ('ins-004','Madrugador','Sesion antes de las 8am','sesion_antes_8am','sunrise.svg'),
 ('ins-005','Pomodoro Pro','10 sesiones Pomodoro completadas','10_pomodoros','tomato.svg');
+
+-- ============================================================
+-- DATOS SEMILLA — Niveles de cuenta
+-- ============================================================
+INSERT INTO nivel_cuenta VALUES
+('niv-001','Principiante','Estás dando tus primeros pasos como estudiante gamificado.',0,1,'nivel_1.svg'),
+('niv-002','Estudiante','Ya tienes experiencia y estás construyendo buenos hábitos.',100,2,'nivel_2.svg'),
+('niv-003','Avanzado','Dominas tus hábitos de estudio y eres constante.',500,3,'nivel_3.svg'),
+('niv-004','Maestro','Has alcanzado la cima. Eres un referente de disciplina.',1000,4,'nivel_4.svg');

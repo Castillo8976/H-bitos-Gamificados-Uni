@@ -49,8 +49,8 @@
 
   <!-- CU05 -->
   <ellipse cx="650" cy="240" rx="120" ry="32" fill="#EAF2FA" stroke="#185FA5"/>
-  <text x="650" y="236" text-anchor="middle" font-size="12" fill="#2C2C2A">CU05 Ver reportes y</text>
-  <text x="650" y="250" text-anchor="middle" font-size="12" fill="#2C2C2A">progreso semanal</text>
+  <text x="650" y="236" text-anchor="middle" font-size="12" fill="#2C2C2A">CU05 Ver Tablero de</text>
+  <text x="650" y="250" text-anchor="middle" font-size="12" fill="#2C2C2A">Avance Personal</text>
 
   <!-- CU06 -->
   <ellipse cx="380" cy="320" rx="120" ry="32" fill="#FDF3E3" stroke="#854F0B"/>

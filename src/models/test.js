@@ -37,7 +37,6 @@
  * @requires ./models/Reto
  * @requires ./models/Meta
  * @requires ./models/Recordatorio
- * @requires ./models/Reporte
  * @requires ./crud/cuentaCrud
  * @requires ./crud/materiaCrud
  * @requires ./crud/tareaCrud
@@ -65,7 +64,6 @@ require('./models/Punto');             // 8. Depende de Cuenta
 require('./models/Reto');              // 9. Depende de Cuenta
 require('./models/Meta');              // 10. Depende de Cuenta
 require('./models/Recordatorio');      // 11. Depende de Cuenta y Tarea
-require('./models/Reporte');           // 12. Depende de Cuenta
 
 
 // ─────────────────────────────────────────

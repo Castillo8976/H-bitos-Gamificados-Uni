@@ -501,12 +501,12 @@ En descanso:      [ ⏸ Pausar ] [ ⏹ ]     → fondo #E1F5EE
 | P08 Gamificación | Estudiante | CU06 | RF05, RF06, RF07 | W05 |
 | P09 Insignias | Estudiante | CU06 | RF05 | — |
 | P10 Reto semanal | Estudiante | CU06 | RF06 | — |
-| P11 Reportes | Estudiante | CU05 | RF08, RF11, RF15 | — |
+| P11 Tablero de Avance | Estudiante | CU05 | RF08, RF11, RF15 | — |
 | P12 Filtros | Estudiante | CU07 | RF09 | — |
 | P13 Configuración | Estudiante | CU08 | RF13, RNF04 | W06 |
 | P14 Exportar datos | Estudiante | CU09 | RF14 | — |
 | P15 Panel admin | Administrador | — | RF01, RF05, RF06, RNF12 | — |
-| P18 Reportes instit. | Revisor institucional | CU05 | RF11 | — |
+| P18 Tablero instit. | Revisor institucional | CU05 | RF11 | — |
 
 ### RF y RNF cubiertos por este entregable
 

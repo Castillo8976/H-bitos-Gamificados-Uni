@@ -21,11 +21,13 @@
 | `Reto` | `generar`, `actualizarProgreso`, `completar` | CU06 | RF06 |
 | `Meta` | `sugerir`, `actualizar`, `evaluar` | CU05 | RF15 |
 | `Recordatorio` | `programar`, `cancelar`, `toggleActivo` | CU10 | RF04, RNF15 |
-| `Reporte` | `generar`, `obtenerEstadisticas` | CU05 | RF11 |
-| `Reporte` | `exportar` | CU09 | RF14 |
+| `Tarea`, `SesionEstudio`, `Punto` | `obtenerEstadisticasSemana()` — cálculo en tiempo real vía COUNT/SUM (reemplaza a `Reporte.generar/obtenerEstadisticas`) | CU05 | RF08, RF11 |
+| `ExportadorDatos` | `exportarDatosPersonales()` (reemplaza a `Reporte.exportar`) | CU09 | RF14 |
 | `PreferenciaVisual` | `guardar`, `cargar`, `aplicarTema` | CU08 | RF13, RNF04 |
 | `NivelCuenta` | `crearNivel`, `listarNiveles`, `actualizarNivel`, `eliminarNivel`, `sembrarNiveles` | CU06 | RF07 |
 | `NivelCuenta` | `evaluarNivelCuenta(totalPuntos)` | CU03, CU06 | RF07 |
 | `Notificacion` | `crearNotificacion`, `listarNotificaciones`, `marcarNotificacionLeida`, `marcarTodasLeidas`, `eliminarNotificacion`, `limpiarNotificacionesLeidas` | CU10 | RF04, RNF15 |
 
-> **Nota de corrección (agosto 2026):** se agregaron `NivelCuenta` y `Notificacion` porque ambas existen como modelos y CRUD completos en `/src` (`nivelCuentaCrud.js`, `notificacionCrud.js`) pero no aparecían en esta matriz ni en el Diagrama de Clases (`DiagramaClases.png`). **Pendiente:** actualizar el diagrama de clases UML (imagen) para incluir estas dos clases con su relación hacia `Cuenta`.
+> **Nota de corrección (agosto 2026):** la clase `Reporte` fue **eliminada** por decisión del equipo (ver `E7-diccionario-datos.md` y `10-reglas-de-negocio.md` RN14). Sus responsabilidades se redistribuyeron: `obtenerEstadisticas` pasó a ser un cálculo en tiempo real sobre `Tarea`/`SesionEstudio`/`Punto`, y `exportar` pasó a una clase utilitaria `ExportadorDatos` que no depende de una tabla propia.
+
+> **Nota de corrección (agosto 2026):** se agregaron `NivelCuenta` y `Notificacion` porque ambas existen como modelos y CRUD completos en `/src` (`nivelCuentaCrud.js`, `notificacionCrud.js`) pero no aparecían en esta matriz ni en el Diagrama de Clases (`DiagramaClases.png`). **Resuelto:** ver `docs/diseno/imagenes/DiagramaClasesActualizado.svg`, que incluye las 14 clases con su relación hacia `Cuenta`. El PNG original (`DiagramaClases.png`) se conserva como referencia histórica de la fase de diseño previa a esta corrección.

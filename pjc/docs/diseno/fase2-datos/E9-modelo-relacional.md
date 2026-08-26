@@ -11,7 +11,9 @@
 
 ## Descripción general
 
-El Modelo Relacional transforma las **12 entidades del MER** en tablas con tipos de datos precisos, claves primarias (PK), claves foráneas (FK) y restricciones de integridad referencial. Cada tabla es trazable a su entidad en el Diccionario de Datos (E7), a su relación en el MER (E8) y a su `CREATE TABLE` en el DDL (E11).
+El Modelo Relacional transforma las **13 entidades del MER** en tablas con tipos de datos precisos, claves primarias (PK), claves foráneas (FK) y restricciones de integridad referencial. Cada tabla es trazable a su entidad en el Diccionario de Datos (E7), a su relación en el MER (E8) y a su `CREATE TABLE` en el DDL (E11).
+
+> **Nota de corrección (agosto 2026):** se eliminó la tabla `reporte`. Ver justificación completa en `E7-diccionario-datos.md` y `E8-modelo-entidad-relacion.md`.
 
 ---
 
@@ -25,12 +27,13 @@ El Modelo Relacional transforma las **12 entidades del MER** en tablas con tipos
 | **tarea** | id_tarea VARCHAR(36) | id_cuenta → cuenta CASCADE · id_materia → materia SET NULL | CHECK prioridad IN (...) · CHECK estado IN (...) · fecha_completada nullable | RF02 · RF03 |
 | **sesion_estudio** | id_sesion VARCHAR(36) | id_cuenta → cuenta CASCADE · id_tarea → tarea SET NULL | CHECK duracion_minutos > 0 · modo_enfoque IN (0,1) | RF10 |
 | **insignia** | id_insignia VARCHAR(36) | — | UNIQUE(nombre) · UNIQUE(condicion) | RF05 |
+| **nivel_cuenta** | id_nivel VARCHAR(36) | — | UNIQUE(nombre) · CHECK puntos_minimos >= 0 · CHECK orden > 0 | RF07 |
 | **cuenta_insignia** | (id_cuenta, id_insignia) | id_cuenta → cuenta CASCADE · id_insignia → insignia CASCADE | PK compuesta · fecha_obtenida NOT NULL | RF05 |
 | **punto** | id_punto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | CHECK cantidad > 0 · CHECK origen IN ('Tarea','Reto','Sesion') | RF03 · RF07 |
 | **reto** | id_reto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK puntos_recompensa > 0 · CHECK progreso >= 0 | RF06 |
 | **meta** | id_meta VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK valor_objetivo > 0 · CHECK valor_actual >= 0 | RF15 |
 | **recordatorio** | id_recordatorio VARCHAR(36) | id_tarea → tarea CASCADE · id_cuenta → cuenta CASCADE | fecha_programada CHECK >= fecha_entrega - 1 día | RF04 |
-| **reporte** | id_reporte VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK tareas_completadas >= 0 · CHECK horas_estudiadas >= 0 | RF11 |
+| **notificacion** | id_notificacion VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | CHECK tipo IN ('Insignia','Reto','Meta','Nivel','Sistema') · leida DEFAULT 0 | RF04 · RNF15 |
 
 ---
 
@@ -91,6 +94,15 @@ insignia(
   icono [nullable]
 )
 
+nivel_cuenta(
+  id_nivel PK,
+  nombre UNIQUE,
+  descripcion,
+  puntos_minimos,
+  orden,
+  icono [nullable]
+)
+
 cuenta_insignia(
   id_cuenta PK FK→cuenta,
   id_insignia PK FK→insignia,
@@ -137,14 +149,13 @@ recordatorio(
   activo
 )
 
-reporte(
-  id_reporte PK,
+notificacion(
+  id_notificacion PK,
   id_cuenta FK→cuenta,
-  semana UNIQUE por cuenta,
-  tareas_completadas,
-  horas_estudiadas,
-  puntos_obtenidos,
-  fecha_generado
+  tipo,
+  mensaje,
+  leida,
+  fecha
 )
 ```
 
@@ -152,33 +163,100 @@ reporte(
 
 ## 3.3 Diagrama de integridad referencial
 
+La integridad referencial garantiza que cada valor almacenado como FK en una tabla hija corresponda con una PK existente en su tabla padre. El siguiente esquema conserva la representación textual del documento y muestra, dentro de cada tabla, las claves que participan en las relaciones.
+
 ```
-                    ┌─────────────┐
-                    │   insignia  │
-                    └──────┬──────┘
-                           │ N:M (resuelta)
-          ┌────────────────▼────────────────┐
-          │         cuenta_insignia         │
-          └────────────────┬────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│                         cuenta                          │
-│                       (entidad raíz)                    │
-└──┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬────┘
-   │      │      │      │      │      │      │      │
-   ▼      ▼      ▼      ▼      ▼      ▼      ▼      ▼
-materia punto  reto   meta reporte sesion pref_  tarea
-                            estudio visual
-                                           │
-                                    ┌──────▼──────┐
-                                    │recordatorio │
-                                    └─────────────┘
+TABLA PADRE O DE REFERENCIA
+┌──────────────────────────┐
+│          CUENTA          │
+├──────────────────────────┤
+│ PK  id_cuenta            │
+└────────────┬─────────────┘
+             │
+             ├── 1:1 ──→ ┌──────────────────────────────┐
+             │            │     PREFERENCIA_VISUAL      │
+             │            ├──────────────────────────────┤
+             │            │ PK  id_preferencia          │
+             │            │ FK  id_cuenta               │
+             │            │ UQ  id_cuenta               │
+             │            └──────────────────────────────┘
+             │
+             ├── 1:N ──→ ┌──────────────────────────────┐
+             │            │           MATERIA            │
+             │            ├──────────────────────────────┤
+             │            │ PK  id_materia               │
+             │            │ FK  id_cuenta                │
+             │            └──────────────────────────────┘
+             │
+             ├── 1:N ──→ ┌──────────────────────────────┐
+             │            │            TAREA             │
+             │            ├──────────────────────────────┤
+             │            │ PK  id_tarea                 │
+             │            │ FK  id_cuenta                │
+             │            │ FK  id_materia  [nullable]   │
+             │            └──────────────────────────────┘
+             │
+             ├── 1:N ──→ SESION_ESTUDIO  (PK id_sesion, FK id_cuenta)
+             ├── 1:N ──→ PUNTO           (PK id_punto, FK id_cuenta)
+             ├── 1:N ──→ RETO            (PK id_reto, FK id_cuenta)
+             ├── 1:N ──→ META            (PK id_meta, FK id_cuenta)
+             ├── 1:N ──→ RECORDATORIO    (PK id_recordatorio, FK id_cuenta)
+             └── 1:N ──→ NOTIFICACION    (PK id_notificacion, FK id_cuenta)
+
+
+REFERENCIAS ADICIONALES ENTRE TABLAS
+
+┌──────────────────────────┐       1:N       ┌──────────────────────────┐
+│          MATERIA         │────────────────→│           TAREA          │
+├──────────────────────────┤                 ├──────────────────────────┤
+│ PK  id_materia           │                 │ FK  id_materia [nullable]│
+└──────────────────────────┘                 └──────────────────────────┘
+
+┌──────────────────────────┐       1:N       ┌──────────────────────────┐
+│           TAREA          │────────────────→│     SESION_ESTUDIO       │
+├──────────────────────────┤                 ├──────────────────────────┤
+│ PK  id_tarea             │                 │ FK  id_tarea [nullable]  │
+└────────────┬─────────────┘                 └──────────────────────────┘
+             │ 1:N
+             ▼
+┌──────────────────────────┐
+│       RECORDATORIO       │
+├──────────────────────────┤
+│ FK  id_tarea             │
+└──────────────────────────┘
+
+
+RESOLUCIÓN DE LA RELACIÓN N:M
+
+┌──────────────────────┐   1:N   ┌────────────────────────┐   N:1   ┌──────────────────────┐
+│        CUENTA        │────────→│    CUENTA_INSIGNIA     │←────────│       INSIGNIA       │
+├──────────────────────┤         ├────────────────────────┤         ├──────────────────────┤
+│ PK  id_cuenta        │         │ PK, FK  id_cuenta      │         │ PK  id_insignia      │
+└──────────────────────┘         │ PK, FK  id_insignia    │         └──────────────────────┘
+                                 └────────────────────────┘
+
+
+TABLA CATÁLOGO SIN CLAVE FORÁNEA
+
+┌──────────────────────────┐
+│       NIVEL_CUENTA       │
+├──────────────────────────┤
+│ PK  id_nivel             │
+│ UQ  nombre               │
+│     puntos_minimos       │
+└──────────────────────────┘
 ```
 
+`nivel_cuenta` se presenta sin una línea de integridad referencial porque no contiene FK y ninguna tabla almacena `id_nivel`. El nivel vigente se obtiene mediante el cálculo descrito en la sección 3.5.
+
 **Leyenda:**
-- `CASCADE` = ON DELETE CASCADE → si se borra el padre, se borran los hijos
-- `SET NULL` = ON DELETE SET NULL → si se borra el padre, la FK del hijo queda NULL
-- `UNIQUE` en id_cuenta de preferencia_visual → garantiza relación 1:1
+- `PK` = clave primaria que identifica de forma única cada fila de una tabla.
+- `FK` = clave foránea almacenada en la tabla hija que referencia la PK de una tabla padre.
+- `UQ` = restricción de unicidad; en `preferencia_visual.id_cuenta` garantiza la relación 1:1.
+- `1:N` = una fila de la tabla padre puede ser referenciada por múltiples filas de la tabla hija.
+- `N:M` = se implementa mediante `cuenta_insignia`, cuya PK está compuesta por las dos FK.
+- `CASCADE` = `ON DELETE CASCADE`; al eliminar el padre también se eliminan los registros hijos.
+- `SET NULL` = `ON DELETE SET NULL`; al eliminar el padre, la FK opcional del hijo queda en `NULL`.
 
 ---
 
@@ -197,6 +275,10 @@ materia punto  reto   meta reporte sesion pref_  tarea
 | cuenta → punto | CASCADE | Los puntos son del estudiante |
 | cuenta → reto | CASCADE | Los retos son del estudiante |
 | cuenta → meta | CASCADE | Las metas son del estudiante |
-| cuenta → reporte | CASCADE | Los reportes son del estudiante |
+| cuenta → notificacion | CASCADE | Las notificaciones pertenecen al estudiante destinatario |
 | cuenta → cuenta_insignia | CASCADE | Resolución de N:M, depende de cuenta |
 | insignia → cuenta_insignia | CASCADE | Resolución de N:M, depende de insignia |
+
+## 3.5 Regla derivada de nivel de cuenta
+
+`nivel_cuenta` no contiene una FK hacia `cuenta` ni requiere una tabla asociativa. Es un catálogo global ordenado por `puntos_minimos`. El nivel vigente de una cuenta se obtiene seleccionando el registro con el mayor valor de `puntos_minimos` que sea menor o igual a `SUM(punto.cantidad)` para esa cuenta. De esta forma, múltiples cuentas pueden compartir el mismo nivel sin duplicar sus datos y el nivel cambia automáticamente cuando aumenta el puntaje acumulado.

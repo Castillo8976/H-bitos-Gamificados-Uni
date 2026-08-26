@@ -29,7 +29,6 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | `CREATE TABLE reto` | reto | pk_reto (id_reto) | fk_reto_cta → cuenta CASCADE | puntos_recompensa > 0, progreso >= 0, completado IN (0,1) | uq_reto_sem (id_cuenta, semana) | progreso=0, completado=0 | §8 |
 | `CREATE TABLE meta` | meta | pk_meta (id_meta) | fk_meta_cta → cuenta CASCADE | valor_objetivo > 0, valor_actual >= 0, cumplida IN (0,1) | uq_meta_sem (id_cuenta, semana) | valor_actual=0, cumplida=0 | §9 |
 | `CREATE TABLE recordatorio` | recordatorio | pk_recordatorio (id_recordatorio) | fk_rec_tarea → tarea CASCADE · fk_rec_cuenta → cuenta CASCADE | enviado IN (0,1), activo IN (0,1) | — | enviado=0, activo=1 | §10 |
-| `CREATE TABLE reporte` | reporte | pk_reporte (id_reporte) | fk_rep_cuenta → cuenta CASCADE | tareas_completadas >= 0, horas_estudiadas >= 0, puntos_obtenidos >= 0 | uq_rep_sem (id_cuenta, semana) | todos=0, fecha_generado=DATE('now') | §11 |
 
 ---
 
@@ -44,7 +43,6 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | `idx_punto_cuenta` | punto | (id_cuenta) | Sumar puntos totales del estudiante | RNF02 |
 | `idx_reto_semana` | reto | (id_cuenta, semana) | Obtener reto activo de la semana | RNF02 |
 | `idx_recordatorio_pend` | recordatorio | (activo, enviado, fecha_programada) | Chequear recordatorios pendientes de envío | RNF15 |
-| `idx_reporte_semana` | reporte | (id_cuenta, semana) | Navegar historial de reportes semanales | RNF02 |
 
 ---
 

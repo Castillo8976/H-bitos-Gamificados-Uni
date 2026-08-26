@@ -61,7 +61,7 @@ Sistema de notificaciones personalizadas sobre entregas, sesiones programadas y 
 - No requiere registro en servidor externo ni autenticación con terceros (Google, Facebook, etc.).
 - No incluye funciones de colaboración en tiempo real entre estudiantes.
 - No tiene panel de administración con acceso desde internet público.
-- No genera reportes para docentes de forma automática (solo consulta de solo lectura por URL directa).
+- No genera estadísticas para docentes de forma automática ni las persiste (solo consulta de solo lectura por URL directa, calculada en tiempo real).
 
 ---
 
@@ -76,7 +76,7 @@ El alcance cubre los siguientes requisitos funcionales y no funcionales:
 | Recordatorios | RF04 | RNF15 |
 | Gamificación (puntos, insignias, retos) | RF05, RF06, RF07, RF08 | — |
 | Pomodoro y modo enfoque | RF10, RF12 | RNF02, RNF13 |
-| Reportes semanales | RF11 | RNF02 |
+| Tablero de Avance Personal (cálculo en tiempo real) | RF11 | RNF02 |
 | Personalización visual | RF13 | RNF04, RNF06, RNF07 |
 | Exportación de datos | RF14 | RNF04 |
 | Metas semanales sugeridas | RF15 | — |

@@ -22,7 +22,6 @@
  *   Reto              ← depende de Cuenta
  *   Meta              ← depende de Cuenta
  *   Recordatorio      ← depende de Cuenta y Tarea
- *   Reporte           ← depende de Cuenta
  * ```
  *
  * @module syncDatabase
@@ -38,7 +37,6 @@
  * @requires ./models/Reto
  * @requires ./models/Meta
  * @requires ./models/Recordatorio
- * @requires ./models/Reporte
  */
 
 const sequelize = require('./database'); // Instancia de conexión Sequelize a SQLite
@@ -62,7 +60,6 @@ require('./models/Punto');            // 8. Depende de Cuenta (FK: id_cuenta)
 require('./models/Reto');             // 9. Depende de Cuenta (FK: id_cuenta)
 require('./models/Meta');             // 10. Depende de Cuenta (FK: id_cuenta)
 require('./models/Recordatorio');     // 11. Depende de Cuenta y Tarea (FK: id_cuenta, id_tarea)
-require('./models/Reporte');          // 12. Depende de Cuenta (FK: id_cuenta)
 
 
 // ─────────────────────────────────────────
