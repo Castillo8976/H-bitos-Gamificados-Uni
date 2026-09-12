@@ -9,7 +9,7 @@
 
 | Arquetipo | Categoría | CU relacionado | RF que lo justifica |
 |---|---|---|---|
-| Estudiante | Actores | CU01–CU10 | RF01, HU01, HU03, HU05 |
+| Estudiante | Actores | CU01–CU12, CU15 | RF01–RF15 |
 | Cuenta | Actores | CU01, CU08 | RF01, RNF12 |
 | Materia | Gestión académica | CU01, CU02, CU07 | RF01, RF09 |
 | Tarea | Gestión académica | CU02, CU03, CU07 | RF02, RF03, RF09 |
@@ -20,3 +20,8 @@
 | Recordatorio | Seguimiento | CU10 | RF04, RNF15 |
 | Meta | Seguimiento | CU05 | RF15 |
 | Preferencia visual | Seguimiento | CU08 | RF13, RNF04 |
+| Cuenta–Insignia | Gamificación | CU06, CU14 | RF05 |
+| Nivel de cuenta | Gamificación | CU06, CU13 | RF07 |
+| Notificación | Seguimiento | CU15 | RF04, RNF15 |
+| Administrador | Actores | CU13, CU14 | RF01, RF05, RF07, RNF12 |
+| Revisor institucional | Actores | CU16 | RF11 |

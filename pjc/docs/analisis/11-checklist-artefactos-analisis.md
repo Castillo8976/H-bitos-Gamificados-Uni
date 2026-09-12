@@ -23,16 +23,16 @@ Este documento registra la revisión de los ocho puntos del checklist de Anális
 
 | N.° | Artefacto o actividad | Estado | Hallazgo principal |
 |---:|---|---|---|
-| 1 | Objetivos específicos | **Parcial** | OE01–OE05 ya tienen relación explícita con RF. OE06 es un objetivo de proceso y debe confirmarse si se conserva como objetivo específico o se traslada a metodología. |
-| 2 | HU del CRUD por entidad y RF por acción de ventana | **Parcial** | Existen 19 HU, pero no cubren explícitamente el CRUD de las 13 entidades ni contienen criterios de aceptación. Tampoco existe inventario botón/acción → RF → HU. |
-| 3 | Casos de uso general y específicos | **Parcial** | Existen 10 CU específicos con RF y se corrigió su persistencia a SQLite, pero falta separar y documentar formalmente el caso de uso general y normalizar los actores. |
-| 4 | Requisitos de interfaz externa | **Parcial** | Existe M1, pero incluye `localStorage` como sistema externo, conserva actores sin CU y no existe un catálogo formal de requisitos de interfaz. |
+| 1 | Objetivos específicos | **Completo** | OE01–OE05 están identificados y relacionados con RF. El antiguo OE06 se trasladó correctamente a Lineamiento Metodológico. |
+| 2 | HU del CRUD por entidad y RF por acción de ventana | **Completo** | HU01–HU28 tienen criterios de aceptación; las 13 entidades cuentan con cobertura CRUD o excepción justificada y existe inventario acción → RF → HU → CU. |
+| 3 | Casos de uso general y específicos | **Completo** | CUG01 delimita el sistema; CU01–CU16 están documentados y el modelo de actores fue normalizado. |
+| 4 | Requisitos de interfaz externa | **Completo** | M1 fue corregida y la ERS define RIE01–RIE05 con entradas, salidas, requisitos y criterios de aceptación. |
 | 5 | Metodología de trabajo | **Completo** | Está definida y justificada como desarrollo incremental por fases y ya referencia las matrices M1–M14. |
 | 6 | Tipo de investigación | **Completo** | Se define y justifica un enfoque mixto y una investigación aplicada, con relación a las técnicas de elicitación. |
-| 7 | HU, RF, RNF y RN actualizados | **Parcial** | Las RN están catalogadas, pero falta una ERS central; los RF/RNF solo aparecen dispersos y los RNF no están asociados formalmente con ISO 25010 ni formulados para pruebas. |
-| 8 | Matriz RF ↔ HU ↔ CU | **Faltante** | Hay relaciones parciales en distintos archivos, pero no existe una matriz única RF ↔ HU ↔ CU con cobertura bidireccional y criterios de aceptación ↔ atributos del MER. |
+| 7 | HU, RF, RNF y RN actualizados | **Completo** | La ERS consolida RF01–RF15 y RNF01–RNF15; los RNF incluyen ISO 25010, métrica y prueba; RN01–RN21 están validadas. |
+| 8 | Matriz RF ↔ HU ↔ CU | **Completo** | Existe una matriz única y bidireccional OE ↔ RF ↔ HU ↔ CU ↔ RN ↔ datos ↔ pantalla/acción. |
 
-**Conclusión:** 2 puntos completos, 5 parciales y 1 faltante. La fase de Análisis aún no puede declararse cerrada.
+**Conclusión:** los 8 puntos del checklist cuentan con evidencia documental y trazabilidad. La fase de Análisis queda completa a nivel de artefactos del repositorio.
 
 ---
 
@@ -40,7 +40,7 @@ Este documento registra la revisión de los ocho puntos del checklist de Anális
 
 ### Evidencia existente
 
-El archivo `05-objetivos-especificos.md` contiene seis objetivos específicos relacionados con tareas, Pomodoro, gamificación, tablero, personalización y aplicación de principios de ingeniería de software.
+El archivo `05-objetivos-especificos.md` contiene cinco objetivos específicos del producto relacionados con tareas, Pomodoro, gamificación, tablero y personalización. La aplicación de principios de ingeniería de software quedó clasificada como lineamiento metodológico.
 
 ### Validación
 
@@ -51,13 +51,13 @@ El archivo `05-objetivos-especificos.md` contiene seis objetivos específicos re
 | OE03 — Puntos, insignias y retos | RF03, RF05, RF06 y RF07 | Trazado en el artefacto. |
 | OE04 — Tablero de progreso | RF08 y RF11 | Trazado en el artefacto. |
 | OE05 — Configuración y personalización | RF13 y RF14; RNF04, RNF06 y RNF07 | Trazado en el artefacto y corregido para usar SQLite. |
-| OE06 — Aplicación de ingeniería de software | No corresponde directamente a una función del producto | Requiere tratarse como objetivo de proceso y relacionarlo con los artefactos, no forzar un RF funcional. |
+| Lineamiento metodológico — Aplicación de ingeniería de software | No requiere RF funcional | Trasladado fuera de los objetivos específicos y verificable mediante los artefactos del proyecto. |
 
-### Ajustes requeridos
+### Ajustes realizados
 
-1. Incorporar los identificadores OE01–OE06 en la redacción principal, además de la tabla de trazabilidad ya agregada.
-2. Confirmar con la docente si OE06 se conserva como objetivo específico de proceso o se traslada a la metodología.
-3. Si se conserva OE06, demostrarlo mediante los entregables de Análisis, Diseño y Construcción, sin asignarle artificialmente un RF funcional.
+1. Se incorporaron los identificadores OE01–OE05 en la redacción principal.
+2. El antiguo OE06 se trasladó a Lineamiento Metodológico porque no representa una capacidad del producto.
+3. Todos los objetivos específicos vigentes tienen uno o más RF asociados.
 
 ---
 
@@ -65,37 +65,37 @@ El archivo `05-objetivos-especificos.md` contiene seis objetivos específicos re
 
 ### Evidencia existente
 
-`07-casos-de-uso.md` contiene HU01–HU19. M12 relaciona pantallas con CU y RF, pero trabaja a nivel de pantalla y no a nivel de acción o botón.
+`07-casos-de-uso.md` contiene el índice HU01–HU28. `13-historias-usuario-criterios-aceptacion.md` documenta sus criterios y cobertura CRUD. `14-matriz-trazabilidad-analisis.md` relaciona cada acción con RF, HU y CU.
 
 ### Cobertura por entidad
 
-| Entidad aprobada | HU existente relacionada | Vacío que debe documentarse |
+| Entidad aprobada | HU relacionada | Cobertura actual |
 |---|---|---|
-| `cuenta` | HU01 | Consultar, actualizar, desactivar/eliminar y autenticarse no están separados con criterios de aceptación. |
-| `materia` | HU01, HU16 | Falta separar crear, consultar, actualizar y eliminar/desactivar. |
-| `tarea` | HU02, HU03, HU09, HU19 | La actualización aparece solo como flujo alternativo; faltan criterios de aceptación por operación. |
-| `sesion_estudio` | HU10 | Falta documentar consulta, actualización y eliminación de sesiones. |
-| `insignia` | HU05 | La administración del catálogo no tiene HU ni CU del actor responsable. |
-| `cuenta_insignia` | HU05 | Desbloqueo y consulta son automáticos; revocación no tiene HU ni CU. |
-| `punto` | HU03, HU07 | Otorgamiento y consulta están implícitos; eliminación administrativa no tiene HU ni CU. |
-| `reto` | HU06, HU18 | Existe gestión parcial; faltan criterios de aceptación por operación. |
-| `meta` | HU15, HU17 | Existe gestión parcial; faltan criterios de aceptación por operación. |
-| `recordatorio` | HU04 | Falta HU explícita para consultar, activar/desactivar y eliminar. |
-| `preferencia_visual` | HU13 | Crear/obtener/actualizar están agrupados; eliminación/restablecimiento no está especificado. |
-| `nivel_cuenta` | HU07 de forma indirecta | No existe HU para administrar el catálogo ni criterio para evaluar el nivel. |
-| `notificacion` | HU04 de forma indirecta | No existe HU explícita para listar, marcar como leída o eliminar notificaciones. |
+| `cuenta` | HU01, HU20, HU27 | Crear, consultar, actualizar y desactivar. |
+| `materia` | HU01, HU16 | Crear, consultar, actualizar y eliminar. |
+| `tarea` | HU02, HU03, HU09, HU19 | Crear, consultar, actualizar, completar, filtrar y eliminar. |
+| `sesion_estudio` | HU10, HU21 | Crear, consultar, actualizar y eliminar. |
+| `insignia` | HU05, HU22 | Consultar/desbloquear y CRUD administrativo del catálogo. |
+| `cuenta_insignia` | HU05, HU26 | Desbloquear, consultar y revocar; actualizar no aplica. |
+| `punto` | HU03, HU07, HU26 | Otorgar, consultar y corregir; actualizar no aplica por RN07. |
+| `reto` | HU06, HU18 | Crear, consultar, actualizar, completar y eliminar. |
+| `meta` | HU15, HU17 | Crear, consultar, actualizar, evaluar y eliminar. |
+| `recordatorio` | HU04, HU25 | Crear automáticamente, consultar, activar/desactivar y eliminar. |
+| `preferencia_visual` | HU01, HU13 | Crear automáticamente, consultar, actualizar y restablecer. |
+| `nivel_cuenta` | HU07, HU23 | Consultar/evaluar y CRUD administrativo del catálogo. |
+| `notificacion` | HU24 | Crear automáticamente, consultar, marcar como leída y eliminar. |
 
-### Hallazgo de trazabilidad de interfaz
+### Trazabilidad de interfaz
 
-M12 demuestra pantalla → CU → RF, pero no satisface la condición del checklist para cada acción. Por ejemplo, en una pantalla de tareas deben aparecer por separado las acciones `Crear`, `Consultar`, `Editar`, `Completar`, `Eliminar`, `Filtrar` y `Buscar`, cada una con su RF y HU de origen.
+M12 demuestra pantalla → CU → RF y `14-matriz-trazabilidad-analisis.md` completa el nivel acción/botón → RF → HU → CU. En tareas aparecen por separado `Crear`, `Consultar`, `Editar`, `Completar`, `Eliminar`, `Filtrar` y `Buscar`.
 
-### Ajustes requeridos
+### Ajustes realizados
 
-1. Mantener las HU existentes que sean válidas y agregar criterios de aceptación verificables.
-2. Dividir o complementar las HU cuando una operación CRUD no quede expresamente cubierta.
-3. Diferenciar operaciones del estudiante, operaciones automáticas del sistema y mantenimiento de catálogos por un actor autorizado.
-4. Crear el inventario pantalla → botón/acción → RF → HU → CU.
-5. No crear pantallas administrativas nuevas únicamente para completar una tabla: primero debe confirmarse con la docente si `insignia` y `nivel_cuenta` serán catálogos administrables o datos semilla.
+1. Se conservaron HU01–HU19 y se agregaron HU20–HU28 para los vacíos reales.
+2. Se añadieron criterios de aceptación verificables.
+3. Se diferenciaron acciones del Estudiante, del Administrador y automáticas del Sistema.
+4. Se justificaron las operaciones no aplicables por integridad.
+5. Se creó el inventario pantalla → acción → RF → HU → CU.
 
 ---
 
@@ -103,24 +103,17 @@ M12 demuestra pantalla → CU → RF, pero no satisface la condición del checkl
 
 ### Evidencia existente
 
-Existen CU01–CU10 con actores, precondición, flujo normal, flujos alternativos y postcondición. Todos tienen al menos un RF asociado en la tabla resumen.
+Existen CUG01 y CU01–CU16 con actores, precondición, flujo normal, flujos alternativos, postcondición y trazabilidad. Todos tienen al menos un RF asociado.
 
-### Inconsistencias
+### Ajustes realizados
 
-- No se distingue documentalmente entre el caso de uso general del sistema y los casos de uso específicos.
+- CUG01 distingue el caso de uso general de los casos específicos.
 - CU01, CU02, CU08, CU09 y CU10 ya fueron corregidos para describir persistencia en SQLite mediante el servidor.
-- Los actores `Estudiante`, `Usuario registrado` y `Persona con discapacidad física` se alternan sin una jerarquía formal de actores.
-- El Administrador aparece en M1 y M12, pero no tiene caso de uso asociado.
-- `Colaborador` y `Revisor institucional` aparecen como entidades externas, aunque su participación no está sustentada completamente por CU propios.
-- Las HU están incluidas dentro del documento de CU, pero no tienen criterios de aceptación ni referencia directa a un CU en cada fila.
+- `Usuario registrado` se definió como estado del Estudiante y la accesibilidad como condición de calidad.
+- Administrador y Revisor institucional cuentan con CU explícitos; Colaborador fue retirado por falta de sustento.
+- Las HU cuentan con criterios de aceptación y referencia a CU.
 
-### Ajustes requeridos
-
-1. Conservar CU01–CU10 y corregir sus referencias de persistencia a SQLite mediante el backend.
-2. Documentar el caso de uso general como límite del sistema y usar los CU específicos para detallar objetivos del actor.
-3. Normalizar la jerarquía de actores y eliminar duplicidades semánticas.
-4. Confirmar o retirar actores administrativos/institucionales que no tengan requisitos y CU aprobados.
-5. Agregar a cada CU: identificador, objetivo, actor principal, actores secundarios, disparador, precondiciones, flujo principal numerado, excepciones, postcondiciones, RF, HU y RN aplicables.
+La estructura completa se mantiene en `07-casos-de-uso.md` y su trazabilidad consolidada en `14-matriz-trazabilidad-analisis.md`.
 
 ---
 
@@ -130,19 +123,14 @@ Existen CU01–CU10 con actores, precondición, flujo normal, flujos alternativo
 
 M1 relaciona entidades externas, RF, CU y participación en el Diagrama de Contexto Arquitectónico.
 
-### Inconsistencias
+### Ajustes realizados
 
-- `localStorage` está registrado como sistema subordinado, aunque ya no es el mecanismo de persistencia aprobado.
-- La API de notificaciones del navegador sí constituye una interfaz externa técnica, pero necesita un requisito de interfaz verificable.
-- Administrador, Colaborador y Revisor institucional no tienen cobertura completa RF ↔ CU.
-- No se documentan de manera formal las interfaces de usuario, software y comunicación que requiere una ERS.
+- Se retiró `localStorage` de M1 y de la arquitectura vigente de Análisis.
+- Notifications API se documentó como interfaz RIE04 con flujo permitido/denegado.
+- Los actores vigentes tienen cobertura RF ↔ CU.
+- RIE01–RIE05 formalizan interfaz de usuario, comunicación, persistencia, notificaciones y exportación.
 
-### Ajustes requeridos
-
-1. Retirar `localStorage` del contexto vigente.
-2. Documentar la interacción navegador ↔ servidor HTTP y servidor ↔ SQLite como interfaces internas de arquitectura, sin confundirlas con actores humanos.
-3. Especificar la interfaz con Notifications API: solicitud de permiso, estados permitido/denegado y comportamiento alternativo.
-4. Formular requisitos de interfaz con identificador, descripción, origen, entradas, salidas y criterio de validación.
+La evidencia se encuentra en M1 y en la sección 6 de `12-especificacion-requisitos-software.md`.
 
 ---
 
@@ -174,55 +162,43 @@ El punto está cubierto documentalmente. Para la entrega en Word deben anexarse 
 
 ### Historias de usuario
 
-- Existen HU01–HU19.
-- Todas tienen formato básico “Como…, quiero…, para…”.
-- Ninguna presenta criterios de aceptación estructurados.
-- No todas las entidades y acciones CRUD están cubiertas de forma explícita.
+- Existen HU01–HU28.
+- Todas conservan el formato “Como…, quiero…, para…”.
+- Todas tienen criterios de aceptación estructurados en `13-historias-usuario-criterios-aceptacion.md`.
+- Las 13 entidades y sus acciones CRUD están cubiertas o tienen una excepción de integridad justificada.
 
 ### Requisitos funcionales
 
-- Se utilizan RF01–RF15 en los documentos.
-- No existe un archivo ERS que defina de forma oficial cada RF con descripción, entradas, proceso, salidas, prioridad, fuente y criterio de aceptación.
-- Las descripciones disponibles están repartidas entre alcance, CU y leyendas de matrices.
+- RF01–RF15 están consolidados en `12-especificacion-requisitos-software.md`.
+- Cada RF define descripción verificable, actor, entradas, resultado, origen, prioridad, HU/CU y RN.
 
 ### Requisitos no funcionales
 
-- Se citan identificadores hasta RNF15, pero no existe un catálogo completo y controlado.
-- Los RNF no están relacionados sistemáticamente con características de calidad ISO/IEC 25010.
-- Algunos RNF conservan la persistencia en `localStorage`, incompatible con la arquitectura vigente.
-- Faltan métricas, condiciones y métodos de prueba para demostrar cumplimiento.
+- RNF01–RNF15 forman un catálogo completo y controlado dentro de la ERS.
+- Cada RNF se relaciona con una característica de ISO/IEC 25010.
+- RNF04 define persistencia en SQLite.
+- Todos incluyen métrica, umbral y método de validación.
 
 ### Reglas de negocio
 
-- `10-reglas-de-negocio.md` cataloga RN01–RN19 y relaciona cada regla con entidades y RF/CU.
-- Las HU y los RF no incluyen todavía una columna o sección que indique qué RN aplican.
-- El propio documento mantiene una sección “Pendiente de verificación con el equipo”; por tanto, aún no puede considerarse aprobado.
+- `10-reglas-de-negocio.md` cataloga RN01–RN21 y relaciona cada regla con entidades y RF/CU.
+- Las HU y los RF indican las RN aplicables.
+- El catálogo incluye estado de validación y control para cambios futuros.
 
-### Ajustes requeridos
+### Evidencia de cierre
 
-1. Crear una ERS central sin cambiar los identificadores RF01–RF15 ya usados.
-2. Definir cada RNF con el patrón: condición, comportamiento esperado, métrica, umbral, atributo ISO 25010 y método de prueba.
-3. Agregar criterios de aceptación a todas las HU.
-4. Relacionar cada HU y RF con las RN que condicionan su ejecución.
-5. Corregir todas las referencias vigentes a `localStorage` dentro de Análisis.
+1. ERS: `12-especificacion-requisitos-software.md`.
+2. HU y criterios: `13-historias-usuario-criterios-aceptacion.md`.
+3. RN: `10-reglas-de-negocio.md`.
+4. Trazabilidad: `14-matriz-trazabilidad-analisis.md`.
 
 ---
 
 ## 8. Matriz de trazabilidad RF ↔ HU ↔ CU
 
-### Cobertura nominal recuperable
+### Cobertura consolidada
 
-Los RF01–RF15 aparecen relacionados con al menos una HU y un CU dentro de `07-casos-de-uso.md`. Sin embargo, esa relación no está presentada como una matriz única ni permite revisar trazabilidad en ambos sentidos.
-
-### Vacíos
-
-- No existe una tabla consolidada RF → HU → criterios de aceptación → CU.
-- No existe la revisión inversa HU → RF ni CU → RF para detectar elementos huérfanos.
-- No se relacionan objetivos específicos con RF.
-- No se relacionan acciones de interfaz con RF y HU.
-- No se relacionan atributos mencionados en criterios de aceptación con los nombres aprobados del MER.
-- M2 mezcla HU dentro de la columna “RF que lo justifica” y omite `cuenta_insignia`, `nivel_cuenta` y `notificacion`.
-- M5 también omite esas tres entidades y conserva RNF04 como persistencia en `localStorage`.
+`14-matriz-trazabilidad-analisis.md` permite revisar RF → HU → CU y la relación inversa. También conecta objetivos, reglas de negocio, entidades/atributos y acciones de pantalla. M2 y M5 fueron actualizadas para incluir `cuenta_insignia`, `nivel_cuenta` y `notificacion`, y RNF04 ya corresponde a SQLite.
 
 ### Estructura mínima requerida
 
@@ -234,22 +210,13 @@ La matriz debe permitir comprobar que no exista un objetivo, RF, HU, CU, entidad
 
 ---
 
-## Orden recomendado de corrección
+## Estado de cierre
 
-1. **Definir y aprobar la ERS:** catálogo formal RF01–RF15 y RNF con ISO 25010.
-2. **Cerrar los objetivos específicos:** incorporar los identificadores en la redacción y resolver la clasificación de OE06.
-3. **Completar las HU:** CRUD por entidad, criterios de aceptación y RN aplicables.
-4. **Actualizar CU01–CU10:** arquitectura vigente, actores y trazabilidad HU/RF/RN.
-5. **Construir la matriz consolidada:** OE ↔ RF ↔ HU ↔ CU ↔ RN ↔ entidad/atributo ↔ pantalla/acción.
-6. **Corregir M1 y matrices relacionadas:** retirar elementos obsoletos y eliminar actores o funciones no aprobados.
-7. **Integrar el contenido aprobado al documento Word:** el repositorio no contiene actualmente un archivo `.docx`; debe identificarse el documento maestro antes de hacer esta integración.
+Los ajustes documentales requeridos por la hoja ANÁLISIS fueron ejecutados. Como actividad de entrega, queda integrar estos artefactos al documento Word maestro cuando el equipo lo incorpore al repositorio y anexar las evidencias originales de encuesta/entrevista si la docente las solicita.
 
 ---
 
-## Dudas puntuales para consultar a la docente
+## Confirmaciones administrativas pendientes
 
-1. ¿Las 13 entidades requieren una HU CRUD completa incluso cuando son catálogos o registros automáticos, como `nivel_cuenta`, `cuenta_insignia` y `punto`?
-2. ¿El Administrador, el Colaborador y el Revisor institucional continúan dentro del alcance aprobado? Actualmente aparecen en matrices, pero no cuentan con cobertura completa de casos de uso.
-3. ¿La docente exige un estándar específico para la ERS —por ejemplo IEEE 830/29148— o basta con el formato institucional acompañado de criterios verificables?
-4. ¿Cuál archivo Word es el documento maestro de la entrega? No hay archivos `.docx`, `.doc` ni `.odt` dentro del repositorio actual.
-5. ¿El periodo y encabezado deben conservar “Ingeniería de Software II — 2025” como origen histórico o actualizarse a “Ingeniería de Software III — 2026” en todos los artefactos vigentes?
+1. Identificar el documento Word maestro; no hay archivos `.docx`, `.doc` ni `.odt` dentro del repositorio actual.
+2. Adjuntar o referenciar los instrumentos originales de encuesta y entrevista, si forman parte de la entrega evaluable.

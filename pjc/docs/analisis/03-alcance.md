@@ -1,7 +1,7 @@
 # Alcance del Proyecto
 
 **Proyecto:** Plataforma Web Gamificada para Hábitos de Estudio  
-**Asignatura:** Ingeniería de Software II — Uniremington  
+**Asignatura:** Ingeniería de Software III — Uniremington
 **Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
 **Docente:** Gloria Amparo Lora Patiño  
 
@@ -50,7 +50,7 @@ Sistema de notificaciones personalizadas sobre entregas, sesiones programadas y 
 ## Delimitaciones de Contexto
 
 - **Usuarios objetivo:** Estudiantes universitarios de instituciones privadas en Medellín, de primer a quinto semestre.
-- **Periodo de desarrollo:** Asignatura Ingeniería de Software II, año 2025.
+- **Periodo de desarrollo:** Asignatura Ingeniería de Software III, año 2026.
 - **Equipo de desarrollo:** Dos estudiantes de quinto semestre del programa Desarrollo de Software.
 - **Idioma:** Español, adaptado al contexto universitario colombiano.
 

@@ -1,7 +1,7 @@
 # Objetivo General
 
 **Proyecto:** Plataforma Web Gamificada para Hábitos de Estudio  
-**Asignatura:** Ingeniería de Software II — Uniremington  
+**Asignatura:** Ingeniería de Software III — Uniremington
 **Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
 **Docente:** Gloria Amparo Lora Patiño  
 

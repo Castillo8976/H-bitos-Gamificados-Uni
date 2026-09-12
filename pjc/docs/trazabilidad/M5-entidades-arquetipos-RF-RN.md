@@ -29,6 +29,8 @@ Esta matriz conecta cada entidad del modelo de datos con su arquetipo conceptual
 | **meta** | Meta | RF15 | 1 meta por semana por cuenta · objetivo no supera 120% del promedio histórico · valor_actual se actualiza automáticamente · cumplida se mantiene explícita por consistencia histórica |
 | **recordatorio** | Recordatorio | RF04 · RNF15 | Se genera automáticamente al crear una tarea con fecha · mínimo 24 h antes de la entrega · no se reenvía si enviado=TRUE · se elimina en cascada si se borra la tarea |
 | **preferencia_visual** | Preferencia visual | RF13 · RNF04 | Relación 1:1 con cuenta (UNIQUE en id_cuenta) · se crea automáticamente al registrar cuenta · tema IN {6 colores definidos} · datos persisten al reiniciar (RNF04) |
+| **nivel_cuenta** | Nivel de cuenta | RF07 | Catálogo global ordenado · nombre y orden únicos · puntos mínimos no negativos · el nivel se deriva del total acumulado |
+| **notificacion** | Notificación | RF04 · RNF15 | Pertenece a una cuenta · inicia no leída · puede marcarse como leída o eliminarse · se elimina en cascada con la cuenta |
 
 ---
 
@@ -50,6 +52,6 @@ Esta matriz conecta cada entidad del modelo de datos con su arquetipo conceptual
 | RF13 | Personalización visual |
 | RF15 | Metas semanales sugeridas |
 | RNF02 | Tiempo de respuesta ≤ 2 segundos |
-| RNF04 | Persistencia de datos en localStorage |
+| RNF04 | Persistencia de datos confirmados en SQLite después de reiniciar el servidor |
 | RNF12 | Contraseñas cifradas |
 | RNF15 | Notificaciones con Notifications API |
