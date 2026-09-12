@@ -35,9 +35,9 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 |---|---|
 | **Actores** | Estudiante, Persona con discapacidad física |
 | **Precondición** | El estudiante accede a la URL de la aplicación por primera vez. |
-| **Flujo normal** | 1. El estudiante pulsa "Crear cuenta". 2. Ingresa nombre, correo y contraseña. 3. Agrega al menos una materia con su horario. 4. El sistema valida los datos, cifra la contraseña y guarda en `localStorage`. 5. El sistema crea la preferencia visual predeterminada y redirige al Dashboard. |
+| **Flujo normal** | 1. El estudiante pulsa "Crear cuenta". 2. Ingresa nombre, correo y contraseña. 3. Agrega al menos una materia con su horario. 4. El sistema valida los datos, cifra la contraseña y guarda la cuenta y la materia en SQLite mediante el servidor. 5. El sistema crea la preferencia visual predeterminada y redirige al Dashboard. |
 | **Flujos alternativos** | A1: Correo ya registrado → el sistema muestra "Este correo ya existe". A2: Contraseña débil → el sistema solicita mínimo 6 caracteres. A3: Sin materia → el sistema bloquea el registro hasta agregar al menos una. |
-| **Postcondición** | La cuenta queda activa, los datos persisten en `localStorage` y el estudiante accede al Dashboard. |
+| **Postcondición** | La cuenta queda activa, los datos persisten en SQLite y el estudiante accede al Dashboard. |
 
 ---
 
@@ -47,7 +47,7 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 |---|---|
 | **Actores** | Estudiante, Usuario registrado |
 | **Precondición** | El usuario tiene una sesión activa en el sistema. |
-| **Flujo normal** | 1. El usuario pulsa "Nueva tarea". 2. Ingresa nombre, fecha de entrega, prioridad y materia (opcional). 3. El sistema valida que la fecha sea futura y el nombre no esté vacío. 4. Guarda la tarea en `localStorage` con estado "Pendiente". 5. Programa un recordatorio automático para 24 horas antes de la fecha de entrega. 6. La tarea aparece en la lista con su chip de prioridad. |
+| **Flujo normal** | 1. El usuario pulsa "Nueva tarea". 2. Ingresa nombre, fecha de entrega, prioridad y materia (opcional). 3. El sistema valida que la fecha sea futura y el nombre no esté vacío. 4. Guarda la tarea en SQLite mediante el servidor con estado "Pendiente". 5. Programa un recordatorio automático para 24 horas antes de la fecha de entrega. 6. La tarea aparece en la lista con su chip de prioridad. |
 | **Flujos alternativos** | A1: Fecha en el pasado → "La fecha debe ser futura". A2: Nombre vacío → "El nombre es obligatorio". A3: El usuario edita una tarea existente → los cambios se persisten y el recordatorio se reprograma. |
 | **Postcondición** | La tarea queda guardada con estado "Pendiente" y el recordatorio programado. |
 
@@ -121,9 +121,9 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 |---|---|
 | **Actores** | Estudiante |
 | **Precondición** | El usuario tiene una sesión activa en el sistema. |
-| **Flujo normal** | 1. El usuario accede a "Configuración / Preferencias". 2. El sistema carga las preferencias actuales desde `localStorage`. 3. El usuario selecciona un tema de color (purple, teal, amber, coral, blue, green). 4. El sistema aplica el nuevo tema inmediatamente (preview en tiempo real). 5. El usuario puede activar o desactivar el modo oscuro con un toggle. 6. El usuario selecciona un avatar de la galería. 7. El usuario pulsa "Guardar cambios" y el sistema persiste las preferencias. |
+| **Flujo normal** | 1. El usuario accede a "Configuración / Preferencias". 2. El sistema consulta las preferencias actuales en SQLite mediante el servidor. 3. El usuario selecciona un tema de color (purple, teal, amber, coral, blue, green). 4. El sistema aplica el nuevo tema inmediatamente (preview en tiempo real). 5. El usuario puede activar o desactivar el modo oscuro con un toggle. 6. El usuario selecciona un avatar de la galería. 7. El usuario pulsa "Guardar cambios" y el sistema persiste las preferencias. |
 | **Flujos alternativos** | A1: El usuario cierra sin guardar → el sistema restaura las preferencias anteriores. A2: El usuario activa modo oscuro → toda la interfaz cambia a la paleta oscura sin recargar la página. |
-| **Postcondición** | Las preferencias quedan guardadas en `localStorage` y la interfaz refleja el tema y modo elegidos. |
+| **Postcondición** | Las preferencias quedan guardadas en SQLite y la interfaz refleja el tema y modo elegidos. |
 
 ---
 
@@ -132,8 +132,8 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 | Campo | Descripción |
 |---|---|
 | **Actores** | Estudiante, Usuario registrado |
-| **Precondición** | El usuario tiene una sesión activa y al menos un registro guardado en `localStorage`. |
-| **Flujo normal** | 1. El usuario accede a "Exportar datos" desde Configuración. 2. El sistema muestra un resumen de los datos disponibles. 3. El usuario pulsa "Exportar como JSON". 4. El sistema recopila todos los datos del usuario almacenados en `localStorage`. 5. Genera un archivo `datos.json` mediante la Blob/Download API del navegador. 6. El navegador inicia la descarga automática. 7. El sistema muestra confirmación "Tus datos han sido exportados exitosamente". |
+| **Precondición** | El usuario tiene una sesión activa y al menos un registro almacenado en la base de datos. |
+| **Flujo normal** | 1. El usuario accede a "Exportar datos" desde Configuración. 2. El sistema muestra un resumen de los datos disponibles. 3. El usuario pulsa "Exportar como JSON". 4. El servidor consulta en SQLite los datos asociados a la cuenta. 5. El sistema genera un archivo `datos.json` y lo entrega al navegador. 6. El navegador inicia la descarga. 7. El sistema muestra la confirmación "Tus datos han sido exportados exitosamente". |
 | **Flujos alternativos** | A1: No hay datos guardados → "No tienes datos registrados para exportar" y deshabilita el botón. A2: El navegador bloquea la descarga automática → el sistema muestra un enlace directo. |
 | **Postcondición** | El usuario dispone de un archivo JSON con toda su información académica. |
 
@@ -145,7 +145,7 @@ Se identificaron **10 casos de uso principales** derivados de las historias de u
 |---|---|
 | **Actores** | Estudiante |
 | **Precondición** | El usuario tiene una sesión activa y el navegador ha concedido permiso para notificaciones. |
-| **Flujo normal** | 1. Al crear una tarea con fecha de entrega, el sistema programa automáticamente un recordatorio 24 horas antes. 2. El sistema muestra una lista de recordatorios activos. 3. El usuario puede desactivar un recordatorio con el toggle Activo/Inactivo. 4. El sistema actualiza el campo en `localStorage`. 5. Cuando llega la fecha programada, el sistema dispara la notificación. 6. Una vez enviada, el sistema marca `enviado = true` para no reenviar. |
+| **Flujo normal** | 1. Al crear una tarea con fecha de entrega, el sistema programa automáticamente un recordatorio 24 horas antes. 2. El sistema muestra una lista de recordatorios activos. 3. El usuario puede desactivar un recordatorio con el toggle Activo/Inactivo. 4. El sistema actualiza el registro en SQLite mediante el servidor. 5. Cuando llega la fecha programada, el sistema dispara la notificación. 6. Una vez enviada, el sistema marca `enviado = true` para no reenviar. |
 | **Flujos alternativos** | A1: Navegador sin permiso de notificaciones → el sistema solicita el permiso; si se rechaza, el recordatorio se guarda pero no dispara notificación nativa. A2: El usuario reactiva un recordatorio → el sistema lo reprograma si la fecha aún no ha pasado. A3: La tarea es eliminada → el sistema elimina el recordatorio en cascada. |
 | **Postcondición** | Los recordatorios activos se ejecutan automáticamente y quedan marcados como enviados. |
 

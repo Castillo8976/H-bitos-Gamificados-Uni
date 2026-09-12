@@ -45,7 +45,7 @@ Cada fase se cierra con documentación verificable (los entregables E1–E17 en 
 
 - **Control de versiones:** Git/GitHub, con historial de commits organizado por fase (`Análisis: ...`, `Diseño: ...`, `Semana X: ...`).
 - **Documentación de proceso:** `BITACORA.md` (registro de avance y decisiones técnicas del día a día) y `DECISIONES.md` (decisiones arquitectónicas justificadas y respaldadas por artefactos de diseño).
-- **Trazabilidad:** matrices M1–M13 en `/docs/trazabilidad`, que conectan entidades, RF, casos de uso, clases y diagramas.
+- **Trazabilidad:** matrices M1–M14 en `/docs/trazabilidad`, que conectan entidades, RF, casos de uso, clases y diagramas.
 
 ---
 

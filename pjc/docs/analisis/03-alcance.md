@@ -43,7 +43,7 @@ Sistema de notificaciones personalizadas sobre entregas, sesiones programadas y 
 | **Exportación** | Datos exportables en formato JSON mediante Blob/Download API |
 | **Notificaciones** | API nativa del navegador (Notifications API), respaldada por el modelo `Notificacion` en el servidor |
 
-> **Nota de corrección (revisión de agosto 2026):** la versión inicial de este documento describía una aplicación estática con `localStorage` y despliegue en GitHub Pages. Esa descripción correspondía a una etapa temprana del proyecto. La implementación actual (ver `/src`) usa Node.js, Express, Sequelize y SQLite con persistencia real en base de datos y CRUD del lado del servidor para las 14 entidades del sistema. Esta tabla se actualizó para reflejar la arquitectura real construida.
+> **Nota de corrección (revisión de agosto 2026):** la versión inicial de este documento describía una aplicación estática con `localStorage` y despliegue en GitHub Pages. Esa descripción correspondía a una etapa temprana del proyecto. La implementación actual (ver `/src`) usa Node.js, Express, Sequelize y SQLite con persistencia real en base de datos y CRUD del lado del servidor para las 13 entidades del sistema. Esta tabla se actualizó para reflejar la arquitectura real construida.
 
 ---
 
