@@ -1,0 +1,108 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="Actividad Act-06 Recordatorio y Notificacion">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="920" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="a61" value="Diagrama de Actividades — Act-06 · CU10 Disparar recordatorio y notificación" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="5" width="1000" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a62" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="400" y="60" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="a63" value="Llega fecha_programada
+del recordatorio" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="120" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a64" value="¿enviado = true
+ya?  RN18" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="190" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a65" value="Ignorar: ya fue enviado
+antes (evita duplicados)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="600" y="195" width="240" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a66" value="¿Notifications API
+permiso concedido?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="300" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a67" value="Guardar en BD sin disparar
+notificación nativa  RN19" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="400" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a68" value="Disparar notificación
+nativa del navegador" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="340" y="400" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a69" value="Marcar recordatorio
+enviado = true" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="480" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a610" value="Crear registro en
+notificacion  RN16" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="540" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a611" value="¿Usuario abre/marca
+la notificación?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="220" y="610" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a612" value="Marcar leida = true
+(individual o todas)  RN17" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="460" y="615" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a613" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="315" y="710" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a614" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;" vertex="1" parent="1">
+      <mxGeometry x="321" y="716" width="14" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="a615" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a62" target="a63">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a616" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a63" target="a64">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a617" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#993C1D;" edge="1" parent="1" source="a64" target="a65">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a618" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a64" target="a66">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a619" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#993C1D;" edge="1" parent="1" source="a66" target="a67">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a620" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a66" target="a68">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a621" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a67" target="a69">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a622" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a68" target="a69">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a623" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a69" target="a610">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a624" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a610" target="a611">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a625" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a611" target="a612">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a626" value="no (permanece
+sin leer)" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;dashed=1;" edge="1" parent="1" source="a611" target="a613">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a627" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a612" target="a613">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a628" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a65" target="a613">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

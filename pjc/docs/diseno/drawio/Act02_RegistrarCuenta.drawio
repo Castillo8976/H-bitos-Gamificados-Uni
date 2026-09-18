@@ -1,0 +1,94 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="Actividad Act-02 Registrar cuenta">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="a21" value="Diagrama de Actividades — Act-02 · CU01 Registrar cuenta" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="150" y="5" width="900" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a22" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="a23" value="Ingresar nombre, correo, contraseña
+y al menos una materia" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="240" y="120" width="300" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a24" value="¿Correo ya
+registrado?  RN01" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="290" y="190" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a25" value="Mostrar error: correo
+ya está en uso" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="195" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a26" value="¿Al menos 1
+materia?  RN03" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="290" y="300" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a27" value="Mostrar error: falta
+registrar una materia" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="305" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a28" value="Cifrar contraseña (hash)  RN02" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="410" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a29" value="Crear registro en tabla cuenta" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="470" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a210" value="Crear registro(s) en tabla materia" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="530" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a211" value="Crear preferencia_visual por defecto
+(relación 1:1)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="590" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a212" value="Redirigir a P03 Dashboard" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="650" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a213" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="375" y="720" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a214" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;" vertex="1" parent="1">
+      <mxGeometry x="381" y="726" width="14" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="a215" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a22" target="a23">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a216" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a23" target="a24">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a217" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#993C1D;" edge="1" parent="1" source="a24" target="a25">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a218" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a24" target="a26">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a219" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#993C1D;" edge="1" parent="1" source="a26" target="a27">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a220" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a26" target="a28">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a221" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a28" target="a29">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a222" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a29" target="a210">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a223" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a210" target="a211">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a224" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a211" target="a212">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a225" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a212" target="a213">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

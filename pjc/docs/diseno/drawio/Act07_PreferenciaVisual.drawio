@@ -1,0 +1,100 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="Actividad Act-07 Preferencia visual">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="a71" value="Diagrama de Actividades — Act-07 · CU08 Personalizar configuración visual" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="5" width="1000" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a72" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="a73" value="Abrir P13 Configuración" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="120" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a74" value="Cargar preferencia_visual
+actual de la cuenta (1:1)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="190" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a75" value="¿Qué cambia el
+usuario?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="260" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a76" value="Cambiar tema de color
+(6 opciones)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="370" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a77" value="Alternar modo oscuro" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="370" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a78" value="Cambiar avatar" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="370" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a79" value="Preview inmediato en
+la interfaz (sin guardar)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="450" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a710" value="Confirmar &apos;Guardar cambios&apos;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="520" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a711" value="Actualizar preferencia_visual
+vía API (SQLite)  RF13" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="580" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a712" value="Aplicar accesibilidad:
+fuente ≥14px, contraste 4.5:1  RNF04" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="640" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a713" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="375" y="710" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a714" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;" vertex="1" parent="1">
+      <mxGeometry x="381" y="716" width="14" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="a715" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a72" target="a73">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a716" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a73" target="a74">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a717" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a74" target="a75">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a718" value="tema" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a75" target="a76">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a719" value="modo oscuro" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a75" target="a77">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a720" value="avatar" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a75" target="a78">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a721" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a76" target="a79">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a722" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a77" target="a79">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a723" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a78" target="a79">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a724" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a79" target="a710">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a725" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a710" target="a711">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a726" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a711" target="a712">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a727" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a712" target="a713">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

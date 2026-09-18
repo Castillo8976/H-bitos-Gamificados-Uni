@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="Actividad Act-03 Gestionar tarea">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="740" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="a31" value="Diagrama de Actividades — Act-03 · CU02/CU07 Gestionar tarea (crear/editar/eliminar)" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="5" width="1000" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a32" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="480" y="60" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="a33" value="¿Crear, editar
+o eliminar?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="110" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a34" value="Ingresar nombre, fecha,
+prioridad, materia (opc)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="230" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a35" value="¿fecha_entrega
+&lt; hoy?  RN04" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="90" y="300" width="190" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a36" value="Rechazar: fecha en
+el pasado" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="305" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a37" value="Crear tarea (estado=Pendiente)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="410" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a38" value="Programar recordatorio
+-24h automático  RN05" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="470" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a39" value="Modificar nombre, fecha,
+prioridad o materia" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="360" y="230" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a310" value="Guardar cambios en tarea" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="360" y="300" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a311" value="Confirmar eliminación
+(acción irreversible)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="660" y="230" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a312" value="Eliminar tarea" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="660" y="300" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a313" value="Eliminar recordatorio(s)
+asociado(s)  RN06 CASCADE" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="660" y="360" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a314" value="Actualizar lista de tareas
+(P04)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="360" y="560" width="250" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a315" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="470" y="640" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a316" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;" vertex="1" parent="1">
+      <mxGeometry x="476" y="646" width="14" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="a317" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a32" target="a33">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a318" value="crear" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a33" target="a34">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a319" value="editar" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a33" target="a39">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a320" value="eliminar" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a33" target="a311">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a321" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a34" target="a35">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a322" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#993C1D;" edge="1" parent="1" source="a35" target="a36">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a323" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a35" target="a37">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a324" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a37" target="a38">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a325" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a38" target="a314">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a326" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a39" target="a310">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a327" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a310" target="a314">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a328" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a311" target="a312">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a329" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a312" target="a313">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a330" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a313" target="a314">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a331" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a314" target="a315">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>
