@@ -1,0 +1,161 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="02 - Diagrama de Casos de Uso General">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="cu1" value="Diagrama de Casos de Uso General — CUG01" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="500" y="10" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu2" value="Actualizado: 16 CU, 3 actores humanos + 1 sistema externo (antes solo tenía CU01-CU10, 2 actores)" style="text;html=1;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="400" y="40" width="900" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu3" value="Plataforma Web Gamificada de Hábitos de Estudio" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=none;strokeColor=#534AB7;strokeWidth=2;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="330" y="90" width="900" height="920" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu4" value="Estudiante" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;strokeColor=#2C2C2A;fillColor=none;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="480" width="40" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu5" value="Administrador" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;strokeColor=#2C2C2A;fillColor=none;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="200" width="40" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu6" value="Revisor
+institucional" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;strokeColor=#2C2C2A;fillColor=none;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="500" width="40" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu7" value="Notifications API
+(navegador)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;strokeColor=#2C2C2A;fillColor=none;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="820" width="40" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu8" value="CU01 Registrar cuenta
+y materias" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="130" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu9" value="CU02 Gestionar tareas
+académicas" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="130" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu10" value="CU03 Completar tarea y
+recibir recompensa" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="240" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu11" value="CU04 Sesión de estudio
+Pomodoro" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="240" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu12" value="CU05 Ver Tablero de
+Avance Personal" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="350" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu13" value="CU06 Gestionar insignias
+y retos" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="350" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu14" value="CU07 Filtrar y buscar
+tareas" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="460" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu15" value="CU08 Personalizar
+configuración visual" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="460" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu16" value="CU09 Exportar datos
+personales" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="570" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu17" value="CU10 Gestionar
+recordatorios" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="570" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu18" value="CU11 Gestionar perfil
+de cuenta" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="680" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu19" value="CU12 Gestionar historial
+de sesiones" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="680" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu20" value="CU13 Administrar cuentas
+y catálogos" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="790" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu21" value="CU14 Corregir movimientos
+y asignaciones" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="790" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu22" value="CU15 Gestionar
+notificaciones internas" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="900" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu23" value="CU16 Consultar indicadores
+institucionales" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="900" width="380" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu24" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu25" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu9">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu26" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu10">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu27" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu11">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu28" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu12">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu29" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu13">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu30" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu31" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu15">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu32" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu16">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu33" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu17">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu34" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu18">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu35" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu19">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu36" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#999999;" edge="1" parent="1" source="cu4" target="cu22">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu37" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#185FA5;" edge="1" parent="1" source="cu5" target="cu20">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu38" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#185FA5;" edge="1" parent="1" source="cu5" target="cu21">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu39" value="" style="html=1;fontSize=10;endArrow=none;strokeColor=#185FA5;" edge="1" parent="1" source="cu6" target="cu23">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu40" value="&lt;&lt;include&gt;&gt;" style="html=1;fontSize=10;endArrow=open;dashed=1;strokeColor=#0F6E56;fontColor=#0F6E56;" edge="1" parent="1" source="cu7" target="cu17">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu41" value="&lt;&lt;include&gt;&gt;" style="html=1;fontSize=10;endArrow=open;dashed=1;strokeColor=#0F6E56;fontColor=#0F6E56;" edge="1" parent="1" source="cu7" target="cu22">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cu42" value="Corrección: la versión anterior solo
+cubría CU01-CU10 y omitía por completo
+a Administrador y Revisor institucional.
+Ahora refleja el modelo de actores
+vigente de 07-casos-de-uso.md." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="40" y="900" width="300" height="110" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

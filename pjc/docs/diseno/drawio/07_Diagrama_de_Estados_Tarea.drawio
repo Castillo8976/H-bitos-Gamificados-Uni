@@ -1,0 +1,93 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="07 - Diagrama de Estados (Tarea)">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="650" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="st1" value="Diagrama de Estados — Tarea (actualizado)" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="800" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="st2" value="Pendiente/Completada = valores reales en BD. Vencida/En progreso = estados derivados en la UI (no hay columna adicional)" style="text;html=1;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="250" y="40" width="900" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="st3" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;" vertex="1" parent="1">
+      <mxGeometry x="400" y="100" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="st4" value="Pendiente
+(RF02 · persistido)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="160" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="st5" value="En progreso
+(RF10 · derivado)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="160" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="st6" value="Vencida
+(RF04 · derivado)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="280" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="st7" value="Completada
+(RF03,RF05 · persistido, final)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="280" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="st8" value="Eliminada
+(RF02 · final absorbente)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="420" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="st9" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="570" y="520" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="st10" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;" vertex="1" parent="1">
+      <mxGeometry x="576" y="526" width="14" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="st11" value="crear tarea" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="st3" target="st4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st12" value="iniciarSesión" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="st4" target="st5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st13" value="detenerSesión" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;dashed=1;" edge="1" parent="1" source="st5" target="st4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st14" value="DATE(now) &gt; fecha_entrega [auto]" style="html=1;fontSize=10;endArrow=block;strokeColor=#993C1D;dashed=1;" edge="1" parent="1" source="st4" target="st6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st15" value="DATE(now) &gt; fecha_entrega [auto]" style="html=1;fontSize=10;endArrow=block;strokeColor=#993C1D;dashed=1;" edge="1" parent="1" source="st5" target="st6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st16" value="marcarCompletada" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="st4" target="st7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st17" value="marcarCompletada" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="st5" target="st7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st18" value="marcarCompletada (tardía, sin bono)" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="st6" target="st7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st19" value="eliminar [CASCADE recordatorios]" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="st4" target="st8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st20" value="eliminar [CASCADE recordatorios]" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="st5" target="st8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st21" value="eliminar [CASCADE recordatorios]" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="st6" target="st8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st22" value="eliminar [CASCADE recordatorios]" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="st7" target="st8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st23" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="st7" target="st9">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st24" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="st8" target="st9">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="st25" value="fin" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="850" y="500" width="40" height="20" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

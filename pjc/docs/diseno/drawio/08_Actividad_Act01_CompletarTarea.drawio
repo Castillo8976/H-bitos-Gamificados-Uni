@@ -1,0 +1,99 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="08 - Actividad Act-01 Completar tarea">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="a11" value="Diagrama de Actividades — Act-01 · CU03 Completar tarea" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="a12" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="a13" value="Activar checkbox de la tarea" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="120" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a14" value="Cambiar estado a &quot;Completada&quot;" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="190" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a15" value="Otorgar puntos (RN08, RN07)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="260" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a16" value="¿Cumple condición
+de insignia?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="330" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a17" value="Desbloquear insignia (RN11)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="335" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a18" value="Mostrar animación de celebración" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="405" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a19" value="¿Progreso del reto
+semanal completo?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="470" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a110" value="Otorgar puntos del reto (RN10)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="475" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a111" value="Tablero de Avance se actualiza (tiempo real)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="600" width="320" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a112" value="Actualizar panel de progreso" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="660" width="320" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a113" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="380" y="730" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a114" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="386" y="736" width="14" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="a115" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a12" target="a13">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a116" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a13" target="a14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a117" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a14" target="a15">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a118" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a15" target="a16">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a119" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a16" target="a17">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a120" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a17" target="a18">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a121" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a16" target="a19">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a122" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a18" target="a19">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a123" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a19" target="a110">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a124" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a19" target="a111">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a125" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a110" target="a111">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a126" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a111" target="a112">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a127" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a112" target="a113">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a128" value="Recreado fielmente desde ActividadCompletarTarea.svg (ya vigente y correcto)" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="200" y="780" width="700" height="20" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

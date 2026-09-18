@@ -37,6 +37,10 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | P16 | Gestión de usuarios | Administrador | Administración | — |
 | P17 | Gestión de insignias y retos | Administrador | Administración | — |
 | P18 | Tablero institucional | Revisor institucional | Tablero | — |
+| P19 | Notificaciones | Estudiante | Notificaciones | — |
+| P20 | Recordatorios | Estudiante | Recordatorios | — |
+
+> **Corrección (checklist DISEÑO, ítem 9):** P19 y P20 no estaban en el inventario original aunque HU24/HU25 y CU15/CU10 ya las requerían, y `14-matriz-trazabilidad-analisis.md` ya las nombraba como "Notificaciones" y "Recordatorios" en su inventario de acciones. Sin estas dos pantallas, esas HU eran huérfanas de mapa de navegación. Se agregan aquí para cerrar esa brecha.
 
 ---
 
@@ -114,6 +118,8 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | P03 Dashboard | Ícono engranaje ⚙ | P13 Configuración | Panel desde la derecha | CU08 | RF13 |
 | P03 Dashboard | Sección "Tablero" | P11 Tablero | Slide → | CU05 | RF11 |
 | P03 Dashboard | Sección "Agenda" | P07 Agenda | Slide → | CU01 | RF01 |
+| P03 Dashboard | Icono de campana 🔔 | P19 Notificaciones | Panel desde la derecha | CU15 | RF04 |
+| P04 Lista tareas / P05 Detalle tarea | Sección "Recordatorios" | P20 Recordatorios | Slide → | CU10 | RF04 |
 
 ### 3.3 Flujo módulo Tareas
 
@@ -285,7 +291,9 @@ URL /revisor
 | P15 Panel admin | Administrador | — | RF01, RF05, RF06, RNF12 | — |
 | P16 Gestión usuarios | Administrador | — | RF01, RNF12 | — |
 | P17 Gestión insignias/retos | Administrador | — | RF05, RF06 | — |
-| P18 Tablero instit. | Revisor institucional | CU05 | RF11 | — |
+| P18 Tablero instit. | Revisor institucional | CU16 | RF11 | — |
+| P19 Notificaciones | Estudiante | CU15 | RF04, RNF15 | — |
+| P20 Recordatorios | Estudiante | CU10 | RF04, RNF15 | — |
 
 ### RF y RNF cubiertos por este entregable
 
@@ -293,7 +301,7 @@ URL /revisor
 |------|----------------|
 | Requisitos funcionales | RF01 · RF02 · RF03 · RF04 · RF05 · RF06 · RF07 · RF08 · RF09 · RF10 · RF11 · RF12 · RF13 · RF14 · RF15 |
 | Requisitos no funcionales | RNF04 · RNF07 · RNF12 |
-| Casos de uso cubiertos | CU01 · CU02 · CU03 · CU04 · CU05 · CU06 · CU07 · CU08 · CU09 · CU10 |
+| Casos de uso cubiertos | CU01 · CU02 · CU03 · CU04 · CU05 · CU06 · CU07 · CU08 · CU09 · CU10 · CU15 |
 
 ---
 

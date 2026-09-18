@@ -1,0 +1,63 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="01 - Diagrama de Contexto">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="650" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="ctx1" value="Diagrama de Contexto Arquitectónico (corregido)" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="400" y="20" width="500" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx2" value="Entidades externas vigentes — sin Colaborador ni localStorage" style="text;html=1;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="350" y="50" width="600" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx3" value="Plataforma Web Gamificada
+de Hábitos de Estudio
+
+· Sistema central ·
+Node.js/Express + SQLite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="480" y="300" width="340" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx4" value="Estudiante
+Incl. disc. física
+(&apos;Usuario registrado&apos; = mismo actor)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="260" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx5" value="" style="html=1;fontSize=10;endArrow=block;startArrow=block;strokeColor=#534AB7;" edge="1" parent="1" source="ctx3" target="ctx4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx6" value="Revisor institucional
+Métricas académicas (solo lectura)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="150" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx7" value="" style="html=1;fontSize=10;endArrow=block;startArrow=block;strokeColor=#185FA5;" edge="1" parent="1" source="ctx3" target="ctx6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx8" value="Administrador
+Config. cuentas y catálogos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="320" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx9" value="" style="html=1;fontSize=10;endArrow=block;startArrow=block;strokeColor=#185FA5;" edge="1" parent="1" source="ctx3" target="ctx8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx10" value="Notifications API
+Estado de permiso / navegador" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="480" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx11" value="" style="html=1;fontSize=10;endArrow=block;startArrow=block;strokeColor=#0F6E56;" edge="1" parent="1" source="ctx3" target="ctx10">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx12" value="Corrección de alcance:
+Se retiraron &apos;Colaborador&apos; (sin sustento
+de CU/autenticación) y &apos;localStorage&apos;
+(persistencia ahora en SQLite via
+servidor Node.js/Express, componente
+interno, no actor externo)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="60" y="480" width="300" height="110" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

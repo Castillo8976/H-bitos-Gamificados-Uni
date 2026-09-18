@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="W01 - Login">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="620" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="w11" value="W01 — Login (P01)" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="60" y="5" width="700" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="w12" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="420" height="520" as="geometry"/>
+    </mxCell>
+    <mxCell id="w13" value="LOGO
+Plataforma Gamificada" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="140" y="90" width="260" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="w14" value="Correo electrónico" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="100" y="180" width="340" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="w15" value="Contraseña" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="100" y="240" width="340" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="w16" value="INICIAR SESIÓN" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="300" width="340" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="w17" value="¿Olvidaste tu contraseña?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="360" width="340" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="w18" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cccccc;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="410" width="340" height="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="w19" value="¿No tienes cuenta?  Regístrate →" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="430" width="340" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="w110" value="⚠ Banner de error (clic inválido)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;dashed=1;fontSize=9;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="490" width="340" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="w111" value="Componentes:
+- Logo / nombre del sistema
+- Input correo (RF01)
+- Input contraseña
+- Botón Iniciar sesión → P03 Dashboard
+- Enlace Regístrate → P02 Registro
+- Banner de error (credenciales inválidas)
+
+Accesibilidad: fuente ≥14px, contraste 4.5:1 (RNF06)" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="520" y="90" width="400" height="260" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

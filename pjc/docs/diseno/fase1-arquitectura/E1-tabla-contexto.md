@@ -13,19 +13,18 @@ La tabla de contexto define el sistema central y todas las entidades externas qu
 ## Sistema Central
 
 > **Plataforma Web Gamificada de Hábitos de Estudio**  
-> Aplicación web estática (HTML, CSS, JavaScript) desplegada en GitHub Pages, con almacenamiento en `localStorage`. Opera 100 % offline tras la primera carga.
+> Aplicación web con frontend HTML/CSS/JavaScript y persistencia en SQLite mediante un servidor Node.js/Express (ver `12-especificacion-requisitos-software.md`). El navegador, el servidor y SQLite son componentes internos de la solución, no entidades externas.
 
 ## Entidades Externas
 
 | ID | Entidad Externa | Tipo | Descripción |
 |---|---|---|---|
-| E1 | Estudiante / Persona con discapacidad física | Usuario principal | Actor central. Crea cuenta, registra materias, gestiona tareas y recibe recompensas gamificadas. Interfaz accesible (fuente 14px, responsive). |
-| E2 | Usuario registrado | Usuario secundario | Persona registrada con acceso a tareas, filtros, recordatorios, personalización visual y exportación de datos. |
-| E3 | Colaborador | Entidad par | Aporta retos, metas sugeridas y frases motivacionales. No gestiona usuarios ni tiene acceso administrativo. |
-| E4 | Revisor institucional | Sistema superior | Docente o coordinador con acceso de solo lectura al Tablero de Avance Personal y métricas de uso, calculadas en tiempo real. |
-| E5 | Administrador del sistema | Sistema superior | Acceso total. Gestiona cuentas, configura insignias y retos, supervisa integridad y seguridad. |
-| E6 | Notifications API del navegador | Sistema subordinado | API nativa del navegador. Lanza alertas locales sin servidor. Activable/desactivable desde configuración. |
-| E7 | localStorage del navegador | Sistema subordinado | Almacena datos JSON en el dispositivo del usuario. Sin base de datos externa. Funciona 100 % offline. |
+| E1 | Estudiante / Persona con discapacidad física | Usuario principal | Actor central. Crea cuenta, registra materias, gestiona tareas y recibe recompensas gamificadas. Interfaz accesible (fuente ≥14px, responsive). "Usuario registrado" es un estado de este mismo actor, no un actor diferente (ver `07-casos-de-uso.md`). |
+| E4 | Revisor institucional | Usuario de solo lectura | Docente o coordinador con acceso de solo lectura al Tablero de Avance Personal y métricas de uso, calculadas en tiempo real (CU16). |
+| E5 | Administrador del sistema | Usuario autorizado | Gestiona cuentas y catálogos de gamificación (insignias, niveles); no modifica el historial append-only de puntos (CU13, CU14). |
+| E6 | Notifications API del navegador | Sistema externo | API nativa del navegador. Lanza alertas locales según el permiso concedido. Activable/desactivable desde configuración (CU10, CU15). |
+
+> **Corrección de alcance (alineada con `M1_entidades_externas.md`):** se retiraron `E2 — Usuario registrado` (fusionado con Estudiante, no es un actor distinto), `E3 — Colaborador` (sin autenticación, caso de uso ni intercambio implementado que lo sustente) y `E7 — localStorage` (la persistencia vigente es SQLite vía Node.js/Express; el navegador ya no persiste datos localmente). Los IDs E1, E4, E5, E6 se conservan sin renumerar para no romper referencias cruzadas en E2 y en el DCA.
 
 ## Representación del Contexto
 
@@ -33,6 +32,7 @@ La tabla de contexto define el sistema central y todas las entidades externas qu
   ┌──────────────────────────────────────────────────────┐
   │           SISTEMA CENTRAL                            │
   │   Plataforma Web Gamificada de Hábitos de Estudio    │
+  │        (Node.js/Express + SQLite)                    │
   │                                                      │
   │  ┌─────────────┐  ┌──────────────┐  ┌────────────┐  │
   │  │ Módulo Auth │  │ Módulo Tareas│  │  Módulo    │  │
@@ -43,7 +43,7 @@ La tabla de contexto define el sistema central y todas las entidades externas qu
   │  │Gamificación │  │  Tablero     │  │  Config.   │  │
   │  └─────────────┘  └──────────────┘  └────────────┘  │
   └──────────────────────────────────────────────────────┘
-       ▲            ▲            ▲             ▲
-       │            │            │             │
-   E1/E2        E3/E4/E5       E6            E7
- Estudiantes   Colaborador   Notif. API  localStorage
+       ▲                  ▲                    ▲
+       │                  │                    │
+      E1                E4/E5                  E6
+   Estudiante    Revisor / Administrador   Notif. API

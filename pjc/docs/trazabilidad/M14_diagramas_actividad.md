@@ -11,13 +11,15 @@
 
 | Diagrama | CU / CRUD cubierto | Archivo | RN involucradas |
 |---|---|---|---|
-| **Act-01** Completar tarea y recibir recompensa | CU03 / `tareaCrud`, `puntoCrud`, `insigniaCrud`, `retoCrud` | `docs/diseno/imagenes/ActividadCompletarTarea.svg` | RN07, RN08, RN10, RN11 |
-| **Act-02** Registrar cuenta | CU01 / `cuentaCrud` | `docs/diseno/imagenes/Act02_RegistrarCuenta.svg` | RN01, RN02, RN03 |
-| **Act-03** Gestionar tarea (crear/editar/eliminar) | CU02, CU07, HU19 / `tareaCrud` | `docs/diseno/imagenes/Act03_GestionarTarea.svg` | RN04, RN05, RN06 |
-| **Act-04** Sesión de estudio Pomodoro | CU04 / `sesionEstudioCrud` | `docs/diseno/imagenes/Act04_SesionEstudio.svg` | — (regla de duración pendiente de confirmar, ver M9) |
-| **Act-05** Evaluar progreso de reto y meta | CU06 / `retoCrud`, `metaCrud` | `docs/diseno/imagenes/Act05_RetoMeta.svg` | RN10, RN12, RN13 |
-| **Act-06** Disparar recordatorio y notificación | CU10 / `recordatorioCrud`, `notificacionCrud` | `docs/diseno/imagenes/Act06_RecordatorioNotificacion.svg` | RN16, RN17, RN18, RN19 |
-| **Act-07** Personalizar configuración visual | CU08 / `preferenciaVisualCrud` | `docs/diseno/imagenes/Act07_PreferenciaVisual.svg` | RF13, RNF04 |
+| **Act-01** Completar tarea y recibir recompensa | CU03 / `tareaCrud`, `puntoCrud`, `insigniaCrud`, `retoCrud` | `docs/diseno/imagenes/ActividadCompletarTarea.svg` ✅ existe | RN07, RN08, RN10, RN11 |
+| **Act-02** Registrar cuenta | CU01 / `cuentaCrud` | `docs/diseno/imagenes/Act02_RegistrarCuenta.svg` ⚠️ pendiente de crear | RN01, RN02, RN03 |
+| **Act-03** Gestionar tarea (crear/editar/eliminar) | CU02, CU07, HU19 / `tareaCrud` | `docs/diseno/imagenes/Act03_GestionarTarea.svg` ⚠️ pendiente de crear | RN04, RN05, RN06 |
+| **Act-04** Sesión de estudio Pomodoro | CU04 / `sesionEstudioCrud` | `docs/diseno/imagenes/Act04_SesionEstudio.svg` ✅ existe | — (regla de duración pendiente de confirmar, ver M9) |
+| **Act-05** Evaluar progreso de reto y meta | CU06 / `retoCrud`, `metaCrud` | `docs/diseno/imagenes/Act05_RetoMeta.svg` ⚠️ pendiente de crear | RN10, RN12, RN13 |
+| **Act-06** Disparar recordatorio y notificación | CU10 / `recordatorioCrud`, `notificacionCrud` | `docs/diseno/imagenes/Act06_RecordatorioNotificacion.svg` ⚠️ pendiente de crear | RN16, RN17, RN18, RN19 |
+| **Act-07** Personalizar configuración visual | CU08 / `preferenciaVisualCrud` | `docs/diseno/imagenes/Act07_PreferenciaVisual.svg` ⚠️ pendiente de crear | RF13, RNF04 |
+
+> **Corrección (checklist DISEÑO, ítem 6, revisión septiembre 2026):** esta tabla listaba Act-01 a Act-07 como "diagramas de actividad completados", pero solo Act-01 y Act-04 existen realmente como archivo en `docs/diseno/imagenes/`. Act-02, Act-03, Act-05, Act-06 y Act-07 estaban descritos aquí (CU, CRUD y RN ya definidos) pero el archivo SVG nunca se creó — quedan marcados como pendientes hasta que se dibujen siguiendo el mismo estilo de Act-01/Act-04.
 
 Act-01 se eligió primero como plantilla porque es el flujo con más ramas de decisión del sistema (insignia, reto se evalúan en cadena). Los seis restantes (Act-02 a Act-07) cubren cada CRUD principal del sistema, cerrando el punto "diagrama de actividades por cada CRUD" del checklist original.
 

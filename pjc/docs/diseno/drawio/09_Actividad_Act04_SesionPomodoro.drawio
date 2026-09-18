@@ -1,0 +1,96 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="09 - Actividad Act-04 Sesion Pomodoro">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="a41" value="Diagrama de Actividades — Act-04 · CU04 Sesión Pomodoro" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="150" y="10" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="a42" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="a43" value="¿Modo Pomodoro
+o libre?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="110" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a44" value="Iniciar ciclo 25min enfoque" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="90" y="220" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a45" value="Iniciar cronómetro libre" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="460" y="220" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a46" value="Bloquear notificaciones
+(modo_enfoque)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="90" y="280" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a47" value="¿Usuario
+pausó?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="110" y="350" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a48" value="Pausar / reanudar" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="20" y="450" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a49" value="Descanso corto (5min)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="90" y="520" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a410" value="Guardar sesión
+(duración, fecha)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="600" width="260" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a411" value="Tablero de Avance refleja
+horas (tiempo real) RF11" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="660" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="a412" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="375" y="730" width="26" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="a413" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="381" y="736" width="14" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="a414" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a42" target="a43">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a415" value="Pomodoro" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a43" target="a44">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a416" value="libre" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a43" target="a45">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a417" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a44" target="a46">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a418" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a46" target="a47">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a419" value="sí" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a47" target="a48">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a420" value="no" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a47" target="a49">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a421" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;dashed=1;" edge="1" parent="1" source="a48" target="a47">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a422" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a49" target="a410">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a423" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a45" target="a410">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a424" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a410" target="a411">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a425" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="a411" target="a412">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a426" value="Recreado fielmente desde Act04_SesionEstudio.svg (ya vigente y correcto)" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="150" y="780" width="700" height="20" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

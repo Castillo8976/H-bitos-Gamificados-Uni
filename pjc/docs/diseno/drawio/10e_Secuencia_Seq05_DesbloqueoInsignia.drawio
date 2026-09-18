@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="Secuencia Seq-05 Desbloqueo de insignia">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="650" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="s51" value="Diagrama de Secuencia — Seq-05 · CU06 Desbloqueo de insignia" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="5" width="1000" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="s52" value="Reemplaza ModuloRecompensas/InterfazGamificación de M10 por las clases del diccionario" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="30" width="1000" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="s53" value=":Tarea" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="25" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s54" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="100" y="120" as="sourcePoint"/>
+        <mxPoint x="100" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s55" value=":Insignia" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="245" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s56" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="120" as="sourcePoint"/>
+        <mxPoint x="320" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s57" value=":CuentaInsignia" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="485" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s58" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="120" as="sourcePoint"/>
+        <mxPoint x="560" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s59" value=":Interfaz" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="725" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s510" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="120" as="sourcePoint"/>
+        <mxPoint x="800" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s511" value="Estudiante" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="960" y="60" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="s512" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="980" y="120" as="sourcePoint"/>
+        <mxPoint x="980" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s513" value="1: evaluarCondicion(total) [al completar tarea]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="100" y="140" as="sourcePoint"/>
+        <mxPoint x="320" y="140" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s514" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="314" y="170" width="12" height="340" as="geometry"/>
+    </mxCell>
+    <mxCell id="s515" value="alt  [cumple condición] / [A1: no cumple]" style="shape=umlFrame;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;fontSize=10;align=left;verticalAlign=top;width=60;height=20;" vertex="1" parent="1">
+      <mxGeometry x="60" y="165" width="1000" height="260" as="geometry"/>
+    </mxCell>
+    <mxCell id="s516" value="2: desbloquear() [RN11]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="195" as="sourcePoint"/>
+        <mxPoint x="560" y="195" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s517" value="3: registrar(fecha_obtenida)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;exitX=1;exitY=0;entryX=1;entryY=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="230" as="sourcePoint"/>
+        <mxPoint x="630" y="260" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s518" value="4: insignia desbloqueada" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="270" as="sourcePoint"/>
+        <mxPoint x="800" y="270" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s519" value="5: modal de celebración" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="305" as="sourcePoint"/>
+        <mxPoint x="980" y="305" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s520" value="— — — A1: no cumple la condición — — —" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="290" y="345" width="500" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s521" value="A1: actualizar contador de progreso" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;exitX=1;exitY=0;entryX=1;entryY=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="370" as="sourcePoint"/>
+        <mxPoint x="390" y="400" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s522" value="A1: sin cambio visible (progreso interno)" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="415" as="sourcePoint"/>
+        <mxPoint x="800" y="415" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

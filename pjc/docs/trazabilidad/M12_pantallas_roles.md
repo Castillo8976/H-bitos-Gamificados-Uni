@@ -23,7 +23,11 @@
 | P12 | Filtros y búsqueda de tareas | Estudiante | CU07 | RF09 | — |
 | P13 | Configuración / Preferencias | Estudiante | CU08 | RF13, RNF04 | W06 |
 | P14 | Exportar datos | Estudiante | CU09 | RF14 | — |
-| P15 | Panel de administración | Administrador | — | RF01, RF05, RF06, RNF12 | — |
-| P16 | Gestión de usuarios | Administrador | — | RF01, RNF12 | — |
-| P17 | Gestión de insignias y retos | Administrador | — | RF05, RF06 | — |
-| P18 | Tablero institucional (solo lectura) | Revisor institucional | CU05 | RF11 | — |
+| P15 | Panel de administración | Administrador | CU13, CU14 | RF01, RF05, RF07, RNF12 | — |
+| P16 | Gestión de usuarios | Administrador | CU13 | RF01, RNF12 | — |
+| P17 | Gestión de insignias y niveles | Administrador | CU13, CU14 | RF05, RF07 | — |
+| P18 | Tablero institucional (solo lectura) | Revisor institucional | CU16 | RF11 | — |
+| P19 | Notificaciones | Estudiante | CU15 | RF04, RNF15 | — |
+| P20 | Recordatorios | Estudiante | CU10 | RF04, RNF15 | — |
+
+> **Corrección (revisión septiembre 2026):** se agregaron P19 y P20, ya incorporadas en `entregable_15_mapa_navegacion.md` pero ausentes de esta matriz.

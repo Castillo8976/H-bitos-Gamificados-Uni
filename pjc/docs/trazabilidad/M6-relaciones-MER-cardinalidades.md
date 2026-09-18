@@ -29,6 +29,9 @@ Esta matriz conecta cada relación del MER Conceptual (E8) con su cardinalidad, 
 | **cuenta** | participa en | reto | **1 : N** | id_cuenta FK en reto + UNIQUE(id_cuenta, semana) | ON DELETE CASCADE | Un reto semanal por estudiante, acumulando muchos a lo largo del tiempo. RF06. |
 | **cuenta** | recibe | meta | **1 : N** | id_cuenta FK en meta + UNIQUE(id_cuenta, semana) | ON DELETE CASCADE | Una meta semanal por cuenta. Se acumula semana a semana. RF15. |
 | **tarea** | genera | recordatorio | **1 : N** | id_tarea FK en recordatorio | ON DELETE CASCADE | Al crear una tarea con fecha se genera un recordatorio automático. Una tarea puede tener varios. RF04. |
+| **cuenta** | posee | recordatorio | **1 : N** | id_cuenta FK en recordatorio | ON DELETE CASCADE | Cada recordatorio pertenece también directamente a la cuenta (no solo a la tarea), para listarlos sin pasar por tarea. RF04. |
+| **cuenta** | recibe | notificacion | **1 : N** | id_cuenta FK en notificacion | ON DELETE CASCADE | Un estudiante recibe muchas notificaciones internas (insignia, reto, meta, nivel, sistema). RF04, RNF15. |
+| **cuenta** | alcanza | nivel_cuenta | **N : 1 (derivada)** | Sin FK — se calcula comparando SUM(punto.cantidad) contra nivel_cuenta.puntos_minimos | No aplica (no hay FK física) | El nivel de la cuenta no se persiste; se deriva en tiempo real del total de puntos acumulados. RF07, RN15. |
 
 ---
 
@@ -37,10 +40,11 @@ Esta matriz conecta cada relación del MER Conceptual (E8) con su cardinalidad, 
 | Tipo de cardinalidad | Relaciones | Entidades involucradas |
 |---|---|---|
 | **1:1** | 1 | cuenta ↔ preferencia_visual |
-| **1:N obligatoria** | 8 | cuenta → materia, tarea, sesion_estudio, punto, reto, meta; tarea → recordatorio; cuenta → cuenta_insignia (lado 1) |
+| **1:N obligatoria** | 11 | cuenta → materia, tarea, sesion_estudio, punto, reto, meta, recordatorio, notificacion; tarea → recordatorio; cuenta → cuenta_insignia (lado 1) |
 | **1:N opcional (nullable)** | 2 | materia → tarea (opt), tarea → sesion_estudio (opt) |
 | **N:M** | 1 | cuenta ↔ insignia (resuelta por cuenta_insignia) |
-| **Total** | **12** | |
+| **N:1 derivada (sin FK)** | 1 | cuenta → nivel_cuenta |
+| **Total** | **16** | |
 
 ---
 
@@ -54,3 +58,7 @@ Esta matriz conecta cada relación del MER Conceptual (E8) con su cardinalidad, 
 | tarea → recordatorio | CASCADE | SET NULL | El recordatorio no tiene razón de existir sin la tarea que lo generó |
 | cuenta → cuenta_insignia | CASCADE | RESTRICT | Al eliminar una cuenta, sus insignias desbloqueadas no tienen utilidad |
 | insignia → cuenta_insignia | CASCADE | RESTRICT | Al eliminar una insignia del catálogo, se eliminan todos los registros de obtención |
+| cuenta → notificacion | CASCADE | RESTRICT | Las notificaciones no tienen utilidad sin la cuenta que las recibe |
+| cuenta → nivel_cuenta | N/A (derivada) | FK física | Se evita una FK que habría que sincronizar en cada otorgamiento de puntos; se calcula al vuelo, evitando datos desactualizados |
+
+> **Corrección (revisión septiembre 2026):** se agregaron las 3 relaciones que involucran a `notificacion`, la doble referencia de `recordatorio` hacia `cuenta` (además de `tarea`) y la relación derivada `cuenta → nivel_cuenta`, ausentes de la versión original de esta matriz.

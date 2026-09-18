@@ -1,0 +1,127 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="Secuencia Seq-04 Tablero de Avance">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="650" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="s41" value="Diagrama de Secuencia — Seq-04 · CU05 Tablero de Avance Personal" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="5" width="1000" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="s42" value="Reemplaza InterfazTablero/ServicioEstadisticas de M10 por las clases de dominio que agregan los datos (sin snapshot)" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="30" width="1000" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="s43" value="Estudiante" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="s44" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="80" y="120" as="sourcePoint"/>
+        <mxPoint x="80" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s45" value=":Interfaz" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="185" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s46" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="120" as="sourcePoint"/>
+        <mxPoint x="260" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s47" value=":Punto" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="385" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s48" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="460" y="120" as="sourcePoint"/>
+        <mxPoint x="460" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s49" value=":SesionEstudio" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="585" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s410" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="660" y="120" as="sourcePoint"/>
+        <mxPoint x="660" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s411" value=":Tarea" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="825" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s412" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="120" as="sourcePoint"/>
+        <mxPoint x="900" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s413" value="1: solicitarTablero()" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="80" y="140" as="sourcePoint"/>
+        <mxPoint x="260" y="140" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s414" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="254" y="170" width="12" height="340" as="geometry"/>
+    </mxCell>
+    <mxCell id="s415" value="alt  [hay datos suficientes] / [A1: sin datos]" style="shape=umlFrame;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;fontSize=10;align=left;verticalAlign=top;width=60;height=20;" vertex="1" parent="1">
+      <mxGeometry x="220" y="165" width="1000" height="260" as="geometry"/>
+    </mxCell>
+    <mxCell id="s416" value="2: calcularTotal() [SUM cantidad]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="195" as="sourcePoint"/>
+        <mxPoint x="460" y="195" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s417" value="total de puntos" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="460" y="225" as="sourcePoint"/>
+        <mxPoint x="260" y="225" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s418" value="3: calcularHorasEstudiadas() [SUM duracion_minutos]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="255" as="sourcePoint"/>
+        <mxPoint x="660" y="255" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s419" value="horas acumuladas" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="660" y="285" as="sourcePoint"/>
+        <mxPoint x="260" y="285" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s420" value="4: contarCompletadas() [COUNT estado]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="315" as="sourcePoint"/>
+        <mxPoint x="900" y="315" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s421" value="tareas completadas" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="345" as="sourcePoint"/>
+        <mxPoint x="260" y="345" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s422" value="5: muestra dashboard (calculado en tiempo real, sin snapshot)" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="380" as="sourcePoint"/>
+        <mxPoint x="80" y="380" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s423" value="— — — A1: sin datos suficientes — — —" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="230" y="420" width="500" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s424" value="A1: muestra estado vacío informativo" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="440" as="sourcePoint"/>
+        <mxPoint x="80" y="440" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

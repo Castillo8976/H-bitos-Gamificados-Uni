@@ -1,9 +1,13 @@
 # Entregable 16 — Wireframes de Baja Fidelidad
 
-**Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio — *Tu Agenda Inteligente*  
-**Asignatura:** Ingeniería de Software II  
+**Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio  
+**Asignatura:** Ingeniería de Software III  
 **Institución:** Uniremington — Medellín  
 **Fase:** Fase 4 — Diseño de Interfaz de Usuario
+
+> **Corrección (revisión septiembre 2026):** el encabezado decía "Ingeniería de Software II" y usaba el nombre anterior del proyecto ("Tu Agenda Inteligente"), inconsistentes con `docs/analisis` (ya en Software III). También se corrigió, en W06 más abajo, la referencia a `localStorage` como mecanismo de persistencia — es SQLite vía servidor Node.js/Express (ver `E1-tabla-contexto.md`).
+>
+> **Archivos `.drawio`:** los 6 wireframes (W01–W06) ya están disponibles como archivos `.drawio` independientes, fieles a la estructura descrita en ASCII más abajo, para quien prefiera editarlos visualmente en vez de leer el texto.
 
 ---
 
@@ -473,7 +477,7 @@ En descanso:      [ ⏸ Pausar ] [ ⏹ ]     → fondo #E1F5EE
 | Notificaciones | Botón "Solicitar permiso" | Clic | Muestra diálogo nativo del navegador para notificaciones |
 | Datos | Botón "Exportar JSON" | Clic | Navega a P14 · inicia descarga del archivo `datos.json` |
 | Datos | Botón "Eliminar datos" | Clic | Muestra diálogo de confirmación antes de borrar |
-| CTA | Botón "Guardar cambios" | Clic | Persiste `preferencia_visual` en localStorage · navega a P03 (slide ←) |
+| CTA | Botón "Guardar cambios" | Clic | Persiste `preferencia_visual` vía API (SQLite) · navega a P03 (slide ←) |
 | Header | Botón "← Atrás" | Clic sin guardar | Descarta cambios · restaura preferencias anteriores |
 
 ### Notas de diseño
@@ -481,7 +485,7 @@ En descanso:      [ ⏸ Pausar ] [ ⏹ ]     → fondo #E1F5EE
 - El preview del tema es en tiempo real: al hacer clic en un color, la pantalla actual cambia inmediatamente (antes de guardar).
 - El botón "Eliminar todos mis datos" es rojo/coral con texto de advertencia; requiere confirmación con diálogo modal.
 - Los toggles de notificaciones quedan deshabilitados si el navegador tiene el permiso denegado.
-- "Guardar cambios" persiste en `localStorage` bajo la clave `preferencia_visual` (1:1 con cuenta · UNIQUE).
+- "Guardar cambios" persiste en la tabla `preferencia_visual` vía servidor (1:1 con cuenta · UNIQUE).
 
 ---
 

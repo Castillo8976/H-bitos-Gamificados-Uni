@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="06 - Diagrama de Despliegue">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="dep1" value="Diagrama de Despliegue UML (nuevo)" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="900" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep2" value="No existía ningún diagrama de despliegue real; &apos;Despliegue.png&apos; era en realidad el diagrama de componentes. Este documenta la arquitectura objetivo." style="text;html=1;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="200" y="40" width="1100" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep3" value="Navegador (cliente)" style="shape=cube;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;size=12;fontSize=12;fontStyle=1;align=center;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="80" y="120" width="280" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep4" value="SPA HTML/CSS/JS" style="shape=note;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;size=10;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="110" y="170" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep5" value="Notifications API" style="shape=note;whiteSpace=wrap;html=1;fillColor=#E1F5EE;strokeColor=#0F6E56;size=10;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="110" y="240" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep6" value="Servidor de aplicación
+(Node.js / Express)" style="shape=cube;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;size=12;fontSize=12;fontStyle=1;align=center;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="500" y="120" width="280" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep7" value="API REST
+(⚠ pendiente de implementar)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;size=10;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="530" y="190" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep8" value="Modelos Sequelize + CRUD
+(✅ existente en /src)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;size=10;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="530" y="250" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep9" value="Motor de base de datos
+(SQLite)" style="shape=cube;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;size=12;fontSize=12;fontStyle=1;align=center;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="920" y="120" width="260" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep10" value="database.sqlite" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;size=10;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="190" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep11" value="HTTP/HTTPS (REST, JSON)" style="html=1;fontSize=10;endArrow=block;startArrow=block;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="dep3" target="dep6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep12" value="Sequelize (SQL)" style="html=1;fontSize=10;endArrow=block;startArrow=block;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="dep6" target="dep9">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep13" value="Nota de estado del código: al momento de esta revisión, /src solo contiene los modelos Sequelize y las funciones CRUD.
+No hay servidor Express, rutas ni app.listen() implementados todavía — este diagrama documenta la arquitectura
+OBJETIVO descrita en la ERS (12-especificacion-requisitos-software.md), no el estado actual del código." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF9C4;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+      <mxGeometry x="80" y="420" width="1100" height="110" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

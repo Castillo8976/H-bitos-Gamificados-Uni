@@ -19,6 +19,7 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | Tabla DDL | Tabla E9 | PK implementada | FK(s) implementadas | Restricciones CHECK | UNIQUE | DEFAULT | Trazabilidad E7 |
 |---|---|---|---|---|---|---|---|
 | `CREATE TABLE cuenta` | cuenta | pk_cuenta (id_cuenta) | — | activa IN (0,1) | uq_correo (correo) | activa=1, fecha_registro=DATE('now') | §1 |
+| `CREATE TABLE nivel_cuenta` | nivel_cuenta | pk_nivel (id_nivel) | — (relación con cuenta es derivada: SUM(punto.cantidad) vs puntos_minimos, sin FK) | ck_nivel_puntos (puntos_minimos >= 0), ck_nivel_orden (orden > 0) | uq_nivel_nombre (nombre) | puntos_minimos=0, orden=1 | §13 |
 | `CREATE TABLE preferencia_visual` | preferencia_visual | pk_preferencia (id_preferencia) | fk_pref_cuenta → cuenta CASCADE | tema IN (6 valores), modo_oscuro IN (0,1) | uq_pref_cuenta (id_cuenta) → garantiza 1:1 | tema='purple', modo_oscuro=0 | §12 |
 | `CREATE TABLE materia` | materia | pk_materia (id_materia) | fk_mat_cuenta → cuenta CASCADE | activa IN (0,1) | — | activa=1 | §2 |
 | `CREATE TABLE tarea` | tarea | pk_tarea (id_tarea) | fk_tar_cuenta → cuenta CASCADE · fk_tar_materia → materia SET NULL | prioridad IN ('Alta','Media','Baja'), estado IN ('Pendiente','Completada') | — | estado='Pendiente' | §3 |
@@ -29,6 +30,7 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | `CREATE TABLE reto` | reto | pk_reto (id_reto) | fk_reto_cta → cuenta CASCADE | puntos_recompensa > 0, progreso >= 0, completado IN (0,1) | uq_reto_sem (id_cuenta, semana) | progreso=0, completado=0 | §8 |
 | `CREATE TABLE meta` | meta | pk_meta (id_meta) | fk_meta_cta → cuenta CASCADE | valor_objetivo > 0, valor_actual >= 0, cumplida IN (0,1) | uq_meta_sem (id_cuenta, semana) | valor_actual=0, cumplida=0 | §9 |
 | `CREATE TABLE recordatorio` | recordatorio | pk_recordatorio (id_recordatorio) | fk_rec_tarea → tarea CASCADE · fk_rec_cuenta → cuenta CASCADE | enviado IN (0,1), activo IN (0,1) | — | enviado=0, activo=1 | §10 |
+| `CREATE TABLE notificacion` | notificacion | pk_notificacion (id_notificacion) | fk_not_cuenta → cuenta CASCADE | ck_not_tipo (tipo IN 5 valores) | — | leida=0 | §14 |
 
 ---
 
@@ -43,6 +45,7 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | `idx_punto_cuenta` | punto | (id_cuenta) | Sumar puntos totales del estudiante | RNF02 |
 | `idx_reto_semana` | reto | (id_cuenta, semana) | Obtener reto activo de la semana | RNF02 |
 | `idx_recordatorio_pend` | recordatorio | (activo, enviado, fecha_programada) | Chequear recordatorios pendientes de envío | RNF15 |
+| `idx_not_cuenta` | notificacion | (id_cuenta, leida, fecha) | Listar notificaciones no leídas de la cuenta, ordenadas por fecha | RNF15 |
 
 ---
 
@@ -68,6 +71,9 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | ins-006 | insignia | Maestro del tiempo | 3_pomodoros_en_un_dia | timer.svg |
 | ins-007 | insignia | Sin procrastinar | tarea_mismo_dia | bolt.svg |
 | ins-008 | insignia | Organizado | 5_materias_registradas | book.svg |
+| niv-001..niv-004 | nivel_cuenta | Principiante, Estudiante, Avanzado, Maestro | puntos_minimos: 0, 100, 500, 1000 | nivel_1..4.svg |
+
+> **Nota de consistencia (pendiente de resolver):** el script `E11-script-DDL-v2.sql` vigente solo inserta 5 insignias (`ins-001`..`ins-005`, con nombres distintos a los 8 listados arriba) y no 8. Esta tabla documenta el catálogo objetivo del diccionario de datos (E7); antes de la entrega final hay que decidir cuál de las dos versiones es la definitiva y alinear E11 con esta matriz (o viceversa).
 
 ---
 
@@ -75,7 +81,7 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 
 | Elemento | Definido en E9 | Implementado en E11 | Verificado |
 |---|---|---|---|
-| 12 tablas | ✅ | ✅ | ✅ |
+| 13 tablas | ✅ | ✅ | ✅ |
 | PKs en todas las tablas | ✅ | ✅ | ✅ |
 | FKs con acciones referenciales | ✅ | ✅ | ✅ |
 | UNIQUE donde corresponde | ✅ | ✅ | ✅ |

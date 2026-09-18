@@ -14,17 +14,16 @@ La tabla de interacciones describe los flujos de datos entre cada entidad extern
 
 | Entidad Externa | Entrada al sistema | Salida del sistema | RF/RNF asociado |
 |---|---|---|---|
-| E1 — Estudiante | Datos de registro, tareas, sesiones Pomodoro, preferencias visuales | Confirmaciones, puntos, insignias, estadísticas del Tablero de Avance Personal (calculadas en tiempo real), alertas de vencimiento | RF01–RF15, RNF06, RNF07 |
-| E2 — Usuario registrado | Filtros de búsqueda, configuración visual, solicitud de exportación | Lista de tareas filtrada, preferencias aplicadas, archivo `datos.json` | RF09, RF13, RF14 |
-| E3 — Colaborador | Retos semanales, metas sugeridas, frases motivacionales | Reto activo visible para el estudiante en su panel | RF06, RF15 |
+| E1 — Estudiante | Datos de registro, tareas, sesiones Pomodoro, preferencias visuales, filtros de búsqueda, solicitud de exportación | Confirmaciones, puntos, insignias, estadísticas del Tablero de Avance Personal (calculadas en tiempo real), alertas de vencimiento, lista filtrada, archivo `datos.json` | RF01–RF15, RNF06, RNF07 |
 | E4 — Revisor institucional | Solicitud de estadísticas grupales (solo lectura) | Estadísticas de progreso académico en pantalla, calculadas en tiempo real | RF11 |
-| E5 — Administrador del sistema | Gestión de cuentas, configuración de insignias y retos | Estado actualizado del sistema, confirmación de cambios | RF01, RF05, RF06, RNF12 |
-| E6 — Notifications API | Permiso de notificaciones concedido por el SO | Alerta local emergente en la pantalla del dispositivo | RF04, RNF15 |
-| E7 — localStorage | Operaciones de lectura/escritura desde los módulos JS | Datos JSON recuperados o confirmación de escritura exitosa | RF14, RNF01, RNF04 |
+| E5 — Administrador del sistema | Gestión de cuentas, configuración de insignias y niveles | Estado actualizado del sistema, confirmación de cambios | RF01, RF05, RF07, RNF12 |
+| E6 — Notifications API | Permiso de notificaciones concedido por el navegador | Alerta local emergente en la pantalla del dispositivo | RF04, RNF15 |
+
+> **Corrección de alcance (alineada con `E1-tabla-contexto.md` y `M1_entidades_externas.md`):** se retiraron las filas de `E2 — Usuario registrado` (sus flujos quedaron incorporados en E1), `E3 — Colaborador` y `E7 — localStorage`. La persistencia ahora ocurre en SQLite a través del servidor Node.js/Express, que es un componente interno y no una entidad externa.
 
 ## Detalle de Flujos de Datos
 
-### E1/E2 — Estudiante → Sistema
+### E1 — Estudiante → Sistema
 
 | Operación | Datos de entrada | Datos de salida |
 |---|---|---|
@@ -33,21 +32,22 @@ La tabla de interacciones describe los flujos de datos entre cada entidad extern
 | Completar tarea | ID de tarea | Puntos sumados, insignia desbloqueada (si aplica) |
 | Iniciar Pomodoro | ID de tarea (opcional), modo (enfoque/libre) | Sesión guardada, horas reflejadas en el Tablero de Avance Personal |
 | Personalizar interfaz | Tema de color, modo oscuro, avatar | Preferencias persistidas, interfaz actualizada |
-| Exportar datos | Solicitud de descarga | Archivo `datos.json` generado y descargado |
+| Filtrar tareas | Materia, prioridad, estado, fechas, texto | Lista de tareas filtrada |
+| Exportar datos | Solicitud de descarga | Archivo `datos.json` generado y descargado (sin `contrasena_hash`) |
 
 ### E6 — Notifications API → Sistema
 
 | Condición | Acción del sistema |
 |---|---|
 | Usuario concede permiso | El sistema programa recordatorios automáticos 24h antes de cada entrega |
-| Usuario rechaza permiso | El recordatorio se guarda en localStorage pero no dispara notificación nativa |
+| Usuario rechaza permiso | El recordatorio se guarda en SQLite pero no dispara notificación nativa |
 | Fecha programada llega | El sistema dispara la alerta y marca `enviado = true` para no reenviar |
 
-### E7 — localStorage → Sistema
+### Persistencia — Sistema interno (SQLite vía servidor)
 
 | Operación | Módulo origen | Datos involucrados |
 |---|---|---|
-| `guardar` | Todos los módulos | Tareas, sesiones, puntos, insignias, preferencias |
+| `guardar` | Todos los módulos (a través del servidor) | Tareas, sesiones, puntos, insignias, preferencias |
 | `leer` | Tablero de Avance Personal, módulo de autenticación | Historial completo del usuario |
 | `eliminar` | Módulo de tareas | Tareas eliminadas y sus recordatorios en cascada |
-| `exportarJSON` | Módulo de almacenamiento | Snapshot completo de los datos del usuario |
+| `exportarJSON` | `ExportadorDatos` (CU09) | Snapshot completo de los datos del usuario |

@@ -1,0 +1,75 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="W02 - Dashboard">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="660" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="w21" value="W02 — Dashboard principal (P03)" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="60" y="5" width="700" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="w22" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="700" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="w23" value="☰  Plataforma Gamificada" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="80" y="80" width="300" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="w24" value="🔔  ⚙  👤 Estudiante" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="560" y="80" width="180" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="w25" value="Mis tareas de hoy
+
+☐ Tarea 1 (Alta)
+☑ Tarea 2 (Media)
+☐ Tarea 3 (Baja)
+
+[+ Nueva tarea]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="80" y="140" width="200" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="w26" value="Racha y puntos
+
+🔥 5 días seguidos
+⭐ 240 pts
+Nivel: Estudiante" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="300" y="140" width="200" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="w27" value="Mis logros
+
+🏅 3 insignias
+🎯 Reto semanal 60%
+
+[Ver todo →]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="520" y="140" width="220" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="w28" value="Agenda de materias
+
+· Cálculo — Lun/Mié 8am
+· Programación — Mar/Jue 2pm
+
+[Ver agenda →]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="80" y="380" width="320" height="210" as="geometry"/>
+    </mxCell>
+    <mxCell id="w29" value="Tablero de Avance Personal
+
+Horas estudiadas: 12.5h
+Tareas completadas: 8/10
+(cálculo en tiempo real)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="420" y="380" width="320" height="210" as="geometry"/>
+    </mxCell>
+    <mxCell id="w210" value="Zonas:
+- Barra superior: logo, notificaciones 🔔, config ⚙, perfil
+- Mis tareas de hoy (checkbox = completar, +pts flotante)
+- Racha y puntos (RF07)
+- Mis logros → P08 Gamificación
+- Agenda de materias → P07
+- Tablero de Avance → cálculo en tiempo real, no snapshot (RF11)
+
+Hub central: desde aquí se navega a CU02–CU06" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="800" y="90" width="420" height="300" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

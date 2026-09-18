@@ -1,0 +1,47 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="W04 - Pomodoro">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="660" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="w41" value="W04 — Modo Pomodoro / Cronómetro (P06)" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="60" y="5" width="700" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="w42" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="460" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="w43" value="← Volver          Modo Enfoque 🔒" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="80" y="90" width="420" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="w44" value="25:00" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;strokeWidth=4;fontSize=28;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="150" y="160" width="220" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="w45" value="Tarea vinculada: Entregar informe de Cálculo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="400" width="320" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="w46" value="PAUSAR" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="130" y="450" width="110" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="w47" value="DETENER" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="260" y="450" width="110" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="w48" value="Modo: ○ Pomodoro (25/5)  ○ Libre" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="520" width="320" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="w49" value="Estados del timer:
+- Enfoque (25min) → notificaciones bloqueadas
+- Descanso corto (5min)
+- Pausado (usuario)
+- Finalizado → guarda SesionEstudio
+
+Al finalizar: Tablero de Avance se actualiza
+en tiempo real (RF11). Ver Act-04." style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="560" y="90" width="400" height="300" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

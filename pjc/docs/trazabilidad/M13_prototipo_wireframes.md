@@ -22,6 +22,10 @@
 | P08 Gamificación | Nueva insignia | Automático | Modal de celebración con animación de brillo |
 | P13 Configuración | Toggle modo oscuro | Clic | Toda la interfaz cambia a paleta oscura al instante |
 | P13 Configuración | Selector de tema | Clic en color | Preview inmediato del tema en la pantalla |
+| P19 Notificaciones | Notificación no leída | Clic | Se marca como leída, cambia de color |
+| P19 Notificaciones | Botón "Marcar todas como leídas" | Clic | Todas las notificaciones cambian a estado leído |
+| P20 Recordatorios | Toggle activo/inactivo | Clic | El recordatorio se desactiva sin eliminarse (RN18) |
+| P20 Recordatorios | Botón "Eliminar" | Clic | El recordatorio desaparece de la lista |
 
 ---
 
@@ -33,12 +37,18 @@
 | P01 Login | Enlace "Regístrate" | P02 Registro | Slide horizontal |
 | P02 Registro | Registro exitoso | P03 Dashboard | Fade in |
 | P03 Dashboard | Sección "Mis tareas" | P04 Lista tareas | Slide |
-| P03 Dashboard | Botón "Iniciar sesión" | P06 Pomodoro | Slide vertical |
+| P03 Dashboard | Botón "Iniciar Pomodoro" | P06 Pomodoro | Slide vertical |
 | P03 Dashboard | Ícono engranaje | P13 Configuración | Panel desde la derecha |
 | P03 Dashboard | Sección "Mis logros" | P08 Gamificación | Slide |
+| P03 Dashboard | Ícono de campana 🔔 | P19 Notificaciones | Panel desde la derecha |
+| P04 Lista tareas | Sección "Recordatorios" | P20 Recordatorios | Slide → |
 | P04 Lista tareas | Tarjeta de tarea | P05 Detalle | Expansión modal |
 | P08 Gamificación | Tab "Insignias" | P09 | Tab switch sin recarga |
 | Cualquier pantalla | Botón "Atrás" | P03 Dashboard | Slide |
+
+> **Correcciones (revisión septiembre 2026):**
+> - La fila "P03 Dashboard → Botón 'Iniciar sesión' → P06 Pomodoro" tenía el nombre de botón equivocado (reutilizaba la etiqueta del login); se corrigió a "Botón 'Iniciar Pomodoro'".
+> - Se agregaron las interacciones y transiciones de P19 (Notificaciones) y P20 (Recordatorios), consistentes con `entregable_15_mapa_navegacion.md`.
 
 ---
 

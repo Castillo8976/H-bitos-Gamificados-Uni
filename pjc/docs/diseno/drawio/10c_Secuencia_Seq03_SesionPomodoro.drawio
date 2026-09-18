@@ -1,0 +1,121 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="Secuencia Seq-03 Sesion Pomodoro">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="s31" value="Diagrama de Secuencia — Seq-03 · CU04 Sesión Pomodoro" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="130" y="5" width="900" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="s32" value="Reemplaza InterfazPomodoro/ModuloPomodoro/ModuloTareas de M10 por clases del diccionario" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="100" y="30" width="1000" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="s33" value="Estudiante" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="s34" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="80" y="120" as="sourcePoint"/>
+        <mxPoint x="80" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s35" value=":Interfaz" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="185" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s36" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="120" as="sourcePoint"/>
+        <mxPoint x="260" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s37" value=":SesionEstudio" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="405" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s38" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="120" as="sourcePoint"/>
+        <mxPoint x="480" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s39" value=":Tarea" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=4;" vertex="1" parent="1">
+      <mxGeometry x="625" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s310" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="700" y="120" as="sourcePoint"/>
+        <mxPoint x="700" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s311" value="1: iniciarPomodoro(idTarea?, modo)" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="80" y="140" as="sourcePoint"/>
+        <mxPoint x="260" y="140" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s312" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="254" y="170" width="12" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="s313" value="2: iniciar()" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="180" as="sourcePoint"/>
+        <mxPoint x="480" y="180" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s314" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="474" y="210" width="12" height="420" as="geometry"/>
+    </mxCell>
+    <mxCell id="s315" value="3: ciclo focus/descanso (loop)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;exitX=1;exitY=0;entryX=1;entryY=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="235" as="sourcePoint"/>
+        <mxPoint x="550" y="265" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s316" value="alt  [finaliza normalmente] / [A1: pausa manual]" style="shape=umlFrame;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;fontSize=10;align=left;verticalAlign=top;width=60;height=20;" vertex="1" parent="1">
+      <mxGeometry x="220" y="265" width="680" height="230" as="geometry"/>
+    </mxCell>
+    <mxCell id="s317" value="4: finalizar(duracion)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;exitX=1;exitY=0;entryX=1;entryY=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="295" as="sourcePoint"/>
+        <mxPoint x="550" y="325" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s318" value="5: vincular(idTarea) [opcional]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="335" as="sourcePoint"/>
+        <mxPoint x="700" y="335" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s319" value="6: sesión guardada" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="375" as="sourcePoint"/>
+        <mxPoint x="260" y="375" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s320" value="7: Tablero de Avance actualizado (tiempo real)" style="endArrow=block;endFill=1;html=1;dashed=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="410" as="sourcePoint"/>
+        <mxPoint x="80" y="410" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s321" value="— — — A1: pausa manual — — —" style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="230" y="445" width="500" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s322" value="A1: pausar()" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="80" y="470" as="sourcePoint"/>
+        <mxPoint x="480" y="470" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s323" value="A1: guardarTiempoParcial()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;exitX=1;exitY=0;entryX=1;entryY=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="495" as="sourcePoint"/>
+        <mxPoint x="550" y="525" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

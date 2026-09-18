@@ -1,0 +1,183 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+
+  <diagram name="11 - Mapa de Navegacion">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="780" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="map1" value="Mapa de Navegación (corregido) — 20 pantallas" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="250" y="5" width="900" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="map2" value="Reemplaza Mapa.png, que era un duplicado del diagrama de contexto sin relación con pantallas reales. Incluye P19/P20 (antes ausentes)." style="text;html=1;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="150" y="32" width="1100" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="map3" value="P01 Login" style="terminator;whiteSpace=wrap;html=1;fillColor=#2C2C2A;strokeColor=#2C2C2A;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="map4" value="P02 Registro" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="80" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="map5" value="P03 Dashboard
+(hub central)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="70" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="map6" value="Regístrate" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="map3" target="map4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map7" value="ya tengo cuenta" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;dashed=1;" edge="1" parent="1" source="map4" target="map3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map8" value="credenciales válidas" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="map3" target="map5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map9" value="registro exitoso" style="html=1;fontSize=10;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="map4" target="map5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map10" value="Tareas" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="60" y="196" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map11" value="P04 Lista de tareas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="220" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map12" value="P05 Detalle/edición" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="290" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map13" value="P12 Filtros y búsqueda" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="360" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map14" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map11">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map15" value="Pomodoro" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="320" y="196" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map16" value="P06 Modo Pomodoro" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="220" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map17" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map16">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map18" value="Agenda" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="320" y="316" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map19" value="P07 Agenda de materias" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="340" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map20" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map19">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map21" value="Gamificación" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="540" y="196" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map22" value="P08 Panel gamificación" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="220" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map23" value="P09 Insignias obtenidas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="290" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map24" value="P10 Reto semanal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="360" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map25" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map22">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map26" value="Tablero" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="800" y="196" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map27" value="P11 Tablero de Avance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="220" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map28" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map27">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map29" value="Configuración" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="800" y="316" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map30" value="P13 Config./Preferencias" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="340" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map31" value="P14 Exportar datos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="410" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map32" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map30">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map33" value="Notificaciones" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="196" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map34" value="P19 Notificaciones" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="220" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map35" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map34">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map36" value="Recordatorios" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="316" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map37" value="P20 Recordatorios" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="340" width="220" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="map38" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;" edge="1" parent="1" source="map5" target="map37">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map39" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#82b366;" edge="1" parent="1" source="map11" target="map12">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map40" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="map11" target="map13">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map41" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#854F0B;" edge="1" parent="1" source="map22" target="map23">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map42" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#854F0B;" edge="1" parent="1" source="map22" target="map24">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map43" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="map30" target="map31">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map44" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;fontSize=11;dashed=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="560" width="700" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="map45" value="Zona de administración (acceso restringido por URL directa)" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="60" y="570" width="400" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="map46" value="P15 Panel admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="90" y="610" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="map47" value="P16 Gestión usuarios" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="610" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="map48" value="P17 Gestión insignias/retos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="670" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="map49" value="P18 Tablero institucional" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FA;strokeColor=#185FA5;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="610" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="map50" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#185FA5;" edge="1" parent="1" source="map46" target="map47">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map51" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#185FA5;" edge="1" parent="1" source="map46" target="map48">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map52" value="" style="html=1;fontSize=10;endArrow=block;strokeColor=#185FA5;" edge="1" parent="1" source="map46" target="map49">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map53" value="Administrador" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;strokeColor=#2C2C2A;fillColor=none;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="800" y="610" width="40" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="map54" value="Revisor
+institucional" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;strokeColor=#2C2C2A;fillColor=none;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="900" y="610" width="40" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="map55" value="URL /admin" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;dashed=1;" edge="1" parent="1" source="map53" target="map46">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="map56" value="URL /revisor" style="html=1;fontSize=10;endArrow=block;strokeColor=#666;dashed=1;" edge="1" parent="1" source="map54" target="map49">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>
