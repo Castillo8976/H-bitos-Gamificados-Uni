@@ -1,7 +1,7 @@
 # Alcance del Proyecto
 
 **Proyecto:** Plataforma Web Gamificada para Hábitos de Estudio  
-**Asignatura:** Ingeniería de Software II — Uniremington  
+**Asignatura:** Ingeniería de Software III — Uniremington
 **Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
 **Docente:** Gloria Amparo Lora Patiño  
 
@@ -43,14 +43,14 @@ Sistema de notificaciones personalizadas sobre entregas, sesiones programadas y 
 | **Exportación** | Datos exportables en formato JSON mediante Blob/Download API |
 | **Notificaciones** | API nativa del navegador (Notifications API), respaldada por el modelo `Notificacion` en el servidor |
 
-> **Nota de corrección (revisión de agosto 2026):** la versión inicial de este documento describía una aplicación estática con `localStorage` y despliegue en GitHub Pages. Esa descripción correspondía a una etapa temprana del proyecto. La implementación actual (ver `/src`) usa Node.js, Express, Sequelize y SQLite con persistencia real en base de datos y CRUD del lado del servidor para las 14 entidades del sistema. Esta tabla se actualizó para reflejar la arquitectura real construida.
+> **Nota de corrección (revisión de agosto 2026):** la versión inicial de este documento describía una aplicación estática con `localStorage` y despliegue en GitHub Pages. Esa descripción correspondía a una etapa temprana del proyecto. La implementación actual (ver `/src`) usa Node.js, Express, Sequelize y SQLite con persistencia real en base de datos y CRUD del lado del servidor para las 13 entidades del sistema. Esta tabla se actualizó para reflejar la arquitectura real construida.
 
 ---
 
 ## Delimitaciones de Contexto
 
 - **Usuarios objetivo:** Estudiantes universitarios de instituciones privadas en Medellín, de primer a quinto semestre.
-- **Periodo de desarrollo:** Asignatura Ingeniería de Software II, año 2025.
+- **Periodo de desarrollo:** Asignatura Ingeniería de Software III, año 2026.
 - **Equipo de desarrollo:** Dos estudiantes de quinto semestre del programa Desarrollo de Software.
 - **Idioma:** Español, adaptado al contexto universitario colombiano.
 

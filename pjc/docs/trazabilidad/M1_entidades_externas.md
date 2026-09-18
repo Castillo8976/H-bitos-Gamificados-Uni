@@ -9,10 +9,9 @@
 
 | Entidad externa | Tipo | RF asociado | CU asociado | Rol en el DCA |
 |---|---|---|---|---|
-| Estudiante / Persona con disc. física | Usuario principal | RF01–RF15 | CU01–CU10 | Actor central que interactúa con todos los módulos del sistema |
-| Usuario registrado | Usuario secundario | RF02, RF09, RF11, RF13, RF14 | CU02, CU05, CU07, CU08, CU09 | Actor con acceso a funciones de gestión y configuración |
-| Colaborador | Entidad par | RF06, RF08, RF15 | CU06 | Proveedor de retos, frases y contenido motivacional |
-| Revisor institucional | Sistema superior | RF11 | CU05 | Acceso de solo lectura al Tablero de Avance Personal (grupal), calculado en tiempo real |
-| Administrador del sistema | Sistema superior | RF01, RF05, RF06, RNF12 | — | Control total: cuentas, gamificación, seguridad |
-| Notifications API del navegador | Sistema subordinado | RF04, RNF15 | CU10 | Dispara alertas locales sin servidor. Entrada: permiso. Salida: alerta |
-| localStorage del navegador | Sistema subordinado | RF14, RNF01, RNF04 | CU09 | Persiste todos los datos del sistema. Sin red requerida |
+| Estudiante | Usuario principal | RF01–RF15 | CU01–CU12, CU15 | Actor central. La accesibilidad para personas con discapacidad física es una condición de calidad del mismo actor, no un actor diferente. |
+| Administrador del sistema | Usuario autorizado | RF01, RF05, RF06, RF07 | CU13, CU14 | Mantiene cuentas y catálogos de gamificación; no modifica el historial append-only de puntos. |
+| Revisor institucional | Usuario de solo lectura | RF11 | CU16 | Consulta estadísticas autorizadas calculadas en tiempo real, sin modificar información. |
+| Notifications API del navegador | Sistema externo | RF04, RF12, RNF13, RNF15 | CU10, CU15 | Recibe la solicitud de permiso y muestra alertas cuando el navegador lo permite. |
+
+> **Corrección de alcance:** `localStorage` se retiró porque la persistencia vigente se realiza en SQLite mediante Node.js/Express. El navegador, el servidor y SQLite son componentes internos de la solución y sus interfaces se especifican en la ERS; no se modelan como actores humanos. El antiguo actor “Colaborador” también se retiró porque no posee autenticación, caso de uso ni intercambio implementado que sustente su participación.

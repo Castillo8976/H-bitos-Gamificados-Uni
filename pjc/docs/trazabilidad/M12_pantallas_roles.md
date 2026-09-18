@@ -30,4 +30,6 @@
 | P19 | Notificaciones | Estudiante | CU15 | RF04, RNF15 | — |
 | P20 | Recordatorios | Estudiante | CU10 | RF04, RNF15 | — |
 
-> **Corrección (revisión septiembre 2026):** se agregaron P19 y P20, ya incorporadas en `entregable_15_mapa_navegacion.md` pero ausentes de esta matriz.
+> **Corrección (revisión septiembre 2026):** se agregaron P19 y P20, ya incorporadas en 
+
+

@@ -1,7 +1,7 @@
 # Reglas de Negocio (RN)
 
 **Proyecto:** Plataforma Web Gamificada para Hábitos de Estudio
-**Asignatura:** Ingeniería de Software II — Uniremington
+**Asignatura:** Ingeniería de Software III — Uniremington
 **Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño
 **Docente:** Gloria Amparo Lora Patiño
 
@@ -34,6 +34,8 @@
 | **RN17** | Una notificación queda marcada `leida = false` por defecto; solo cambia a `true` cuando el usuario la marca explícitamente o usa "marcar todas como leídas". | `notificacion` | RF04 | `notificacionCrud.marcarNotificacionLeida()`, `marcarTodasLeidas()` |
 | **RN18** | Un recordatorio ya `enviado = true` no vuelve a dispararse, para evitar notificaciones duplicadas. | `recordatorio` | RF04, RNF15 / CU10 | Descrito en flujo normal de CU10, paso 6 |
 | **RN19** | Si el navegador rechaza el permiso de notificaciones, el recordatorio se guarda igual en base de datos pero no dispara notificación nativa. | `recordatorio` | RF04 / CU10 (A1) | Flujo alternativo A1 de CU10 |
+| **RN20** | Una sesión de estudio debe registrar una duración entera mayor que cero; puede asociarse a una tarea propia o permanecer sin tarea para representar estudio libre. | `sesion_estudio`, `tarea` | RF10 / CU04, CU12 | `sesionEstudioCrud.crearSesionEstudio()`, `actualizarSesionEstudio()` |
+| **RN21** | El estudiante solo puede consultar o modificar registros asociados a su propia cuenta; las operaciones globales requieren permisos administrativos y la consulta institucional es de solo lectura. | Todas las entidades dependientes de `cuenta` | RF01–RF15 / CU01–CU16 | Validación de propietario y rol antes de cada operación |
 
 ---
 
@@ -48,9 +50,6 @@ Varias reglas de negocio existen específicamente para cumplir un RNF, no solo u
 
 ---
 
-## Pendiente de verificación con el equipo
+## Estado de validación
 
-Esta lista se construyó a partir del código y la documentación existente. Antes de entregar, conviene que ambos autores revisen si:
-
-1. Faltan reglas de negocio que existan en el código pero no se detectaron aquí (por ejemplo, validaciones específicas dentro de `sesionEstudioCrud.js` sobre duración mínima/máxima del Pomodoro).
-2. Alguna regla listada ya no aplica porque cambió la implementación después de esta revisión (agosto 2026).
+El catálogo RN01–RN21 cubre las restricciones identificadas en los requisitos, casos de uso, modelos y operaciones CRUD vigentes. RN20 formaliza la duración y asociación opcional de las sesiones; RN21 formaliza la propiedad de datos y los límites de los roles. Toda modificación futura de código o alcance deberá revisar este catálogo y actualizar la matriz de trazabilidad antes de aprobarse.
