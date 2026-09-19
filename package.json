@@ -4,15 +4,22 @@
   "private": true,
   "scripts": {
     "start": "node src/server.js",
-    "test": "node tests/schema/schema-alignment.test.js && node tests/integration/current-layer.test.js",
+    "test": "node tests/architecture/mvc.test.js && node tests/schema/schema-alignment.test.js && node tests/integration/current-layer.test.js && node tests/api/api.test.js",
+    "test:architecture": "node tests/architecture/mvc.test.js",
     "test:schema": "node tests/schema/schema-alignment.test.js",
     "test:integration": "node tests/integration/current-layer.test.js",
-    "test:legacy": "node src/models/test.js"
+    "test:api": "node tests/api/api.test.js",
+    "test:legacy": "node src/models/test.js",
+    "bootstrap:account": "node scripts/bootstrap-account.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.3",
     "sequelize": "^6.37.8",
     "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
   }
 }

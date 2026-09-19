@@ -13,7 +13,7 @@ El diagrama vigente contiene las **13 clases de entidad** correspondientes a las
 
 | Clase | Métodos | CU que lo origina | RF asociado |
 |---|---|---|---|
-| `Cuenta` | `crearCuenta`, `listarCuentas`, `obtenerCuenta`, `actualizarCuenta`, `eliminarCuenta` | CU01, CU11, CU13 | RF01, RNF12 |
+| `Cuenta` | `crearCuenta`, `listarCuentas`, `obtenerCuenta`, `actualizarCuenta`, `eliminarCuenta`, `registrar`, `autenticar`, `cerrarSesion`, `obtenerPerfil` | CU01, CU11, CU13 | RF01, RNF12, RN21 |
 | `Materia` | `crearMateria`, `listarMaterias`, `obtenerMateria`, `actualizarMateria`, `eliminarMateria` | CU01, CU13 | RF01, RF09 |
 | `Tarea` | `crearTarea`, `listarTareas`, `obtenerTarea`, `actualizarTarea`, `completarTarea`, `eliminarTarea` | CU02, CU03, CU07 | RF02, RF03, RF04, RF09 |
 | `SesionEstudio` | `crearSesionEstudio`, `listarSesionesEstudio`, `obtenerSesionEstudio`, `actualizarSesionEstudio`, `eliminarSesionEstudio`, `calcularHorasSemana` | CU04, CU12 | RF10, RF11, RF12 |
