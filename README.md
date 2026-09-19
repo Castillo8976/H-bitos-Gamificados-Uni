@@ -37,6 +37,33 @@ Variables opcionales:
 
 - `PORT`: puerto HTTP; por defecto `3000`.
 - `DATABASE_STORAGE`: ruta del archivo SQLite; por defecto `database.sqlite` en la raíz.
+- `JWT_SECRET`: secreto de firma de tokens; obligatorio cuando `NODE_ENV=production`.
+- `JWT_EXPIRES_IN`: duración del token; por defecto `2h`.
+
+## Autenticación y API
+
+```text
+POST /api/auth/registro
+POST /api/auth/login
+POST /api/auth/logout
+GET  /api/auth/perfil
+```
+
+Las rutas protegidas reciben el encabezado `Authorization: Bearer <token>`. Los roles aprobados son `Estudiante`, `Administrador` y `Revisor institucional`. El registro público siempre asigna el rol Estudiante.
+
+El registro recibe `nombre`, `correo`, `contrasena` y una `materia` inicial con `nombre` y `horario` opcional, cumpliendo HU01. En la misma transacción crea la cuenta, su preferencia visual y la primera materia.
+
+La primera cuenta privilegiada se prepara localmente, sin exponer un cambio de rol en el registro público:
+
+```bash
+BOOTSTRAP_NAME="Administrador" \
+BOOTSTRAP_EMAIL="admin@studyquest.local" \
+BOOTSTRAP_PASSWORD="cambie-esta-clave" \
+BOOTSTRAP_ROLE="Administrador" \
+npm run bootstrap:account
+```
+
+Los recursos se publican bajo `/api`: `cuentas`, `materias`, `tareas`, `preferencias`, `sesiones`, `recordatorios`, `notificaciones`, `puntos`, `insignias`, `cuenta-insignias`, `niveles`, `retos` y `metas`. La matriz completa se encuentra en [M15](pjc/docs/trazabilidad/M15_trazabilidad_construccion.md).
 
 ## Pruebas
 
@@ -68,9 +95,15 @@ npm run test:legacy
 │   ├── server.js              # Inicialización de E11 y servidor HTTP
 │   ├── database.js            # Conexión única Sequelize/SQLite
 │   ├── config/schema.js       # Ejecutor del DDL aprobado
-│   ├── routes/                # Rutas HTTP
 │   ├── models/                # 13 modelos Sequelize
-│   └── crud/                  # Operaciones y reglas actuales de datos
+│   ├── services/              # Reglas de negocio y adaptadores CRUD
+│   ├── controllers/           # Entrada y respuesta HTTP
+│   ├── routes/                # Definición declarativa de endpoints
+│   ├── middlewares/           # Autenticación, autorización y errores
+│   ├── validators/            # Validación de solicitudes
+│   ├── public/                # Recursos públicos del navegador
+│   ├── views/                 # Vistas del patrón MVC
+│   └── crud/                  # Implementación CRUD heredada, consumida por services
 ├── tests/
 │   ├── schema/                # Prueba de alineación del esquema
 │   └── integration/           # Prueba funcional de datos
