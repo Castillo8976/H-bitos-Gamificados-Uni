@@ -29,6 +29,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **contrasena_hash** | VARCHAR(255) | No | Contraseña cifrada. Nunca en texto plano (RNF12). |
 | **fecha_registro** | DATE | No | Fecha de creación de la cuenta. DEFAULT CURRENT_DATE. |
 | **activa** | BOOLEAN/INT | No | TRUE = cuenta activa. FALSE = suspendida. DEFAULT TRUE. |
+| **rol** | VARCHAR(30) | No | Rol autorizado. CHECK IN ('Estudiante','Administrador','Revisor institucional'). DEFAULT 'Estudiante'. CRF-002. |
 
 > **Reglas:** correo único · contraseña siempre cifrada · datos persisten al reiniciar (RNF04) · entidad raíz de la que dependen todas las demás.
 

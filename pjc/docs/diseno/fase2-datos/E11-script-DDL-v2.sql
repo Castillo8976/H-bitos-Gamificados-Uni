@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS cuenta (
   contrasena_hash VARCHAR(255) NOT NULL,
   fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
   activa INTEGER NOT NULL DEFAULT 1 CHECK (activa IN (0,1)),
+  rol VARCHAR(30) NOT NULL DEFAULT 'Estudiante'
+    CHECK (rol IN ('Estudiante','Administrador','Revisor institucional')),
   CONSTRAINT pk_cuenta PRIMARY KEY (id_cuenta),
   CONSTRAINT uq_cuenta_correo UNIQUE (correo)
 );

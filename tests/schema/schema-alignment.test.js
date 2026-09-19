@@ -28,7 +28,7 @@ const models = {
 };
 
 const expected = {
-  cuenta: ['id_cuenta','nombre','correo','contrasena_hash','fecha_registro','activa'],
+  cuenta: ['id_cuenta','nombre','correo','contrasena_hash','fecha_registro','activa','rol'],
   materia: ['id_materia','id_cuenta','nombre','horario','activa'],
   tarea: ['id_tarea','id_cuenta','id_materia','nombre','fecha_entrega','prioridad','estado','fecha_completada'],
   sesion_estudio: ['id_sesion','id_cuenta','id_tarea','fecha','duracion_minutos','modo_enfoque'],
@@ -121,7 +121,7 @@ async function run() {
   }
 
   const defaults = {
-    cuenta: { fecha_registro: 'CURRENT_DATE', activa: '1' },
+    cuenta: { fecha_registro: 'CURRENT_DATE', activa: '1', rol: "'Estudiante'" },
     nivel_cuenta: { puntos_minimos: '0', orden: '1' },
     preferencia_visual: { tema: "'purple'", modo_oscuro: '0', fecha_actualizado: 'CURRENT_DATE' },
     materia: { activa: '1' }, tarea: { estado: "'Pendiente'" },
@@ -140,7 +140,7 @@ async function run() {
   }
 
   const requiredChecks = {
-    cuenta: ['activa IN (0,1)'],
+    cuenta: ['activa IN (0,1)', "rol IN ('Estudiante','Administrador','Revisor institucional')"],
     nivel_cuenta: ['puntos_minimos >= 0', 'orden > 0'],
     preferencia_visual: ["tema IN ('purple','teal','amber','coral','blue','green')", 'modo_oscuro IN (0,1)'],
     materia: ['activa IN (0,1)'],

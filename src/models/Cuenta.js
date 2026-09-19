@@ -102,6 +102,16 @@ const Cuenta = sequelize.define('cuenta', {
     type: DataTypes.BOOLEAN,          // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,                 // Campo obligatorio
     defaultValue: true                // Toda cuenta nueva se activa automáticamente
+  },
+
+  /** Rol de autorización incorporado mediante CRF-002. */
+  rol: {
+    type: DataTypes.STRING(30),
+    allowNull: false,
+    defaultValue: 'Estudiante',
+    validate: {
+      isIn: [['Estudiante', 'Administrador', 'Revisor institucional']]
+    }
   }
 
 }, {
