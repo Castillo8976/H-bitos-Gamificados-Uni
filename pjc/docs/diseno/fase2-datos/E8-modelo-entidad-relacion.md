@@ -3,7 +3,7 @@
 **Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio  
 **Entregable:** 8 — Modelo Entidad-Relación Conceptual  
 **Fase:** 2 — Diseño de Datos  
-**Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
+**Autores:** Juan David Castillo Mena · Alejandro Cardona Jaramillo  
 **Docente:** Gloria Amparo Lora Patiño  
 **Institución:** Uniremington · Medellín · 2025  
 

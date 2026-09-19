@@ -2,7 +2,7 @@
 
 **Proyecto:** Plataforma Web Gamificada para Hábitos de Estudio
 **Asignatura:** Ingeniería de Software III — Uniremington
-**Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño
+**Autores:** Juan David Castillo Mena · Alejandro Cardona Jaramillo
 **Docente:** Gloria Amparo Lora Patiño
 
 ---
