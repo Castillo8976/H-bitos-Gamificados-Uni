@@ -11,8 +11,8 @@
  * // RF-05 | E12 - InsigniaService
  */
 
-const CuentaInsignia = require('../crud-models/models/CuentaInsignia');
-const Insignia = require('../crud-models/models/Insignia');
+const CuentaInsignia = require('../models/CuentaInsignia');
+const Insignia = require('../models/Insignia');
 
 
 // ─────────────────────────────────────────
@@ -81,6 +81,7 @@ async function listarInsigniasDesbloqueadas(id_cuenta) {
     where: { id_cuenta },
     include: [{
       model: Insignia,
+      as: 'insignia',
       attributes: ['nombre', 'descripcion', 'icono']
     }]
   });
@@ -161,6 +162,7 @@ async function revocarInsignia(id_cuenta, id_insignia) {
  * @param {number} contexto.totalTareasCompletadas - Total histórico de tareas completadas.
  * @param {number} contexto.totalPomodoros         - Total de sesiones Pomodoro completadas.
  * @param {number} contexto.sesionesUltimaSemana   - Sesiones en los últimos 7 días.
+ * @param {boolean} [contexto.sesionAntes8am=false] - Indica si registró una sesión antes de las 8 a. m.
  * @returns {Promise<string[]>} Nombres de las insignias recién desbloqueadas.
  *
  * @example
@@ -191,6 +193,10 @@ async function evaluarInsignias(id_cuenta, contexto) {
     {
       condicion: '10_pomodoros',
       cumple: () => contexto.totalPomodoros >= 10
+    },
+    {
+      condicion: 'sesion_antes_8am',
+      cumple: () => contexto.sesionAntes8am === true
     }
   ];
 

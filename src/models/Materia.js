@@ -107,7 +107,7 @@ const Materia = sequelize.define('materia', {
    * Por defecto toda materia nueva se crea como activa.
    */
   activa: {
-    type: DataTypes.BOOLEAN, // TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: true       // Toda materia nueva se considera vigente al crearse
   }

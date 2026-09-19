@@ -11,7 +11,7 @@
  * // RF-13 | RNF-04 | E12 - PreferenciaVisualService
  */
 
-const PreferenciaVisual = require('../crud-models/models/PreferenciaVisual');
+const PreferenciaVisual = require('../models/PreferenciaVisual');
 const crypto = require('crypto');
 
 

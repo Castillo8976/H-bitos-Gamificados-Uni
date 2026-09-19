@@ -2,7 +2,7 @@
 
 **Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio  
 **Autor:** Juan David Castillo Mena  
-**Asignatura:** Ingeniería de Software II — Uniremington 2025
+**Asignatura:** Ingeniería de Software III — Uniremington 2026
 
 ---
 

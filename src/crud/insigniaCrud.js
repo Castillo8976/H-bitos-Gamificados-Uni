@@ -9,7 +9,7 @@
  * @requires crypto
  */
 
-const Insignia = require('../crud-models/models/Insignia');
+const Insignia = require('../models/Insignia');
 const crypto = require('crypto');
 
 
@@ -157,27 +157,33 @@ async function sembrarInsignias() {
   const catalogo = [
     {
       nombre: 'Primera tarea',
-      descripcion: 'Completaste tu primera tarea antes de la fecha límite.',
+      descripcion: 'Completaste tu primera tarea',
       condicion: 'primera_tarea',
-      icono: 'insignia_primera_tarea.svg'
-    },
-    {
-      nombre: 'Racha de 5 tareas',
-      descripcion: 'Completaste 5 tareas en total. ¡Eres constante!',
-      condicion: '5_tareas_seguidas',
-      icono: 'insignia_5_tareas.svg'
+      icono: 'star.svg'
     },
     {
       nombre: 'Semana perfecta',
-      descripcion: 'Iniciaste sesión de estudio 7 días seguidos en una semana.',
+      descripcion: '7 sesiones en una semana',
       condicion: '7_sesiones_semana',
-      icono: 'insignia_semana_perfecta.svg'
+      icono: 'fire.svg'
     },
     {
-      nombre: 'Maestro Pomodoro',
-      descripcion: 'Completaste 10 sesiones en modo enfoque (Pomodoro).',
+      nombre: 'Racha de 5',
+      descripcion: '5 tareas completadas seguidas',
+      condicion: '5_tareas_seguidas',
+      icono: 'lightning.svg'
+    },
+    {
+      nombre: 'Madrugador',
+      descripcion: 'Sesion antes de las 8am',
+      condicion: 'sesion_antes_8am',
+      icono: 'sunrise.svg'
+    },
+    {
+      nombre: 'Pomodoro Pro',
+      descripcion: '10 sesiones Pomodoro completadas',
       condicion: '10_pomodoros',
-      icono: 'insignia_pomodoro.svg'
+      icono: 'tomato.svg'
     }
   ];
 
@@ -185,7 +191,7 @@ async function sembrarInsignias() {
     await crearInsignia(datos.nombre, datos.descripcion, datos.condicion, datos.icono);
   }
 
-  console.log('🌱 Catálogo de insignias sembrado (4 insignias base)');
+  console.log('🌱 Catálogo de insignias sembrado (5 insignias base)');
 }
 
 

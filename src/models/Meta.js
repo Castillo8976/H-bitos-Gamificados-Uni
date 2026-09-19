@@ -133,7 +133,7 @@ const Meta = sequelize.define('meta', {
    * `valor_actual >= valor_objetivo`, no de forma automática en el modelo.
    */
   cumplida: {
-    type: DataTypes.BOOLEAN, // TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: false      // Toda meta nueva comienza como no cumplida
   }

@@ -134,7 +134,7 @@ const Recordatorio = sequelize.define('recordatorio', {
    * `true`  → notificación ya enviada al usuario.
    */
   enviado: {
-    type: DataTypes.BOOLEAN, // TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: false      // Todo recordatorio nuevo comienza como no enviado
   },
@@ -150,7 +150,7 @@ const Recordatorio = sequelize.define('recordatorio', {
    * El servicio de notificaciones debe filtrar: `WHERE activo = true AND enviado = false`.
    */
   activo: {
-    type: DataTypes.BOOLEAN, // TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: true       // Todo recordatorio nuevo se crea habilitado por defecto
   }

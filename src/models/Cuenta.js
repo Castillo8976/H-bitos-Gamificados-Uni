@@ -99,7 +99,7 @@ const Cuenta = sequelize.define('cuenta', {
    * Por defecto toda cuenta nueva se crea como activa.
    */
   activa: {
-    type: DataTypes.BOOLEAN,          // Columna TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN,          // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,                 // Campo obligatorio
     defaultValue: true                // Toda cuenta nueva se activa automáticamente
   }

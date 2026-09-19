@@ -42,8 +42,8 @@ const Insignia = require('./Insignia');      // Modelo del extremo 2 de la relac
  * Además de las dos claves foráneas, almacena `fecha_obtenida` como
  * campo extra que enriquece la relación con información temporal.
  *
- * La clave primaria compuesta (id_cuenta + id_insignia) la gestiona
- * Sequelize automáticamente al usarse como tabla `through` en `belongsToMany`.
+ * La clave primaria compuesta (id_cuenta + id_insignia) se declara
+ * explícitamente para conservar la misma estructura definida en el DDL.
  *
  * Configuración relevante:
  * - `timestamps: false` — sin columnas `createdAt`/`updatedAt`; la fecha
@@ -61,7 +61,8 @@ const CuentaInsignia = sequelize.define('cuenta_insignia', {
    */
   id_cuenta: {
     type: DataTypes.STRING(36),  // UUID v4: siempre 36 caracteres
-    allowNull: false             // Campo obligatorio: toda fila debe tener un propietario
+    allowNull: false,            // Campo obligatorio: toda fila debe tener un propietario
+    primaryKey: true             // Primera columna de la PK compuesta
   },
 
   /**
@@ -71,7 +72,8 @@ const CuentaInsignia = sequelize.define('cuenta_insignia', {
    */
   id_insignia: {
     type: DataTypes.STRING(36),  // UUID v4: siempre 36 caracteres
-    allowNull: false             // Campo obligatorio: toda fila debe tener una insignia
+    allowNull: false,            // Campo obligatorio: toda fila debe tener una insignia
+    primaryKey: true             // Segunda columna de la PK compuesta
   },
 
   /**
@@ -103,6 +105,20 @@ const CuentaInsignia = sequelize.define('cuenta_insignia', {
 // ─────────────────────────────────────────
 // ASOCIACIONES N:M (Many-to-Many)
 // ─────────────────────────────────────────
+
+// Asociaciones directas de la tabla hija. Permiten consultar cada registro
+// de cuenta_insignia junto con su cuenta o insignia de referencia.
+CuentaInsignia.belongsTo(Cuenta, {
+  foreignKey: 'id_cuenta',
+  as: 'cuenta',
+  onDelete: 'CASCADE'
+});
+
+CuentaInsignia.belongsTo(Insignia, {
+  foreignKey: 'id_insignia',
+  as: 'insignia',
+  onDelete: 'CASCADE'
+});
 
 /**
  * Asociación: Cuenta → Insignia (una cuenta puede tener muchas insignias).

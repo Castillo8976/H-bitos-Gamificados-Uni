@@ -1,6 +1,17 @@
 {
+  "name": "studyquest-habitos-gamificados",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node tests/schema/schema-alignment.test.js && node tests/integration/current-layer.test.js",
+    "test:schema": "node tests/schema/schema-alignment.test.js",
+    "test:integration": "node tests/integration/current-layer.test.js",
+    "test:legacy": "node src/models/test.js"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "express": "^4.22.3",
     "sequelize": "^6.37.8",
     "sqlite3": "^6.0.1"
   }

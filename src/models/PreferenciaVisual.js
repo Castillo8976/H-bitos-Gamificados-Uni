@@ -108,7 +108,7 @@ const PreferenciaVisual = sequelize.define('preferencia_visual', {
    * `true`  → modo oscuro (dark mode), activado por el usuario.
    */
   modo_oscuro: {
-    type: DataTypes.BOOLEAN, // TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: false      // Por defecto la interfaz inicia en modo claro
   },

@@ -43,27 +43,28 @@
  * @requires ./crud/insigniaCrud
  */
 
-const sequelize = require('./database'); // Instancia única de conexión Sequelize a SQLite
+const sequelize = require('../database'); // Instancia única de conexión Sequelize a SQLite
+const { inicializarEsquema } = require('../config/schema');
 
 
 // ─────────────────────────────────────────
 // REGISTRO DE MODELOS
 // ─────────────────────────────────────────
 // Se cargan todos los modelos para que Sequelize registre sus definiciones
-// y asociaciones antes de ejecutar sync(). El orden respeta las dependencias
+// y asociaciones antes de ejecutar el DDL. El orden respeta las dependencias
 // de claves foráneas entre modelos padre e hijo.
 
-require('./models/Cuenta');            // 1. Raíz del esquema
-require('./models/Materia');           // 2. Depende de Cuenta
-require('./models/Tarea');             // 3. Depende de Cuenta y Materia
-require('./models/PreferenciaVisual'); // 4. Depende de Cuenta (1:1)
-require('./models/SesionEstudio');     // 5. Depende de Cuenta y Tarea
-require('./models/Insignia');          // 6. Catálogo global sin dependencias
-require('./models/CuentaInsignia');    // 7. Tabla pivote N:M: Cuenta ↔ Insignia
-require('./models/Punto');             // 8. Depende de Cuenta
-require('./models/Reto');              // 9. Depende de Cuenta
-require('./models/Meta');              // 10. Depende de Cuenta
-require('./models/Recordatorio');      // 11. Depende de Cuenta y Tarea
+require('./Cuenta');            // 1. Raíz del esquema
+require('./Materia');           // 2. Depende de Cuenta
+require('./Tarea');             // 3. Depende de Cuenta y Materia
+require('./PreferenciaVisual'); // 4. Depende de Cuenta (1:1)
+require('./SesionEstudio');     // 5. Depende de Cuenta y Tarea
+require('./Insignia');          // 6. Catálogo global sin dependencias
+require('./CuentaInsignia');    // 7. Tabla pivote N:M: Cuenta ↔ Insignia
+require('./Punto');             // 8. Depende de Cuenta
+require('./Reto');              // 9. Depende de Cuenta
+require('./Meta');              // 10. Depende de Cuenta
+require('./Recordatorio');      // 11. Depende de Cuenta y Tarea
 
 
 // ─────────────────────────────────────────
@@ -74,19 +75,19 @@ require('./models/Recordatorio');      // 11. Depende de Cuenta y Tarea
  * Operaciones de Cuenta necesarias para crear y limpiar los datos base del test.
  * Solo se importan `crearCuenta` y `eliminarCuenta` ya que el foco del test es Insignia.
  */
-const { crearCuenta, eliminarCuenta } = require('./crud/cuentaCrud');
+const { crearCuenta, eliminarCuenta } = require('../crud/cuentaCrud');
 
 /**
  * Operaciones de Materia necesarias para los datos base del test.
  * Solo se importan `crearMateria` y `eliminarMateria`.
  */
-const { crearMateria, eliminarMateria } = require('./crud/materiaCrud');
+const { crearMateria, eliminarMateria } = require('../crud/materiaCrud');
 
 /**
  * Operaciones de Tarea necesarias para los datos base del test.
  * Solo se importan `crearTarea` y `eliminarTarea`.
  */
-const { crearTarea, eliminarTarea } = require('./crud/tareaCrud');
+const { crearTarea, eliminarTarea } = require('../crud/tareaCrud');
 
 /**
  * Todas las operaciones CRUD de Insignia: el conjunto completo que se prueba
@@ -98,7 +99,7 @@ const {
   obtenerInsignia,
   actualizarInsignia,
   eliminarInsignia
-} = require('./crud/insigniaCrud');
+} = require('../crud/insigniaCrud');
 
 
 // ─────────────────────────────────────────
@@ -127,9 +128,8 @@ const {
  */
 async function test() {
 
-  // Sincroniza el esquema sin forzar recreación de tablas.
-  // force: false garantiza que los datos existentes no se borren.
-  await sequelize.sync({ force: false });
+  // Inicializa el esquema de forma idempotente desde el E11 aprobado.
+  await inicializarEsquema();
 
 
   // ── DATOS BASE ────────────────────────────────────────────────────────────

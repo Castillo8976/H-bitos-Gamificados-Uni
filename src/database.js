@@ -38,8 +38,10 @@ const path = require('path');               // Módulo nativo para construir rut
  *   único archivo local, ideal para desarrollo, pruebas y aplicaciones
  *   de escritorio sin necesidad de un servidor de BD externo.
  *
- * - `storage: path.join(__dirname, '..', 'database.sqlite')`
- *   Ruta absoluta al archivo SQLite. Se construye con `path.join` para
+ * - `storage: process.env.DATABASE_STORAGE || ruta predeterminada`
+ *   Permite seleccionar otro archivo mediante `DATABASE_STORAGE`, útil para
+ *   ejecutar pruebas aisladas sin modificar la base real del proyecto.
+ *   Si la variable no existe, la ruta se construye con `path.join` para
  *   garantizar compatibilidad entre sistemas operativos (Windows/Linux/macOS).
  *   `__dirname` apunta al directorio de este archivo (ej: `/proyecto/src`),
  *   y `'..'` sube un nivel para ubicar el archivo en la raíz del proyecto:
@@ -60,14 +62,14 @@ const path = require('path');               // Módulo nativo para construir rut
  * // Uso en cualquier modelo o script del proyecto
  * const sequelize = require('./database');
  * await sequelize.authenticate(); // verifica la conexión
- * await sequelize.sync();         // sincroniza el esquema
+ * // El esquema se inicializa desde E11 mediante config/schema.js.
  */
 const sequelize = new Sequelize({
   dialect: 'sqlite',  // Motor: SQLite (archivo local, sin servidor externo)
 
   // Ruta absoluta y multiplataforma al archivo de la base de datos.
   // path.join garantiza separadores correctos en Windows (\) y Unix (/)
-  storage: path.join(__dirname, '..', 'database.sqlite'),
+  storage: process.env.DATABASE_STORAGE || path.join(__dirname, '..', 'database.sqlite'),
 
   logging: false  // false → silencia las consultas SQL en consola (recomendado en producción)
                   // console.log → muestra cada query generado (útil para depuración)

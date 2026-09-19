@@ -10,7 +10,7 @@
  * // RF-04 | RNF-13 | RNF-15 | E12 - NotificacionService
  */
 
-const Notificacion = require('../crud-models/models/Notificacion');
+const Notificacion = require('../models/Notificacion');
 const crypto = require('crypto');
 
 

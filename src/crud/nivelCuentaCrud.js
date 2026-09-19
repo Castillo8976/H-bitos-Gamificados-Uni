@@ -11,7 +11,7 @@
  * // RF-07 | E12 - NivelCuentaService
  */
 
-const NivelCuenta = require('../crud-models/models/NivelCuenta');
+const NivelCuenta = require('../models/NivelCuenta');
 const crypto = require('crypto');
 
 

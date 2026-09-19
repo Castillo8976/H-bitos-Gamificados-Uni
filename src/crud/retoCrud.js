@@ -11,7 +11,7 @@
  * // RF-06 | RF-07 | E12 - RetoService
  */
 
-const Reto = require('../crud-models/models/Reto');
+const Reto = require('../models/Reto');
 const crypto = require('crypto');
 
 
@@ -175,7 +175,7 @@ async function completarReto(id) {
   await reto.update({ completado: true });
 
   // Acredita los puntos — importación dinámica para evitar dependencia circular
-  const { otorgarPuntos } = require('../crud-models/crud/puntoCrud');
+  const { otorgarPuntos } = require('./puntoCrud');
   await otorgarPuntos(reto.id_cuenta, reto.puntos_recompensa, 'Reto', reto.id_reto);
 
   console.log(`🎯 ¡Reto completado! "${reto.descripcion}" | +${reto.puntos_recompensa} pts`);

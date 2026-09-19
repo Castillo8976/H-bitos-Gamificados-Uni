@@ -11,7 +11,7 @@
  * // RF-03 | RF-07 | E12 - PuntoService
  */
 
-const Punto = require('../crud-models/models/Punto');
+const Punto = require('../models/Punto');
 const crypto = require('crypto');
 
 

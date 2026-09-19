@@ -178,7 +178,7 @@ const Reto = sequelize.define('reto', {
    * preservar la integridad del historial de logros del usuario.
    */
   completado: {
-    type: DataTypes.BOOLEAN, // TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: false      // Todo reto nuevo comienza como no completado
   }

@@ -153,7 +153,7 @@ const SesionEstudio = sequelize.define('sesion_estudio', {
    *            de gamificación del controlador.
    */
   modo_enfoque: {
-    type: DataTypes.BOOLEAN, // TINYINT(1) en MySQL / BOOLEAN en otros motores
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: false      // Por defecto las sesiones se registran en modo regular
   }

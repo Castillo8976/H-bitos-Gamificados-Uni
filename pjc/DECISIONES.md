@@ -2,7 +2,7 @@
 
 **Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio  
 **Autor:** Juan David Castillo Mena  
-**Asignatura:** Ingeniería de Software II — Uniremington 2025
+**Asignatura:** Ingeniería de Software III — Uniremington 2026
 
 ---
 
@@ -16,6 +16,8 @@ SQLite no requiere instalar ni configurar un servidor de base de datos separado.
 
 **¿Qué artefacto de diseño respalda esta decisión?**  
 **Entregable 6 — Diagrama de Despliegue UML**: define una arquitectura de nodo único donde la aplicación web (Node.js/Express) y el almacenamiento de datos (SQLite) residen en el mismo entorno, sin servidor de BD externo. Esto está alineado con la sección de Alcance del documento de requisitos (actualizada en agosto de 2026 para reflejar el backend Node.js/Express/Sequelize/SQLite realmente implementado, en lugar de la versión estática con `localStorage` planteada al inicio del proyecto).
+
+**Formalización en construcción:** `CRF-001-unificacion-linea-tecnica.md`. Desde septiembre de 2026, E11 es un DDL SQLite y la raíz del repositorio contiene el único manifiesto ejecutable.
 
 ---
 

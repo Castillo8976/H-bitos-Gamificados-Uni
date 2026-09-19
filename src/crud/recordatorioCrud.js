@@ -10,7 +10,7 @@
  * // RF-04 | RNF-15 | E12 - RecordatorioService
  */
 
-const Recordatorio = require('../crud-models/models/Recordatorio');
+const Recordatorio = require('../models/Recordatorio');
 const crypto = require('crypto');
 
 

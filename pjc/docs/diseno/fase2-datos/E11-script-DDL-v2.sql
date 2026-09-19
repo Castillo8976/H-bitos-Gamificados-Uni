@@ -1,239 +1,202 @@
--- ============================================================
--- DDL MySQL — Plataforma Web Gamificada de Hábitos de Estudio
--- Motor: MySQL (XAMPP) — Compatible con MySQL 5.7+
--- ============================================================
+-- E11 — DDL SQLite — Plataforma Web Gamificada de Hábitos de Estudio
+-- Línea oficial: Node.js + Express + Sequelize ORM + SQLite | CRF-001
+-- Fuente semántica: E7-diccionario-datos.md
 
-SET FOREIGN_KEY_CHECKS = 0;
+PRAGMA foreign_keys = ON;
 
-DROP TABLE IF EXISTS preferencia_visual;
-DROP TABLE IF EXISTS notificacion;
-DROP TABLE IF EXISTS meta;
-DROP TABLE IF EXISTS recordatorio;
-DROP TABLE IF EXISTS reto;
-DROP TABLE IF EXISTS punto;
-DROP TABLE IF EXISTS cuenta_insignia;
-DROP TABLE IF EXISTS insignia;
-DROP TABLE IF EXISTS sesion_estudio;
-DROP TABLE IF EXISTS tarea;
-DROP TABLE IF EXISTS materia;
-DROP TABLE IF EXISTS nivel_cuenta;
-DROP TABLE IF EXISTS cuenta;
+CREATE TABLE IF NOT EXISTS cuenta (
+  id_cuenta VARCHAR(36) NOT NULL,
+  nombre VARCHAR(60) NOT NULL,
+  correo VARCHAR(100) NOT NULL,
+  contrasena_hash VARCHAR(255) NOT NULL,
+  fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
+  activa INTEGER NOT NULL DEFAULT 1 CHECK (activa IN (0,1)),
+  CONSTRAINT pk_cuenta PRIMARY KEY (id_cuenta),
+  CONSTRAINT uq_cuenta_correo UNIQUE (correo)
+);
 
-SET FOREIGN_KEY_CHECKS = 1;
-
--- TABLA cuenta | RF01, RNF12
-CREATE TABLE cuenta (
-  idcuenta       VARCHAR(36)  NOT NULL,
-  nombre         VARCHAR(60)  NOT NULL,
-  correo         VARCHAR(100) NOT NULL,
-  contrasenahash VARCHAR(255) NOT NULL,
-  fecharegistro  DATE         NOT NULL,
-  activa         TINYINT(1)   NOT NULL DEFAULT 1,
-  CONSTRAINT pk_cuenta PRIMARY KEY (idcuenta),
-  CONSTRAINT uq_correo UNIQUE (correo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- TABLA nivel_cuenta | RF07 — catálogo global de niveles
-CREATE TABLE nivel_cuenta (
-  idnivel       VARCHAR(36)  NOT NULL,
-  nombre        VARCHAR(60)  NOT NULL,
-  descripcion   VARCHAR(200) NOT NULL,
-  puntosminimos INT          NOT NULL DEFAULT 0,
-  orden         INT          NOT NULL DEFAULT 1,
-  icono         VARCHAR(50),
-  CONSTRAINT pk_nivel PRIMARY KEY (idnivel),
-  CONSTRAINT uq_nivel_nombre UNIQUE (nombre),
-  CONSTRAINT ck_nivel_puntos CHECK (puntosminimos >= 0),
-  CONSTRAINT ck_nivel_orden CHECK (orden > 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- TABLA preferencia_visual | RF13 — relación 1:1
-CREATE TABLE preferencia_visual (
-  idpreferencia    VARCHAR(36) NOT NULL,
-  idcuenta         VARCHAR(36) NOT NULL,
-  tema             VARCHAR(20) NOT NULL DEFAULT 'purple',
-  modooscuro       TINYINT(1)  NOT NULL DEFAULT 0,
-  avatar           VARCHAR(50),
-  fechaactualizado DATE        NOT NULL,
-  CONSTRAINT pk_preferencia PRIMARY KEY (idpreferencia),
-  CONSTRAINT uq_pref_cuenta UNIQUE (idcuenta),
-  CONSTRAINT fk_pref_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- TABLA materia | RF01, RF09
-CREATE TABLE materia (
-  idmateria VARCHAR(36) NOT NULL,
-  idcuenta  VARCHAR(36) NOT NULL,
-  nombre    VARCHAR(80) NOT NULL,
-  horario   VARCHAR(100),
-  activa    TINYINT(1)  NOT NULL DEFAULT 1,
-  CONSTRAINT pk_materia PRIMARY KEY (idmateria),
-  CONSTRAINT fk_mat_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- TABLA tarea | RF02, RF03, RF09
-CREATE TABLE tarea (
-  idtarea         VARCHAR(36)  NOT NULL,
-  idcuenta        VARCHAR(36)  NOT NULL,
-  idmateria       VARCHAR(36),
-  nombre          VARCHAR(120) NOT NULL,
-  fechaentrega    DATE         NOT NULL,
-  prioridad       VARCHAR(10)  NOT NULL,
-  estado          VARCHAR(15)  NOT NULL DEFAULT 'Pendiente',
-  fechacompletada DATE,
-  CONSTRAINT pk_tarea PRIMARY KEY (idtarea),
-  CONSTRAINT fk_tar_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_tar_materia FOREIGN KEY (idmateria)
-    REFERENCES materia(idmateria) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- TABLA sesion_estudio | RF10, RF11, RF12
-CREATE TABLE sesion_estudio (
-  idsesion        VARCHAR(36) NOT NULL,
-  idcuenta        VARCHAR(36) NOT NULL,
-  idtarea         VARCHAR(36),
-  fecha           DATE        NOT NULL,
-  duracionminutos INT         NOT NULL,
-  modoenfoque     TINYINT(1)  NOT NULL DEFAULT 0,
-  CONSTRAINT pk_sesion PRIMARY KEY (idsesion),
-  CONSTRAINT fk_ses_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_ses_tarea FOREIGN KEY (idtarea)
-    REFERENCES tarea(idtarea) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- TABLA insignia | RF05
-CREATE TABLE insignia (
-  idinsignia  VARCHAR(36)  NOT NULL,
-  nombre      VARCHAR(80)  NOT NULL,
+CREATE TABLE IF NOT EXISTS nivel_cuenta (
+  id_nivel VARCHAR(36) NOT NULL,
+  nombre VARCHAR(60) NOT NULL,
   descripcion VARCHAR(200) NOT NULL,
-  condicion   VARCHAR(100) NOT NULL,
-  icono       VARCHAR(50),
-  CONSTRAINT pk_insignia PRIMARY KEY (idinsignia),
-  CONSTRAINT uq_ins_nombre UNIQUE (nombre),
-  CONSTRAINT uq_ins_condicion UNIQUE (condicion)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  puntos_minimos INTEGER NOT NULL DEFAULT 0 CHECK (puntos_minimos >= 0),
+  orden INTEGER NOT NULL DEFAULT 1 CHECK (orden > 0),
+  icono VARCHAR(50),
+  CONSTRAINT pk_nivel_cuenta PRIMARY KEY (id_nivel),
+  CONSTRAINT uq_nivel_cuenta_nombre UNIQUE (nombre)
+);
 
--- TABLA cuenta_insignia — N:M | RF05
-CREATE TABLE cuenta_insignia (
-  idcuenta      VARCHAR(36) NOT NULL,
-  idinsignia    VARCHAR(36) NOT NULL,
-  fechaobtenida DATE        NOT NULL,
-  CONSTRAINT pk_ci PRIMARY KEY (idcuenta, idinsignia),
-  CONSTRAINT fk_ci_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_ci_insignia FOREIGN KEY (idinsignia)
-    REFERENCES insignia(idinsignia) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS preferencia_visual (
+  id_preferencia VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  tema VARCHAR(20) NOT NULL DEFAULT 'purple'
+    CHECK (tema IN ('purple','teal','amber','coral','blue','green')),
+  modo_oscuro INTEGER NOT NULL DEFAULT 0 CHECK (modo_oscuro IN (0,1)),
+  avatar VARCHAR(50),
+  fecha_actualizado DATE NOT NULL DEFAULT CURRENT_DATE,
+  CONSTRAINT pk_preferencia_visual PRIMARY KEY (id_preferencia),
+  CONSTRAINT uq_preferencia_visual_cuenta UNIQUE (id_cuenta),
+  CONSTRAINT fk_preferencia_visual_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
--- TABLA punto | RF03, RF07
-CREATE TABLE punto (
-  idpunto  VARCHAR(36) NOT NULL,
-  idcuenta VARCHAR(36) NOT NULL,
-  cantidad INT         NOT NULL,
-  origen   VARCHAR(20) NOT NULL,
-  idorigen VARCHAR(36),
-  fecha    DATE        NOT NULL,
-  CONSTRAINT pk_punto PRIMARY KEY (idpunto),
-  CONSTRAINT fk_pto_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS materia (
+  id_materia VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  nombre VARCHAR(80) NOT NULL,
+  horario VARCHAR(100),
+  activa INTEGER NOT NULL DEFAULT 1 CHECK (activa IN (0,1)),
+  CONSTRAINT pk_materia PRIMARY KEY (id_materia),
+  CONSTRAINT fk_materia_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
--- TABLA reto | RF06
-CREATE TABLE reto (
-  idreto           VARCHAR(36)  NOT NULL,
-  idcuenta         VARCHAR(36)  NOT NULL,
-  descripcion      VARCHAR(200) NOT NULL,
-  condicion        VARCHAR(100) NOT NULL,
-  puntosrecompensa INT          NOT NULL,
-  semana           VARCHAR(10)  NOT NULL,
-  progreso         INT          NOT NULL DEFAULT 0,
-  completado       TINYINT(1)   NOT NULL DEFAULT 0,
-  CONSTRAINT pk_reto PRIMARY KEY (idreto),
-  CONSTRAINT uq_reto_semana UNIQUE (idcuenta, semana),
-  CONSTRAINT fk_reto_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS tarea (
+  id_tarea VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  id_materia VARCHAR(36),
+  nombre VARCHAR(120) NOT NULL,
+  fecha_entrega DATE NOT NULL,
+  prioridad VARCHAR(10) NOT NULL CHECK (prioridad IN ('Alta','Media','Baja')),
+  estado VARCHAR(15) NOT NULL DEFAULT 'Pendiente'
+    CHECK (estado IN ('Pendiente','Completada')),
+  fecha_completada DATE,
+  CONSTRAINT pk_tarea PRIMARY KEY (id_tarea),
+  CONSTRAINT fk_tarea_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_tarea_materia FOREIGN KEY (id_materia)
+    REFERENCES materia(id_materia) ON DELETE SET NULL ON UPDATE CASCADE
+);
 
--- TABLA meta | RF15
-CREATE TABLE meta (
-  idmeta        VARCHAR(36)  NOT NULL,
-  idcuenta      VARCHAR(36)  NOT NULL,
-  semana        VARCHAR(10)  NOT NULL,
-  descripcion   VARCHAR(200) NOT NULL,
-  valorobjetivo INT          NOT NULL,
-  valoractual   INT          NOT NULL DEFAULT 0,
-  cumplida      TINYINT(1)   NOT NULL DEFAULT 0,
-  CONSTRAINT pk_meta PRIMARY KEY (idmeta),
-  CONSTRAINT uq_meta_semana UNIQUE (idcuenta, semana),
-  CONSTRAINT fk_meta_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS sesion_estudio (
+  id_sesion VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  id_tarea VARCHAR(36),
+  fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+  duracion_minutos INTEGER NOT NULL CHECK (duracion_minutos > 0),
+  modo_enfoque INTEGER NOT NULL DEFAULT 0 CHECK (modo_enfoque IN (0,1)),
+  CONSTRAINT pk_sesion_estudio PRIMARY KEY (id_sesion),
+  CONSTRAINT fk_sesion_estudio_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_sesion_estudio_tarea FOREIGN KEY (id_tarea)
+    REFERENCES tarea(id_tarea) ON DELETE SET NULL ON UPDATE CASCADE
+);
 
--- TABLA recordatorio | RF04, RNF15
-CREATE TABLE recordatorio (
-  idrecordatorio  VARCHAR(36)  NOT NULL,
-  idtarea         VARCHAR(36)  NOT NULL,
-  idcuenta        VARCHAR(36)  NOT NULL,
-  fechaprogramada DATE         NOT NULL,
-  mensaje         VARCHAR(200) NOT NULL,
-  enviado         TINYINT(1)   NOT NULL DEFAULT 0,
-  activo          TINYINT(1)   NOT NULL DEFAULT 1,
-  CONSTRAINT pk_recordatorio PRIMARY KEY (idrecordatorio),
-  CONSTRAINT fk_rec_tarea FOREIGN KEY (idtarea)
-    REFERENCES tarea(idtarea) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_rec_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS insignia (
+  id_insignia VARCHAR(36) NOT NULL,
+  nombre VARCHAR(80) NOT NULL,
+  descripcion VARCHAR(200) NOT NULL,
+  condicion VARCHAR(100) NOT NULL,
+  icono VARCHAR(50),
+  CONSTRAINT pk_insignia PRIMARY KEY (id_insignia),
+  CONSTRAINT uq_insignia_nombre UNIQUE (nombre),
+  CONSTRAINT uq_insignia_condicion UNIQUE (condicion)
+);
 
--- Nota (agosto 2026): la tabla `reporte` fue eliminada por decisión del equipo.
--- Sus estadísticas se calculan en tiempo real con SUM/COUNT sobre tarea,
--- sesion_estudio y punto — ver justificación en E7-diccionario-datos.md.
+CREATE TABLE IF NOT EXISTS cuenta_insignia (
+  id_cuenta VARCHAR(36) NOT NULL,
+  id_insignia VARCHAR(36) NOT NULL,
+  fecha_obtenida DATE NOT NULL DEFAULT CURRENT_DATE,
+  CONSTRAINT pk_cuenta_insignia PRIMARY KEY (id_cuenta,id_insignia),
+  CONSTRAINT fk_cuenta_insignia_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_cuenta_insignia_insignia FOREIGN KEY (id_insignia)
+    REFERENCES insignia(id_insignia) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
--- TABLA notificacion | RF04, RNF15
-CREATE TABLE notificacion (
-  idnotificacion VARCHAR(36)  NOT NULL,
-  idcuenta       VARCHAR(36)  NOT NULL,
-  tipo           VARCHAR(20)  NOT NULL,
-  mensaje        VARCHAR(200) NOT NULL,
-  leida          TINYINT(1)   NOT NULL DEFAULT 0,
-  fecha          DATE         NOT NULL,
-  CONSTRAINT pk_notificacion PRIMARY KEY (idnotificacion),
-  CONSTRAINT ck_not_tipo CHECK (tipo IN ('Insignia','Reto','Meta','Nivel','Sistema')),
-  CONSTRAINT fk_not_cuenta FOREIGN KEY (idcuenta)
-    REFERENCES cuenta(idcuenta) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS punto (
+  id_punto VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+  origen VARCHAR(20) NOT NULL CHECK (origen IN ('Tarea','Reto','Sesion')),
+  id_origen VARCHAR(36),
+  fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+  CONSTRAINT pk_punto PRIMARY KEY (id_punto),
+  CONSTRAINT fk_punto_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
--- ============================================================
--- ÍNDICES DE RENDIMIENTO
--- ============================================================
-CREATE INDEX idx_tarea_estado    ON tarea(idcuenta, estado);
-CREATE INDEX idx_tarea_prioridad ON tarea(idcuenta, prioridad);
-CREATE INDEX idx_tarea_fecha     ON tarea(idcuenta, fechaentrega);
-CREATE INDEX idx_sesion_fecha    ON sesion_estudio(idcuenta, fecha);
-CREATE INDEX idx_punto_cuenta    ON punto(idcuenta);
-CREATE INDEX idx_reto_semana     ON reto(idcuenta, semana);
-CREATE INDEX idx_rec_pendiente   ON recordatorio(activo, enviado, fechaprogramada);
-CREATE INDEX idx_not_cuenta      ON notificacion(idcuenta, leida, fecha);
+CREATE TABLE IF NOT EXISTS reto (
+  id_reto VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  descripcion VARCHAR(200) NOT NULL,
+  condicion VARCHAR(100) NOT NULL,
+  puntos_recompensa INTEGER NOT NULL CHECK (puntos_recompensa > 0),
+  semana VARCHAR(10) NOT NULL,
+  progreso INTEGER NOT NULL DEFAULT 0 CHECK (progreso >= 0),
+  completado INTEGER NOT NULL DEFAULT 0 CHECK (completado IN (0,1)),
+  CONSTRAINT pk_reto PRIMARY KEY (id_reto),
+  CONSTRAINT uq_reto_cuenta_semana UNIQUE (id_cuenta,semana),
+  CONSTRAINT fk_reto_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
--- ============================================================
--- DATOS SEMILLA — Insignias
--- ============================================================
-INSERT INTO insignia VALUES
-('ins-001','Primera tarea','Completaste tu primera tarea','primera_tarea','star.svg'),
-('ins-002','Semana perfecta','7 sesiones en una semana','7_sesiones_semana','fire.svg'),
-('ins-003','Racha de 5','5 tareas completadas seguidas','5_tareas_seguidas','lightning.svg'),
-('ins-004','Madrugador','Sesion antes de las 8am','sesion_antes_8am','sunrise.svg'),
-('ins-005','Pomodoro Pro','10 sesiones Pomodoro completadas','10_pomodoros','tomato.svg');
+CREATE TABLE IF NOT EXISTS meta (
+  id_meta VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  semana VARCHAR(10) NOT NULL,
+  descripcion VARCHAR(200) NOT NULL,
+  valor_objetivo INTEGER NOT NULL CHECK (valor_objetivo > 0),
+  valor_actual INTEGER NOT NULL DEFAULT 0 CHECK (valor_actual >= 0),
+  cumplida INTEGER NOT NULL DEFAULT 0 CHECK (cumplida IN (0,1)),
+  CONSTRAINT pk_meta PRIMARY KEY (id_meta),
+  CONSTRAINT uq_meta_cuenta_semana UNIQUE (id_cuenta,semana),
+  CONSTRAINT fk_meta_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
--- ============================================================
--- DATOS SEMILLA — Niveles de cuenta
--- ============================================================
-INSERT INTO nivel_cuenta VALUES
-('niv-001','Principiante','Estás dando tus primeros pasos como estudiante gamificado.',0,1,'nivel_1.svg'),
-('niv-002','Estudiante','Ya tienes experiencia y estás construyendo buenos hábitos.',100,2,'nivel_2.svg'),
-('niv-003','Avanzado','Dominas tus hábitos de estudio y eres constante.',500,3,'nivel_3.svg'),
-('niv-004','Maestro','Has alcanzado la cima. Eres un referente de disciplina.',1000,4,'nivel_4.svg');
+CREATE TABLE IF NOT EXISTS recordatorio (
+  id_recordatorio VARCHAR(36) NOT NULL,
+  id_tarea VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  fecha_programada DATE NOT NULL,
+  mensaje VARCHAR(200) NOT NULL,
+  enviado INTEGER NOT NULL DEFAULT 0 CHECK (enviado IN (0,1)),
+  activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
+  CONSTRAINT pk_recordatorio PRIMARY KEY (id_recordatorio),
+  CONSTRAINT fk_recordatorio_tarea FOREIGN KEY (id_tarea)
+    REFERENCES tarea(id_tarea) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_recordatorio_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS notificacion (
+  id_notificacion VARCHAR(36) NOT NULL,
+  id_cuenta VARCHAR(36) NOT NULL,
+  tipo VARCHAR(20) NOT NULL
+    CHECK (tipo IN ('Insignia','Reto','Meta','Nivel','Sistema')),
+  mensaje VARCHAR(200) NOT NULL,
+  leida INTEGER NOT NULL DEFAULT 0 CHECK (leida IN (0,1)),
+  fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+  CONSTRAINT pk_notificacion PRIMARY KEY (id_notificacion),
+  CONSTRAINT fk_notificacion_cuenta FOREIGN KEY (id_cuenta)
+    REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_tarea_estado ON tarea(id_cuenta,estado);
+CREATE INDEX IF NOT EXISTS idx_tarea_prioridad ON tarea(id_cuenta,prioridad);
+CREATE INDEX IF NOT EXISTS idx_tarea_fecha ON tarea(id_cuenta,fecha_entrega);
+CREATE INDEX IF NOT EXISTS idx_sesion_fecha ON sesion_estudio(id_cuenta,fecha);
+CREATE INDEX IF NOT EXISTS idx_punto_cuenta ON punto(id_cuenta);
+CREATE INDEX IF NOT EXISTS idx_reto_semana ON reto(id_cuenta,semana);
+CREATE INDEX IF NOT EXISTS idx_recordatorio_pendiente
+  ON recordatorio(activo,enviado,fecha_programada);
+CREATE INDEX IF NOT EXISTS idx_notificacion_cuenta
+  ON notificacion(id_cuenta,leida,fecha);
+
+INSERT OR IGNORE INTO insignia
+  (id_insignia,nombre,descripcion,condicion,icono)
+VALUES
+  ('ins-001','Primera tarea','Completaste tu primera tarea','primera_tarea','star.svg'),
+  ('ins-002','Semana perfecta','7 sesiones en una semana','7_sesiones_semana','fire.svg'),
+  ('ins-003','Racha de 5','5 tareas completadas seguidas','5_tareas_seguidas','lightning.svg'),
+  ('ins-004','Madrugador','Sesion antes de las 8am','sesion_antes_8am','sunrise.svg'),
+  ('ins-005','Pomodoro Pro','10 sesiones Pomodoro completadas','10_pomodoros','tomato.svg');
+
+INSERT OR IGNORE INTO nivel_cuenta
+  (id_nivel,nombre,descripcion,puntos_minimos,orden,icono)
+VALUES
+  ('niv-001','Principiante','Estás dando tus primeros pasos como estudiante gamificado.',0,1,'nivel_1.svg'),
+  ('niv-002','Estudiante','Ya tienes experiencia y estás construyendo buenos hábitos.',100,2,'nivel_2.svg'),
+  ('niv-003','Avanzado','Dominas tus hábitos de estudio y eres constante.',500,3,'nivel_3.svg'),
+  ('niv-004','Maestro','Has alcanzado la cima. Eres un referente de disciplina.',1000,4,'nivel_4.svg');

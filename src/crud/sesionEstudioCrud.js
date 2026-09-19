@@ -10,7 +10,7 @@
  * // RF-10 | RF-11 | RF-12 | E12 - SesionEstudioService
  */
 
-const SesionEstudio = require('../crud-models/models/SesionEstudio');
+const SesionEstudio = require('../models/SesionEstudio');
 const crypto = require('crypto');
 
 

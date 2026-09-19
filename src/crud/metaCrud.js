@@ -11,7 +11,7 @@
  * // RF-15 | E12 - MetaService
  */
 
-const Meta = require('../crud-models/models/Meta');
+const Meta = require('../models/Meta');
 const crypto = require('crypto');
 
 
