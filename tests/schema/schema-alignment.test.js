@@ -159,6 +159,27 @@ async function run() {
     for (const check of checks) assert.ok(rows[0].sql.includes(check), `${table}: falta CHECK ${check}`);
   }
 
+  const requiredUniqueKeys = {
+    cuenta: [['correo']],
+    nivel_cuenta: [['nombre']],
+    preferencia_visual: [['id_cuenta']],
+    insignia: [['nombre'], ['condicion']],
+    reto: [['id_cuenta', 'semana']],
+    meta: [['id_cuenta', 'semana']]
+  };
+  for (const [table, uniqueKeys] of Object.entries(requiredUniqueKeys)) {
+    const indexes = await sequelize.query(`PRAGMA index_list(${table})`, { type: sequelize.QueryTypes.SELECT });
+    const actualUniqueKeys = [];
+    for (const index of indexes.filter(item => item.unique === 1)) {
+      const columns = await sequelize.query(`PRAGMA index_info(${index.name})`, { type: sequelize.QueryTypes.SELECT });
+      actualUniqueKeys.push(columns.sort((a, b) => a.seqno - b.seqno).map(column => column.name));
+    }
+    for (const key of uniqueKeys) {
+      assert.ok(actualUniqueKeys.some(actual => JSON.stringify(actual) === JSON.stringify(key)),
+        `${table}: falta UNIQUE(${key.join(', ')})`);
+    }
+  }
+
   const expectedForeignKeys = [
     ['preferencia_visual','id_cuenta','cuenta','id_cuenta','CASCADE'],
     ['materia','id_cuenta','cuenta','id_cuenta','CASCADE'],
