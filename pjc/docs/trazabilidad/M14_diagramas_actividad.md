@@ -25,15 +25,30 @@ Act-01 se eligió primero como plantilla porque es el flujo con más ramas de de
 
 > **Nota (agosto 2026):** `ActividadCompletarTarea.svg` (Act-01) fue actualizado: el paso final ya no dice "Actualizar reporte semanal", ahora dice "Tablero de Avance se actualiza (tiempo real)", reflejando que el Tablero se calcula al momento de la consulta sin ninguna acción explícita en este flujo.
 
+## Matriz de cobertura CRUD de actividades
+
+Los siete diagramas agrupan entidades relacionadas en flujos funcionales. La siguiente matriz demuestra la cobertura CRUD sin asumir operaciones que las reglas de negocio declaran como no aplicables.
+
+| Entidad E7 | Crear | Consultar | Actualizar / acción equivalente | Eliminar / acción equivalente | Actividad que lo sustenta | HU |
+|---|---|---|---|---|---|---|
+| `cuenta` | Registrar | Perfil / administración | Actualizar perfil | Desactivar | Act-02 | HU01, HU20, HU27 |
+| `materia` | Sí | Sí | Sí | Sí | Act-02, Act-03 | HU01, HU16 |
+| `tarea` | Sí | Sí | Editar / completar | Sí | Act-01, Act-03 | HU02, HU03, HU09, HU19 |
+| `sesion_estudio` | Sí | Sí | Sí | Sí | Act-04 | HU10, HU21 |
+| `insignia` | Administración | Sí | Administración | Administración | Act-01, Act-05 | HU05, HU22 |
+| `cuenta_insignia` | Desbloquear | Sí | No aplica | Revocar | Act-01 | HU05, HU26 |
+| `punto` | Otorgar | Sí / calcular | No aplica | Corrección autorizada | Act-01, Act-05 | HU03, HU07, HU26 |
+| `reto` | Sí | Sí | Progreso / completar / editar | Sí | Act-05 | HU06, HU18 |
+| `meta` | Sí | Sí | Progreso / editar | Sí | Act-05 | HU15, HU17 |
+| `recordatorio` | Automática / manual | Sí | Activar / desactivar / marcar enviado | Sí | Act-03, Act-06 | HU04, HU25 |
+| `preferencia_visual` | Automática | Sí | Guardar / restablecer | En cascada | Act-07 | HU01, HU13 |
+| `nivel_cuenta` | Administración | Sí / evaluar | Administración | Administración | Act-01, Act-05 | HU07, HU23 |
+| `notificacion` | Automática | Sí | Marcar leída | Sí / limpiar leídas | Act-06 | HU24 |
+
+Las acciones especiales mantienen la semántica aprobada en las HU: `cuenta_insignia` se desbloquea o revoca; `punto` es un ledger sin edición; `preferencia_visual` se crea automáticamente; `notificacion` se genera por eventos; y la cuenta se desactiva para conservar el historial.
+
 
 
 ## Diagramas de secuencia — cobertura por CRUD (complemento a M10)
 
-M10 ya cubre Seq-01 a Seq-05 mapeados a CU02–CU06. Para cumplir "por cada CRUD" de forma más literal, faltan diagramas de secuencia específicos para:
-
-- `cuentaCrud` (registro/login) — actualmente cubierto solo indirectamente por Seq-01.
-- `preferenciaVisualCrud` (CU08) — sin diagrama de secuencia propio.
-- `notificacionCrud` / `recordatorioCrud` (CU10) — sin diagrama de secuencia propio.
-- `nivelCuentaCrud` — entidad agregada en esta revisión (ver M9), sin diagrama de secuencia.
-
-**Recomendación:** priorizar Seq-06 (`preferenciaVisualCrud`) y Seq-07 (`recordatorioCrud`/`notificacionCrud`) porque son los dos CRUD con más lógica condicional que aún no tienen ningún diagrama de comportamiento asociado.
+M10 conserva Seq-01 a Seq-05 como diagramas visuales de los flujos críticos y agrega Seq-CRUD-01 a Seq-CRUD-13 como especificaciones textuales UML de la cobertura por entidad. Estas especificaciones incluyen participantes, mensajes, métodos reales, alternativas y excepciones CRUD; por tanto, `cuenta`, `materia`, `tarea`, `sesion_estudio`, `insignia`, `cuenta_insignia`, `punto`, `reto`, `meta`, `recordatorio`, `preferencia_visual`, `nivel_cuenta` y `notificacion` quedan trazadas sin modificar los archivos Draw.io existentes.
