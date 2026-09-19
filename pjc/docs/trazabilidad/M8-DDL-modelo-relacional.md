@@ -2,7 +2,7 @@
 
 **Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio  
 **Artefacto:** M8 — Trazabilidad Fase 2 (Datos)  
-**Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
+**Autores:** Juan David Castillo Mena · Alejandro Cardona Jaramillo  
 **Docente:** Gloria Amparo Lora Patiño  
 **Institución:** Uniremington · Medellín · 2025  
 
@@ -63,17 +63,14 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 
 | INSERT | Tabla | Registro | Condición | Ícono |
 |---|---|---|---|---|
-| ins-001 | insignia | Primera tarea | 1_tarea_completada | star.svg |
-| ins-002 | insignia | En racha | 5_tareas_seguidas | fire.svg |
-| ins-003 | insignia | Estudiante dedicado | 10_horas_estudio | clock.svg |
-| ins-004 | insignia | Reto superado | 1_reto_completado | trophy.svg |
-| ins-005 | insignia | Constancia | 3_dias_seguidos | calendar.svg |
-| ins-006 | insignia | Maestro del tiempo | 3_pomodoros_en_un_dia | timer.svg |
-| ins-007 | insignia | Sin procrastinar | tarea_mismo_dia | bolt.svg |
-| ins-008 | insignia | Organizado | 5_materias_registradas | book.svg |
+| ins-001 | insignia | Primera tarea | primera_tarea | star.svg |
+| ins-002 | insignia | Semana perfecta | 7_sesiones_semana | fire.svg |
+| ins-003 | insignia | Racha de 5 | 5_tareas_seguidas | lightning.svg |
+| ins-004 | insignia | Madrugador | sesion_antes_8am | sunrise.svg |
+| ins-005 | insignia | Pomodoro Pro | 10_pomodoros | tomato.svg |
 | niv-001..niv-004 | nivel_cuenta | Principiante, Estudiante, Avanzado, Maestro | puntos_minimos: 0, 100, 500, 1000 | nivel_1..4.svg |
 
-> **Nota de consistencia (pendiente de resolver):** el script `E11-script-DDL-v2.sql` vigente solo inserta 5 insignias (`ins-001`..`ins-005`, con nombres distintos a los 8 listados arriba) y no 8. Esta tabla documenta el catálogo objetivo del diccionario de datos (E7); antes de la entrega final hay que decidir cuál de las dos versiones es la definitiva y alinear E11 con esta matriz (o viceversa).
+> **Decisión de diseño (septiembre de 2026):** se adopta como catálogo semilla aprobado la lista de 5 insignias definida en `E11-script-DDL-v2.sql`. Esta matriz reproduce los mismos identificadores, nombres, condiciones e íconos para mantener correspondencia exacta entre el Modelo Relacional y el DDL.
 
 ---
 
@@ -89,6 +86,6 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | DEFAULT para campos automáticos | ✅ | ✅ | ✅ |
 | 8 índices de rendimiento | Definidos en este artefacto | ✅ | ✅ |
 | 3 vistas útiles | Definidas en este artefacto | ✅ | ✅ |
-| Datos semilla (8 insignias) | RF05 | ✅ | ✅ |
+| Datos semilla (5 insignias) | RF05 | ✅ | ✅ |
 | PRAGMA foreign_keys = ON | RNF (integridad) | ✅ | ✅ |
 | PRAGMA journal_mode = WAL | RNF02 (rendimiento) | ✅ | ✅ |
