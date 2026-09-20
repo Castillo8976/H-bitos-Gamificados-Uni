@@ -2,7 +2,7 @@
 
 **Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio  
 **Artefacto:** M6 — Trazabilidad Fase 2 (Datos)  
-**Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
+**Autores:** Juan David Castillo Mena · Alejandro Cardona Jaramillo  
 **Docente:** Gloria Amparo Lora Patiño  
 **Institución:** Uniremington · Medellín · 2025  
 

@@ -1,9 +1,11 @@
 # E7 — Diccionario de Datos
 
+**Estado:** Aprobado — 19 de septiembre de 2026 — Juan David Castillo Mena y Alejandro Cardona Jaramillo
+
 **Proyecto:** Plataforma Web Gamificada de Hábitos de Estudio  
 **Entregable:** 7 — Diccionario de Datos  
 **Fase:** 2 — Diseño de Datos  
-**Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
+**Autores:** Juan David Castillo Mena · Alejandro Cardona Jaramillo  
 **Docente:** Gloria Amparo Lora Patiño  
 **Institución:** Uniremington · Medellín · 2025  
 

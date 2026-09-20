@@ -5,29 +5,52 @@
 
 > Esta matriz verifica que cada clase del diagrama de clases tenga sus métodos justificados por un Caso de Uso y un Requisito Funcional.
 
+El diagrama vigente contiene las **13 clases de entidad** correspondientes a las 13 tablas aprobadas en E7. Los nombres físicos del diccionario se escriben en `snake_case` y sus clases UML equivalentes en `PascalCase`. `ExportadorDatos`, cuando se documenta, es una clase de servicio y no una entidad persistente ni una tabla; por tanto, no incrementa el conteo de entidades del modelo.
+
+**Fuente gráfica vigente:** `docs/diseno/fase3-componentes/E12-diagrama-clases.drawio`.
+
 ---
 
 | Clase | Métodos | CU que lo origina | RF asociado |
 |---|---|---|---|
-| `Cuenta` | `registrar`, `iniciarSesion`, `cifrarContraseña` | CU01 | RF01, RNF12 |
-| `Cuenta` | `obtenerPerfil`, `actualizarDatos` | CU08 | RF13 |
-| `Tarea` | `crear`, `editar`, `eliminar` | CU02 | RF02 |
-| `Tarea` | `marcarCompletada` | CU03 | RF03 |
-| `Tarea` | `filtrar(criterio)` | CU07 | RF09 |
-| `SesionEstudio` | `iniciar`, `pausar`, `detener` | CU04 | RF10 |
-| `SesionEstudio` | `activarModoEnfoque` | CU04 | RF12 |
-| `Insignia` | `verificarCondicion`, `desbloquear` | CU06 | RF05 |
-| `Punto` | `otorgar`, `calcularTotal` | CU03, CU06 | RF03, RF07 |
-| `Reto` | `generar`, `actualizarProgreso`, `completar` | CU06 | RF06 |
-| `Meta` | `sugerir`, `actualizar`, `evaluar` | CU05 | RF15 |
-| `Recordatorio` | `programar`, `cancelar`, `toggleActivo` | CU10 | RF04, RNF15 |
+| `Cuenta` | `crearCuenta`, `listarCuentas`, `obtenerCuenta`, `actualizarCuenta`, `eliminarCuenta` | CU01, CU11, CU13 | RF01, RNF12 |
+| `Materia` | `crearMateria`, `listarMaterias`, `obtenerMateria`, `actualizarMateria`, `eliminarMateria` | CU01, CU13 | RF01, RF09 |
+| `Tarea` | `crearTarea`, `listarTareas`, `obtenerTarea`, `actualizarTarea`, `completarTarea`, `eliminarTarea` | CU02, CU03, CU07 | RF02, RF03, RF04, RF09 |
+| `SesionEstudio` | `crearSesionEstudio`, `listarSesionesEstudio`, `obtenerSesionEstudio`, `actualizarSesionEstudio`, `eliminarSesionEstudio`, `calcularHorasSemana` | CU04, CU12 | RF10, RF11, RF12 |
+| `Insignia` | `crearInsignia`, `listarInsignias`, `obtenerInsignia`, `actualizarInsignia`, `eliminarInsignia`, `sembrarInsignias` | CU06, CU13 | RF05 |
+| `CuentaInsignia` | `desbloquearInsignia`, `listarInsigniasDesbloqueadas`, `tieneInsignia`, `revocarInsignia`, `evaluarInsignias` | CU03, CU06, CU14 | RF05 |
+| `Punto` | `otorgarPuntos`, `listarPuntos`, `obtenerPunto`, `eliminarPunto`, `calcularTotalPuntos`, `calcularPuntosSemana` | CU03, CU05, CU06, CU14 | RF03, RF07, RF08 |
+| `Reto` | `crearReto`, `listarRetos`, `obtenerReto`, `actualizarProgresoReto`, `completarReto`, `actualizarReto`, `eliminarReto` | CU06, CU13 | RF06 |
+| `Meta` | `crearMeta`, `listarMetas`, `obtenerMeta`, `actualizarProgresoMeta`, `actualizarMeta`, `eliminarMeta` | CU05 | RF15 |
+| `Recordatorio` | `crearRecordatorio`, `generarRecordatorioAutomatico`, `listarRecordatorios`, `obtenerRecordatorio`, `marcarRecordatorioEnviado`, `toggleRecordatorio`, `eliminarRecordatorio` | CU02, CU10 | RF04, RNF15 |
 | `Tarea`, `SesionEstudio`, `Punto` | `obtenerEstadisticasSemana()` — cálculo en tiempo real vía COUNT/SUM (reemplaza a `Reporte.generar/obtenerEstadisticas`) | CU05 | RF08, RF11 |
 | `ExportadorDatos` | `exportarDatosPersonales()` (reemplaza a `Reporte.exportar`) | CU09 | RF14 |
-| `PreferenciaVisual` | `guardar`, `cargar`, `aplicarTema` | CU08 | RF13, RNF04 |
-| `NivelCuenta` | `crearNivel`, `listarNiveles`, `actualizarNivel`, `eliminarNivel`, `sembrarNiveles` | CU06 | RF07 |
-| `NivelCuenta` | `evaluarNivelCuenta(totalPuntos)` | CU03, CU06 | RF07 |
-| `Notificacion` | `crearNotificacion`, `listarNotificaciones`, `marcarNotificacionLeida`, `marcarTodasLeidas`, `eliminarNotificacion`, `limpiarNotificacionesLeidas` | CU10 | RF04, RNF15 |
+| `PreferenciaVisual` | `crearPreferenciaVisual`, `obtenerPreferenciaVisual`, `actualizarPreferenciaVisual`, `obtenerOCrearPreferenciaVisual`, `eliminarPreferenciaVisual` | CU08 | RF13, RNF04 |
+| `NivelCuenta` | `crearNivel`, `listarNiveles`, `obtenerNivel`, `actualizarNivel`, `eliminarNivel`, `evaluarNivelCuenta`, `sembrarNiveles` | CU03, CU06, CU13 | RF07 |
+| `Notificacion` | `crearNotificacion`, `listarNotificaciones`, `contarNotificacionesNoLeidas`, `marcarNotificacionLeida`, `marcarTodasLeidas`, `eliminarNotificacion`, `limpiarNotificacionesLeidas` | CU15 | RF04, RNF15 |
 
 > **Nota de corrección (agosto 2026):** la clase `Reporte` fue **eliminada** por decisión del equipo (ver `E7-diccionario-datos.md` y `10-reglas-de-negocio.md` RN14). Sus responsabilidades se redistribuyeron: `obtenerEstadisticas` pasó a ser un cálculo en tiempo real sobre `Tarea`/`SesionEstudio`/`Punto`, y `exportar` pasó a una clase utilitaria `ExportadorDatos` que no depende de una tabla propia.
 
-> **Nota de corrección (agosto 2026):** se agregaron `NivelCuenta` y `Notificacion` porque ambas existen como modelos y CRUD completos en `/src` (`nivelCuentaCrud.js`, `notificacionCrud.js`) pero no aparecían en esta matriz ni en el Diagrama de Clases (`DiagramaClases.png`). **Resuelto:** ver `docs/diseno/imagenes/DiagramaClasesActualizado.svg`, que incluye las 14 clases con su relación hacia `Cuenta`. El PNG original (`DiagramaClases.png`) se conserva como referencia histórica de la fase de diseño previa a esta corrección.
+> **Nota de corrección (septiembre 2026):** `NivelCuenta` y `Notificacion` forman parte de las 13 clases de entidad del modelo vigente. El archivo oficial editable es `docs/diseno/fase3-componentes/E12-diagrama-clases.drawio`; `DiagramaClases.png` y `DiagramaClasesActualizado.svg` se conservan únicamente como exportaciones o referencias históricas y no determinan el conteo actual.
+
+---
+
+## Equivalencia E7 → clase UML → comportamiento
+
+| Entidad E7 (`snake_case`) | Clase UML (`PascalCase`) | Secuencias / actividades relacionadas |
+|---|---|---|
+| `cuenta` | `Cuenta` | Act-02 |
+| `materia` | `Materia` | Act-02, Act-03 |
+| `tarea` | `Tarea` | Seq-01, Seq-02, Act-01, Act-03 |
+| `sesion_estudio` | `SesionEstudio` | Seq-03, Seq-04, Act-04 |
+| `insignia` | `Insignia` | Seq-02, Seq-05, Act-01 |
+| `cuenta_insignia` | `CuentaInsignia` | Seq-05, Act-01 |
+| `punto` | `Punto` | Seq-02, Seq-04, Act-01 |
+| `reto` | `Reto` | Act-01, Act-05 |
+| `meta` | `Meta` | Seq-04, Act-05 |
+| `recordatorio` | `Recordatorio` | Seq-01, Act-03, Act-06 |
+| `preferencia_visual` | `PreferenciaVisual` | Act-07 |
+| `nivel_cuenta` | `NivelCuenta` | Act-01, Act-05 |
+| `notificacion` | `Notificacion` | Act-06 |
+
+Los participantes de interfaz, control o persistencia que aparecen en los diagramas de secuencia no representan tablas adicionales. Su clasificación y correspondencia con las entidades anteriores se documenta en M10.

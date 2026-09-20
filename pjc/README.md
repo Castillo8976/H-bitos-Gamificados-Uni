@@ -1,7 +1,7 @@
 # Plataforma Web Gamificada de Hábitos de Estudio
 
 **Ingeniería de Software II — Uniremington 2025**  
-**Autores:** Juan David Castillo Mena · Juan José Pulgarín Avendaño  
+**Autores:** Juan David Castillo Mena · Alejandro Cardona Jaramillo  
 **Docente:** Gloria Amparo Lora Patiño
 
 ---
@@ -121,6 +121,6 @@ plataforma-gamificada/
 
 ## ¿Cuál es el repositorio de tu compañero?
 
-> **Repositorio de Juan José Pulgarín Avendaño:**  
+> **Repositorio de Alejandro Cardona Jaramillo:**  
 > `https://github.com/<usuario-compañero>/<repositorio-compañero>`  
 > *(Reemplazar con la URL real del repositorio)*
