@@ -5,6 +5,7 @@ const sequelize = require('./database');
 const { inicializarEsquema } = require('./config/schema');
 const port = Number(process.env.PORT || 3000);
 
+/** RF01/HU01: inicializa E11, publica Express y registra el cierre de conexión ante señales. */
 async function iniciarServidor() {
   await inicializarEsquema();
   const server = app.listen(port, () => {

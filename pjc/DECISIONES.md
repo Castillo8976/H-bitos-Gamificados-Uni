@@ -8,10 +8,10 @@
 
 ## Decisión #01
 
-**¿Qué decidí?**  
+**¿Qué decidí?**
 Usar **SQLite como motor de base de datos** en lugar de PostgreSQL o MySQL.
 
-**¿Por qué?**  
+**¿Por qué?**
 SQLite no requiere instalar ni configurar un servidor de base de datos separado. El archivo `.sqlite` es portátil, vive en el mismo directorio del proyecto y funciona en cualquier máquina sin pasos adicionales de instalación. Para el alcance de este módulo académico (un solo estudiante como usuario por sesión, sin concurrencia real), SQLite cubre todos los requisitos funcionales. Además, es compatible con Sequelize sin cambios en el código de los modelos, lo que permitiría migrar a PostgreSQL en el futuro simplemente cambiando la configuración de conexión en `database.js`.
 
 **¿Qué artefacto de diseño respalda esta decisión?**  
@@ -23,10 +23,10 @@ SQLite no requiere instalar ni configurar un servidor de base de datos separado.
 
 ## Decisión #02
 
-**¿Qué decidí?**  
+**¿Qué decidí?**
 Implementar el historial de puntos como un **ledger inmutable (append-only)** en lugar de un contador actualizable en la tabla `cuenta`.
 
-**¿Por qué?**  
+**¿Por qué?**
 La alternativa simple sería guardar un campo `puntos_totales` en la tabla `cuenta` y actualizarlo con cada acción. Sin embargo, esto pierde el historial: no se podría saber cuántos puntos ganó el usuario en una semana específica, ni de qué acciones provinieron (tareas, retos, sesiones). El patrón ledger resuelve ambos problemas: cada evento de ganancia genera una fila nueva en la tabla `punto` con su `origen` e `id_origen`. El total se calcula con `SUM(cantidad)` y el desglose semanal con un filtro adicional por fecha. Esta decisión es clave para que el cálculo en tiempo real del Tablero de Avance Personal (antes `generarReporteSemanal()`, eliminado en agosto 2026) pueda obtener `puntos_obtenidos` por semana de forma precisa mediante una simple consulta `SUM` filtrada por fecha.
 
 **¿Qué artefacto de diseño respalda esta decisión?**  
@@ -44,3 +44,38 @@ Usar **importaciones dinámicas** (`require()` dentro del cuerpo de funciones) p
 
 **¿Qué artefacto de diseño respalda esta decisión?**  
 **Entregable 13 — Diagramas de Secuencia**: el diagrama de secuencia de CU-06 (Completar Reto) muestra la llamada de `RetoService` a `PuntoService` como una dependencia de ejecución, no de inicialización. Esto confirma que la relación entre estos componentes es una colaboración en tiempo de ejecución, lo que justifica la importación dinámica como mecanismo de implementación.
+
+---
+
+## Decisión #04
+
+**¿Qué decidí?**
+Coordinar las operaciones de gamificación desde `GamificacionService`, con una
+transacción única y protección de idempotencia, en lugar de encadenar CRUD desde
+el controlador.
+
+**¿Por qué?**
+Completar una tarea afecta tarea, puntos, reto, meta, insignias, nivel y
+notificaciones. La transacción evita estados parciales y el índice
+`uq_punto_evento` impide recompensas duplicadas. El controlador queda limitado
+al contrato HTTP y el servicio puede probarse sin navegador.
+
+**¿Qué artefacto respalda esta decisión?**
+CRF-003, RN22–RN24, M9 y M15. La verificación se encuentra en
+`tests/integration/objectives-6-10.test.js`.
+
+---
+
+## Decisión #05
+
+**¿Qué decidí?**
+Entregar al Revisor institucional únicamente indicadores globales agregados de
+estudiantes activos.
+
+**¿Por qué?**
+El modelo no contiene grupos ni una relación Revisor–Estudiante. Mostrar cuentas
+individuales inventaría un alcance y expondría información personal. Los
+agregados permiten cumplir HU28/CU16 sin nombres, correos ni identificadores.
+
+**¿Qué artefacto respalda esta decisión?**
+RN21, RN25, CRF-002 y CRF-003.

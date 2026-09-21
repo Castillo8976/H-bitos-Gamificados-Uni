@@ -11,6 +11,7 @@ const HttpError = require('../middlewares/httpError');
 
 const revokedTokens = new Set();
 
+/** RF01/HU01: exige secreto en producción; el valor de desarrollo no es seguro para despliegue público. */
 function jwtSecret() {
   if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET es obligatoria en producción');
@@ -18,6 +19,7 @@ function jwtSecret() {
   return process.env.JWT_SECRET || 'studyquest-desarrollo-cambiar-en-produccion';
 }
 
+/** RF01/HU20: excluye el hash de contraseña de la representación HTTP. */
 function safeAccount(account) {
   const value = account.toJSON ? account.toJSON() : { ...account };
   delete value.contrasena_hash;
@@ -68,16 +70,19 @@ async function authenticate({ correo, contrasena }) {
   return { token, cuenta: safeAccount(account) };
 }
 
+/** RF01/HU01: verifica firma, expiración y revocación en memoria. */
 function verifyToken(token) {
   const payload = jwt.verify(token, jwtSecret());
   if (revokedTokens.has(payload.jti)) throw new HttpError(401, 'La sesión fue cerrada');
   return payload;
 }
 
+/** RF01/HU01: revoca jti en este proceso; se pierde al reiniciar, pendiente documentado en M17. */
 function revokeToken(payload) {
   if (payload?.jti) revokedTokens.add(payload.jti);
 }
 
+/** RF01/HU20: consulta perfil seguro o produce error 404. */
 async function getProfile(id) {
   const account = await Cuenta.findByPk(id);
   if (!account) throw new HttpError(404, 'Cuenta no encontrada');

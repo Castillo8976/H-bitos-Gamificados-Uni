@@ -4,6 +4,7 @@ const Cuenta = require('../models/Cuenta');
 const authService = require('../services/authService');
 const HttpError = require('./httpError');
 
+/** RF01/HU01: verifica JWT y consulta cuenta activa/rol vigente en la BD en cada petición. */
 async function authenticateRequest(req, _res, next) {
   try {
     const header = req.get('authorization') || '';
@@ -23,6 +24,7 @@ async function authenticateRequest(req, _res, next) {
   }
 }
 
+/** RF01/HU27: crea un control de roles; requiere authenticateRequest previamente. */
 function authorize(...roles) {
   return (req, _res, next) => {
     if (!roles.includes(req.user.rol)) return next(new HttpError(403, 'No tiene permisos para esta operación'));
