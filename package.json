@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "start": "node src/server.js",
-    "test": "node tests/architecture/mvc.test.js && node tests/schema/schema-alignment.test.js && node tests/integration/current-layer.test.js && node tests/api/api.test.js",
+    "test": "node tests/architecture/mvc.test.js && npm run test:schema && node tests/integration/current-layer.test.js && node tests/integration/objectives-6-10.test.js && node tests/api/api.test.js && node tests/frontend/static.test.js",
     "test:architecture": "node tests/architecture/mvc.test.js",
-    "test:schema": "node tests/schema/schema-alignment.test.js",
-    "test:integration": "node tests/integration/current-layer.test.js",
+    "test:schema": "node tests/schema/schema-alignment.test.js && node tests/schema/point-date.test.js",
+    "test:integration": "node tests/integration/current-layer.test.js && node tests/integration/objectives-6-10.test.js",
     "test:api": "node tests/api/api.test.js",
+    "test:frontend": "node tests/frontend/static.test.js",
+    "test:browser": "node tests/frontend/browser.test.js",
     "test:legacy": "node src/models/test.js",
     "bootstrap:account": "node scripts/bootstrap-account.js"
   },

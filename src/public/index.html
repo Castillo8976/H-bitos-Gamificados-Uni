@@ -1,14 +1,179 @@
 <!doctype html>
+<!-- RF01–RF15/HU01–HU28: vistas conectadas en app.js (M16).
+     Los ID enlazan formularios/eventos. Ocultar una sección no autoriza
+     peticiones: el backend comprueba el acceso. -->
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>StudyQuest API</title>
+  <meta name="description" content="StudyQuest: gestión gamificada de hábitos de estudio.">
+  <title>StudyQuest</title>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <main>
-    <h1>StudyQuest</h1>
-    <p>Servidor MVC activo. Consulte <a href="/api/health">/api/health</a>.</p>
+  <div id="avisos" class="avisos" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- P01/P02: acceso y registro. Solo una vista se muestra a la vez. -->
+  <main id="acceso" class="acceso">
+    <section class="marca-acceso" aria-labelledby="titulo-marca">
+      <p class="eyebrow">Hábitos de estudio gamificados</p>
+      <h1 id="titulo-marca">StudyQuest</h1>
+      <p>Organiza tus materias, completa tareas y registra tus sesiones de concentración desde un solo lugar.</p>
+      <div class="marca-datos" aria-label="Características principales">
+        <span>13 recursos conectados</span><span>Datos persistentes en SQLite</span><span>Acceso protegido con JWT</span>
+      </div>
+    </section>
+
+    <section class="tarjeta acceso-tarjeta" aria-labelledby="titulo-acceso">
+      <div class="selector-acceso" role="tablist" aria-label="Acceso a StudyQuest">
+        <button id="tab-login" class="tab activo" type="button" role="tab" aria-selected="true" aria-controls="panel-login" tabindex="0">Ingresar</button>
+        <button id="tab-registro" class="tab" type="button" role="tab" aria-selected="false" aria-controls="panel-registro" tabindex="-1">Crear cuenta</button>
+      </div>
+      <div id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+        <p class="eyebrow">Bienvenido de nuevo</p><h2 id="titulo-acceso">Iniciar sesión</h2>
+        <p class="texto-secundario">Usa una cuenta registrada en esta base local.</p>
+        <form id="form-login" class="formulario">
+          <label>Correo<input name="correo" type="email" autocomplete="email" placeholder="nombre@correo.com" required></label>
+          <label>Contraseña<input name="contrasena" type="password" autocomplete="current-password" minlength="8" required></label>
+          <button class="boton primario ancho" type="submit">Iniciar sesión</button>
+        </form>
+      </div>
+      <div id="panel-registro" role="tabpanel" aria-labelledby="tab-registro" hidden>
+        <p class="eyebrow">Primer paso</p><h2>Crear una cuenta</h2>
+        <p class="texto-secundario">La materia inicial es obligatoria según HU01.</p>
+        <form id="form-registro" class="formulario">
+          <label>Nombre completo<input name="nombre" autocomplete="name" required></label>
+          <label>Correo<input name="correo" type="email" autocomplete="email" required></label>
+          <label>Contraseña<input name="contrasena" type="password" autocomplete="new-password" minlength="8" required></label>
+          <label>Materia inicial<input name="materia" placeholder="Ingeniería de Software III" required></label>
+          <label>Horario <span class="opcional">opcional</span><input name="horario" placeholder="Sábado 8:00 a. m."></label>
+          <button class="boton primario ancho" type="submit">Registrarme</button>
+        </form>
+      </div>
+    </section>
   </main>
+
+  <!-- Aplicación autenticada. La navegación conserva el modelo P03 como hub. -->
+  <div id="aplicacion" class="aplicacion" hidden>
+    <header class="barra-superior">
+      <button class="marca-boton" type="button" data-vista="dashboard" aria-label="Ir al inicio">
+        <span class="marca-simbolo" aria-hidden="true">SQ</span><span><strong>StudyQuest</strong><small>Tu avance académico</small></span>
+      </button>
+      <div class="usuario-resumen">
+        <span id="usuario-rol" class="chip">Estudiante</span>
+        <div><strong id="usuario-nombre">Usuario</strong><small id="usuario-correo"></small></div>
+        <button id="boton-salir" class="boton secundario pequeno" type="button">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <div class="estructura-app">
+      <nav class="navegacion" aria-label="Navegación principal">
+        <button class="nav-item activo" type="button" data-vista="dashboard" data-roles="Estudiante">Inicio</button>
+        <button class="nav-item" type="button" data-vista="materias" data-roles="Estudiante">Materias</button>
+        <button class="nav-item" type="button" data-vista="tareas" data-roles="Estudiante">Tareas</button>
+        <button class="nav-item" type="button" data-vista="pomodoro" data-roles="Estudiante">Pomodoro</button>
+        <button class="nav-item" type="button" data-vista="gamificacion" data-roles="Estudiante">Gamificación</button>
+        <button class="nav-item" type="button" data-vista="estadisticas" data-roles="Estudiante">Tablero</button>
+        <button class="nav-item" type="button" data-vista="recordatorios" data-roles="Estudiante">Recordatorios</button>
+        <button class="nav-item" type="button" data-vista="notificaciones" data-roles="Estudiante">Notificaciones <span id="contador-notificaciones" class="contador" hidden>0</span></button>
+        <button class="nav-item" type="button" data-vista="configuracion" data-roles="Estudiante">Configuración</button>
+        <button class="nav-item" type="button" data-vista="exportacion" data-roles="Estudiante">Exportar</button>
+        <button class="nav-item" type="button" data-vista="administracion" data-roles="Administrador">Administración</button>
+        <button class="nav-item" type="button" data-vista="institucional" data-roles="Administrador,Revisor institucional">Indicadores</button>
+      </nav>
+
+      <main id="contenido" class="contenido">
+        <section id="vista-dashboard" class="vista activa" data-seccion="dashboard">
+          <div class="encabezado-vista"><div><p class="eyebrow">Resumen personal</p><h2>Hola, <span id="saludo-nombre">estudiante</span></h2></div><button class="boton primario" type="button" data-vista="tareas" data-accion="nueva-tarea">Nueva tarea</button></div>
+          <div class="rejilla metricas">
+            <article class="tarjeta metrica"><span>Tareas pendientes</span><strong id="metrica-pendientes">0</strong><small>por completar</small></article>
+            <article class="tarjeta metrica"><span>Puntos acumulados</span><strong id="metrica-puntos">0</strong><small>historial registrado</small></article>
+            <article class="tarjeta metrica"><span>Nivel actual</span><strong id="metrica-nivel">Principiante</strong><small>según tus puntos</small></article>
+            <article class="tarjeta metrica"><span>Sesiones</span><strong id="metrica-sesiones">0</strong><small>sesiones guardadas</small></article>
+          </div>
+          <div class="rejilla dashboard-columnas">
+            <article class="tarjeta bloque"><div class="titulo-bloque"><div><p class="eyebrow">Próximas</p><h3>Mis tareas</h3></div><button class="enlace-boton" type="button" data-vista="tareas">Ver todas</button></div><div id="dashboard-tareas" class="lista compacta"></div></article>
+            <article class="tarjeta bloque accion-estudio"><p class="eyebrow">Concentración</p><h3>Sesión de estudio</h3><p>Activa el cronómetro y guarda el tiempo dedicado.</p><button class="boton primario" type="button" data-vista="pomodoro">Iniciar Pomodoro</button></article>
+          </div>
+        </section>
+
+        <section id="vista-materias" class="vista" data-seccion="materias" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">Agenda académica</p><h2>Materias</h2></div></div>
+          <div class="rejilla editor-lista">
+            <article class="tarjeta bloque"><h3 id="titulo-form-materia">Nueva materia</h3><form id="form-materia" class="formulario"><input name="id" type="hidden"><label>Nombre<input name="nombre" required></label><label>Horario <span class="opcional">opcional</span><input name="horario" placeholder="Viernes 6:00 p. m."></label><div class="acciones-form"><button class="boton primario" type="submit">Guardar materia</button><button id="cancelar-materia" class="boton secundario" type="button" hidden>Cancelar</button></div></form></article>
+            <article class="tarjeta bloque"><div class="titulo-bloque"><h3>Materias registradas</h3><span id="total-materias" class="chip">0</span></div><div id="lista-materias" class="lista"></div></article>
+          </div>
+        </section>
+
+        <section id="vista-tareas" class="vista" data-seccion="tareas" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">Organización</p><h2>Mis tareas</h2></div><button id="mostrar-form-tarea" class="boton primario" type="button">Nueva tarea</button></div>
+          <article id="panel-form-tarea" class="tarjeta bloque panel-form" hidden><div class="titulo-bloque"><h3 id="titulo-form-tarea">Nueva tarea</h3><button id="cerrar-form-tarea" class="enlace-boton" type="button">Cerrar</button></div><form id="form-tarea" class="formulario formulario-rejilla"><input name="id" type="hidden"><label>Nombre<input name="nombre" required></label><label>Fecha de entrega<input name="fecha_entrega" type="date" required></label><label>Prioridad<select name="prioridad" required><option value="Alta">Alta</option><option value="Media" selected>Media</option><option value="Baja">Baja</option></select></label><label>Materia <span class="opcional">opcional</span><select id="tarea-materia" name="id_materia"><option value="">Sin materia</option></select></label><div class="acciones-form"><button class="boton primario" type="submit">Guardar tarea</button><button id="cancelar-tarea" class="boton secundario" type="button">Cancelar</button></div></form></article>
+          <article class="tarjeta bloque"><div class="filtros"><label class="buscar">Buscar<input id="buscar-tarea" type="search" placeholder="Nombre de la tarea"></label><label>Prioridad<select id="filtro-prioridad"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baja</option></select></label><label>Estado<select id="filtro-estado"><option value="">Todos</option><option value="Pendiente">Pendientes</option><option value="Completada">Completadas</option></select></label></div><div id="lista-tareas" class="lista tareas"></div></article>
+        </section>
+
+        <section id="vista-pomodoro" class="vista" data-seccion="pomodoro" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">Modo enfoque</p><h2>Concentración total</h2></div></div>
+          <article id="tarjeta-temporizador" class="tarjeta temporizador"><label>Vincular con una tarea <span class="opcional">opcional</span><select id="pomodoro-tarea"><option value="">Sesión libre</option></select></label><div id="reloj" class="reloj" aria-live="off">25:00</div><p id="estado-temporizador" class="texto-secundario">Listo para comenzar una sesión Pomodoro.</p><div class="acciones-centradas"><button id="iniciar-temporizador" class="boton primario" type="button">Iniciar</button><button id="guardar-temporizador" class="boton secundario" type="button" hidden>Detener y guardar</button><button id="cancelar-temporizador" class="boton peligro" type="button" hidden>Cancelar</button></div></article>
+        </section>
+
+        <section id="vista-gamificacion" class="vista" data-seccion="gamificacion" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">Progreso</p><h2>Juega y aprende</h2></div></div>
+          <div class="rejilla metricas dos"><article class="tarjeta metrica"><span>Puntos totales</span><strong id="gamificacion-puntos">0</strong></article><article class="tarjeta metrica"><span>Nivel</span><strong id="gamificacion-nivel">Principiante</strong></article></div>
+          <div class="rejilla dashboard-columnas"><article class="tarjeta bloque"><div class="titulo-bloque"><h3>Catálogo de insignias</h3><span id="total-insignias" class="chip">0</span></div><div id="lista-insignias" class="lista"></div></article><article class="tarjeta bloque"><h3>Retos y metas</h3><div id="lista-retos-metas" class="lista"></div></article></div>
+        </section>
+
+        <section id="vista-estadisticas" class="vista" data-seccion="estadisticas" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">P11 · Avance personal</p><h2>Estadísticas semanales</h2></div></div>
+          <form id="form-estadisticas" class="tarjeta bloque filtros-periodo">
+            <label>Desde<input name="fecha_inicio" type="date" required></label>
+            <label>Hasta<input name="fecha_fin" type="date" required></label>
+            <button class="boton primario" type="submit">Consultar periodo</button>
+          </form>
+          <div id="metricas-estadisticas" class="rejilla metricas"></div>
+          <div class="rejilla dashboard-columnas"><article class="tarjeta bloque"><h3>Meta semanal</h3><div id="estadisticas-metas" class="lista"></div></article><article class="tarjeta bloque"><h3>Reto semanal</h3><div id="estadisticas-retos" class="lista"></div></article></div>
+        </section>
+
+        <section id="vista-recordatorios" class="vista" data-seccion="recordatorios" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">Planificación</p><h2>Recordatorios</h2></div></div>
+          <div class="rejilla editor-lista"><article class="tarjeta bloque"><h3>Nuevo recordatorio</h3><form id="form-recordatorio" class="formulario"><label>Tarea<select id="recordatorio-tarea" name="id_tarea" required></select></label><label>Fecha programada<input name="fecha_programada" type="date" required></label><label>Mensaje<input name="mensaje" required></label><button class="boton primario" type="submit">Guardar recordatorio</button></form></article><article class="tarjeta bloque"><h3>Programados</h3><div id="lista-recordatorios" class="lista"></div></article></div>
+        </section>
+
+        <section id="vista-notificaciones" class="vista" data-seccion="notificaciones" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">Actividad</p><h2>Notificaciones</h2></div><button id="marcar-notificaciones" class="boton secundario" type="button">Marcar todas como leídas</button></div><article class="tarjeta bloque"><div id="lista-notificaciones" class="lista"></div></article>
+        </section>
+
+        <section id="vista-configuracion" class="vista" data-seccion="configuracion" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">Personalización</p><h2>Configuración</h2></div></div>
+          <div class="rejilla editor-lista"><article class="tarjeta bloque"><h3>Perfil</h3><dl class="datos-perfil"><div><dt>Nombre</dt><dd id="perfil-nombre">—</dd></div><div><dt>Correo</dt><dd id="perfil-correo">—</dd></div><div><dt>Rol</dt><dd id="perfil-rol">—</dd></div></dl><button class="boton secundario" type="button" data-vista="exportacion">Exportar mis datos</button></article><article class="tarjeta bloque"><h3>Preferencias visuales</h3><form id="form-preferencias" class="formulario"><label>Tema<select name="tema"><option value="purple">Violeta</option><option value="teal">Teal</option><option value="amber">Ámbar</option><option value="coral">Coral</option><option value="blue">Azul</option><option value="green">Verde</option></select></label><label class="fila-toggle"><input name="modo_oscuro" type="checkbox"> Activar modo oscuro</label><button class="boton primario" type="submit">Guardar preferencias</button></form></article></div>
+        </section>
+
+        <section id="vista-exportacion" class="vista" data-seccion="exportacion" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">P14 · Privacidad</p><h2>Exportar datos personales</h2></div></div>
+          <article class="tarjeta bloque exportacion"><h3>Tu respaldo en formato JSON</h3><p>Incluye perfil, materias, tareas, sesiones, puntos, insignias, retos, metas, recordatorios, notificaciones y preferencias. Nunca incluye la contraseña.</p><button id="boton-exportar" class="boton primario" type="button">Descargar datos.json</button><p id="estado-exportacion" class="texto-secundario" aria-live="polite"></p></article>
+        </section>
+
+        <section id="vista-administracion" class="vista" data-seccion="administracion" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">P15 · Administración</p><h2>Control del sistema</h2></div></div>
+          <article id="panel-usuarios" class="tarjeta bloque"><div class="titulo-bloque"><h3>P16 · Gestión de usuarios</h3><button id="recargar-admin" class="boton secundario pequeno" type="button">Actualizar</button></div><div id="lista-usuarios-admin" class="lista"></div></article>
+          <div id="panel-catalogos" class="rejilla editor-lista separacion-superior">
+            <article class="tarjeta bloque"><h3>P17 · Nueva insignia</h3><form id="form-admin-insignia" class="formulario"><label>Nombre<input name="nombre" required></label><label>Descripción<input name="descripcion" required></label><label>Condición<input name="condicion" placeholder="10_pomodoros" required></label><label>Ícono<input name="icono" placeholder="insignia.svg"></label><button class="boton primario" type="submit">Crear insignia</button></form></article>
+            <article class="tarjeta bloque"><h3>Niveles e insignias</h3><div id="lista-catalogos-admin" class="lista"></div></article>
+            <article class="tarjeta bloque"><h3>Nuevo nivel</h3><form id="form-admin-nivel" class="formulario"><label>Nombre<input name="nombre" required></label><label>Descripción<input name="descripcion" required></label><label>Puntos mínimos<input name="puntos_minimos" type="number" min="0" required></label><label>Orden<input name="orden" type="number" min="1" required></label><button class="boton primario" type="submit">Crear nivel</button></form></article>
+            <article class="tarjeta bloque"><h3>Asignar reto semanal</h3><form id="form-admin-reto" class="formulario"><label>Cuenta<select id="admin-reto-cuenta" name="id_cuenta" required></select></label><label>Descripción<input name="descripcion" required></label><label>Condición<input name="condicion" placeholder="tareas:5" required></label><label>Recompensa<input name="puntos_recompensa" type="number" min="1" required></label><label>Semana<input name="semana" placeholder="2026-W39" required></label><button class="boton primario" type="submit">Asignar reto</button></form><div id="lista-retos-admin" class="lista separacion-superior"></div></article>
+            <article class="tarjeta bloque"><h3>Correcciones controladas</h3><label>Cuenta<select id="admin-correccion-cuenta"></select></label><p class="texto-secundario">Toda asignación, eliminación o revocación exige un motivo y notifica al estudiante.</p><form id="form-admin-punto" class="formulario separacion-superior"><h4>Otorgar puntos</h4><label>Cantidad<input name="cantidad" type="number" min="1" required></label><label>Origen<select name="origen"><option value="Tarea">Tarea</option><option value="Sesion">Sesión</option><option value="Reto">Reto</option></select></label><label>Motivo<input name="motivo" maxlength="200" required></label><button class="boton primario" type="submit">Registrar corrección</button></form><form id="form-admin-asignar-insignia" class="formulario separacion-superior"><h4>Asignar insignia</h4><label>Insignia<select id="admin-insignia-correccion" name="id_insignia" required></select></label><label>Motivo<input name="motivo" maxlength="200" required></label><button class="boton primario" type="submit">Asignar insignia</button></form><div id="lista-correcciones-admin" class="lista separacion-superior"></div></article>
+          </div>
+        </section>
+
+        <section id="vista-institucional" class="vista" data-seccion="institucional" hidden>
+          <div class="encabezado-vista"><div><p class="eyebrow">P18 · Solo lectura</p><h2>Indicadores institucionales</h2><p class="texto-secundario">Resultados agregados sin nombres, correos ni credenciales.</p></div></div>
+          <form id="form-institucional" class="tarjeta bloque filtros-periodo"><label>Desde<input name="fecha_inicio" type="date" required></label><label>Hasta<input name="fecha_fin" type="date" required></label><button class="boton primario" type="submit">Consultar indicadores</button></form>
+          <div id="metricas-institucionales" class="rejilla metricas"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <dialog id="modal-recompensa" class="modal-recompensa"><div class="celebracion" aria-labelledby="titulo-recompensa"><p class="eyebrow">Progreso actualizado</p><h2 id="titulo-recompensa">¡Buen trabajo!</h2><div id="detalle-recompensa"></div><button id="cerrar-recompensa" class="boton primario" type="button">Continuar</button></div></dialog>
+  <dialog id="modal-detalle-tarea" class="modal-recompensa"><div class="celebracion"><p class="eyebrow">P05 · Detalle de tarea</p><h2 id="detalle-tarea-nombre">Tarea</h2><dl id="detalle-tarea-datos" class="datos-perfil"></dl><div class="acciones-centradas"><button id="editar-desde-detalle" class="boton primario" type="button">Editar</button><button id="cerrar-detalle-tarea" class="boton secundario" type="button">Cerrar</button></div></div></dialog>
+  <script src="/app.js" defer></script>
 </body>
 </html>
