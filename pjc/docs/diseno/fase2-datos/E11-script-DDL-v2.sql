@@ -118,6 +118,12 @@ CREATE TABLE IF NOT EXISTS punto (
     REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- Un mismo evento solo puede entregar una recompensa a una cuenta.
+-- El índice parcial conserva los ajustes administrativos sin id_origen.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_punto_evento
+  ON punto(id_cuenta, origen, id_origen)
+  WHERE id_origen IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS reto (
   id_reto VARCHAR(36) NOT NULL,
   id_cuenta VARCHAR(36) NOT NULL,

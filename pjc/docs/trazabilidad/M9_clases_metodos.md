@@ -23,11 +23,20 @@ El diagrama vigente contiene las **13 clases de entidad** correspondientes a las
 | `Reto` | `crearReto`, `listarRetos`, `obtenerReto`, `actualizarProgresoReto`, `completarReto`, `actualizarReto`, `eliminarReto` | CU06, CU13 | RF06 |
 | `Meta` | `crearMeta`, `listarMetas`, `obtenerMeta`, `actualizarProgresoMeta`, `actualizarMeta`, `eliminarMeta` | CU05 | RF15 |
 | `Recordatorio` | `crearRecordatorio`, `generarRecordatorioAutomatico`, `listarRecordatorios`, `obtenerRecordatorio`, `marcarRecordatorioEnviado`, `toggleRecordatorio`, `eliminarRecordatorio` | CU02, CU10 | RF04, RNF15 |
-| `Tarea`, `SesionEstudio`, `Punto` | `obtenerEstadisticasSemana()` — cálculo en tiempo real vía COUNT/SUM (reemplaza a `Reporte.generar/obtenerEstadisticas`) | CU05 | RF08, RF11 |
-| `ExportadorDatos` | `exportarDatosPersonales()` (reemplaza a `Reporte.exportar`) | CU09 | RF14 |
 | `PreferenciaVisual` | `crearPreferenciaVisual`, `obtenerPreferenciaVisual`, `actualizarPreferenciaVisual`, `obtenerOCrearPreferenciaVisual`, `eliminarPreferenciaVisual` | CU08 | RF13, RNF04 |
 | `NivelCuenta` | `crearNivel`, `listarNiveles`, `obtenerNivel`, `actualizarNivel`, `eliminarNivel`, `evaluarNivelCuenta`, `sembrarNiveles` | CU03, CU06, CU13 | RF07 |
 | `Notificacion` | `crearNotificacion`, `listarNotificaciones`, `contarNotificacionesNoLeidas`, `marcarNotificacionLeida`, `marcarTodasLeidas`, `eliminarNotificacion`, `limpiarNotificacionesLeidas` | CU15 | RF04, RNF15 |
+
+### Clases de servicio de Construcción
+
+Estas clases no representan tablas nuevas. Coordinan entidades del modelo y
+mantienen la lógica fuera de los controladores HTTP.
+
+| Clase de servicio | Métodos públicos | CU / HU | RF / RN |
+|---|---|---|---|
+| `GamificacionService` | `completarTareaConGamificacion`, `registrarSesionConGamificacion` | CU03, CU04, CU06 · HU03, HU05–HU07, HU10, HU15, HU17 | RF03, RF05–RF07, RF10, RF15 · RN22–RN24 |
+| `EstadisticasService` | `obtenerEstadisticasSemana`, `obtenerIndicadoresInstitucionales` | CU05, CU16 · HU08, HU11, HU28 | RF08, RF11, RF15 · RN14, RN21, RN25 |
+| `ExportadorDatos` | `exportarDatosPersonales` | CU09 · HU14 | RF14 · RN21 |
 
 > **Nota de corrección (agosto 2026):** la clase `Reporte` fue **eliminada** por decisión del equipo (ver `E7-diccionario-datos.md` y `10-reglas-de-negocio.md` RN14). Sus responsabilidades se redistribuyeron: `obtenerEstadisticas` pasó a ser un cálculo en tiempo real sobre `Tarea`/`SesionEstudio`/`Punto`, y `exportar` pasó a una clase utilitaria `ExportadorDatos` que no depende de una tabla propia.
 

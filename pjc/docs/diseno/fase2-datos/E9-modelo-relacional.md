@@ -29,7 +29,7 @@ El Modelo Relacional transforma las **13 entidades del MER** en tablas con tipos
 | **insignia** | id_insignia VARCHAR(36) | — | UNIQUE(nombre) · UNIQUE(condicion) | RF05 |
 | **nivel_cuenta** | id_nivel VARCHAR(36) | — | UNIQUE(nombre) · CHECK puntos_minimos >= 0 · CHECK orden > 0 | RF07 |
 | **cuenta_insignia** | (id_cuenta, id_insignia) | id_cuenta → cuenta CASCADE · id_insignia → insignia CASCADE | PK compuesta · fecha_obtenida NOT NULL | RF05 |
-| **punto** | id_punto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | CHECK cantidad > 0 · CHECK origen IN ('Tarea','Reto','Sesion') | RF03 · RF07 |
+| **punto** | id_punto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | CHECK cantidad > 0 · CHECK origen IN ('Tarea','Reto','Sesion') · UNIQUE parcial (id_cuenta, origen, id_origen) cuando id_origen no es NULL | RF03 · RF07 |
 | **reto** | id_reto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK puntos_recompensa > 0 · CHECK progreso >= 0 | RF06 |
 | **meta** | id_meta VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK valor_objetivo > 0 · CHECK valor_actual >= 0 | RF15 |
 | **recordatorio** | id_recordatorio VARCHAR(36) | id_tarea → tarea CASCADE · id_cuenta → cuenta CASCADE | fecha_programada CHECK >= fecha_entrega - 1 día | RF04 |

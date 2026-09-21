@@ -43,6 +43,7 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | `idx_tarea_fecha` | tarea | (id_cuenta, fecha_entrega) | Ordenar tareas por fecha de vencimiento | RNF02 |
 | `idx_sesion_cuenta_fecha` | sesion_estudio | (id_cuenta, fecha) | Calcular horas estudiadas por semana | RNF02 |
 | `idx_punto_cuenta` | punto | (id_cuenta) | Sumar puntos totales del estudiante | RNF02 |
+| `uq_punto_evento` | punto | UNIQUE parcial (id_cuenta, origen, id_origen) | Impedir recompensa duplicada del mismo evento | RN23 · CRF-003 |
 | `idx_reto_semana` | reto | (id_cuenta, semana) | Obtener reto activo de la semana | RNF02 |
 | `idx_recordatorio_pend` | recordatorio | (activo, enviado, fecha_programada) | Chequear recordatorios pendientes de envío | RNF15 |
 | `idx_not_cuenta` | notificacion | (id_cuenta, leida, fecha) | Listar notificaciones no leídas de la cuenta, ordenadas por fecha | RNF15 |

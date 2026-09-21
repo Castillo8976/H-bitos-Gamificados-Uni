@@ -118,7 +118,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **id_origen** | VARCHAR(36) | Sí | ID del objeto que generó los puntos. Referencia polimórfica. |
 | **fecha** | DATE | No | Fecha en que se otorgaron. DEFAULT CURRENT_DATE. |
 
-> **Reglas:** cantidad > 0 · origen en {Tarea, Reto, Sesion} · el total de puntos de una cuenta es la suma de todos sus registros (RF07).
+> **Reglas:** cantidad > 0 · origen en {Tarea, Reto, Sesion} · el total de puntos de una cuenta es la suma de todos sus registros (RF07) · un evento con `id_origen` solo puede acreditarse una vez por cuenta y origen mediante `uq_punto_evento` (RN23, CRF-003).
 
 ---
 

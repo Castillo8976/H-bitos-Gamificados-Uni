@@ -30,9 +30,21 @@ Esta matriz enlaza los requisitos aprobados con la construcción HTTP. Los servi
 - `preferencia_visual` se crea automáticamente y pertenece únicamente a su cuenta.
 - `notificacion` se crea por eventos del sistema o administración y el estudiante controla lectura/eliminación.
 
+## Flujos integrados de los objetivos 6–10
+
+| RF → HU → CU | Clase y método | Endpoint | Pantalla / acción | Prueba |
+|---|---|---|---|---|
+| RF03/RF05–RF07/RF15 → HU03/HU05–HU07/HU15/HU17 → CU03/CU06 | `GamificacionService.completarTareaConGamificacion()` | `PATCH /api/tareas/:id/completar` | P04, botón **Completar** | `TC-O6-TAREA`, `TC-O6-DUPLICADO`, `TC-O6-ROLLBACK` en `objectives-6-10.test.js` |
+| RF05/RF07/RF10 → HU05/HU07/HU10 → CU04/CU06 | `GamificacionService.registrarSesionConGamificacion()` | `POST /api/sesiones` | P06, botón **Detener y guardar** | `TC-O6-SESION` en `objectives-6-10.test.js` |
+| RF08/RF11/RF15 → HU08/HU11/HU15/HU17 → CU05 | `EstadisticasService.obtenerEstadisticasSemana()` | `GET /api/estadisticas/semanales` | P11, **Consultar periodo** | `TC-O7-SEMANA` en integración y API |
+| RF14 → HU14 → CU09 | `ExportadorDatos.exportarDatosPersonales()` | `GET /api/exportacion/datos` | P14, **Descargar datos.json** | `TC-O8-PRIVACIDAD` en integración y API |
+| RF01/RF05/RF07 → HU22/HU23/HU26/HU27 → CU13/CU14 | Servicios CRUD aprobados | `/api/cuentas`, `/api/insignias`, `/api/niveles`, `/api/retos`, `/api/puntos`, `/api/cuenta-insignias` | P15–P17 | Casos administrativos de `api.test.js` |
+| RF11 → HU28 → CU16 | `EstadisticasService.obtenerIndicadoresInstitucionales()` | `GET /api/estadisticas/institucionales` | P18, **Consultar indicadores** | `TC-O10-REVISOR` en integración y API |
+
 ## Evidencia
 
 - `npm run test:architecture`: verifica límites MVC.
 - `npm run test:schema`: verifica E7 → E11 → modelos → SQLite.
 - `npm run test:integration`: verifica la capa de servicios/datos.
-- `npm run test:api`: verifica autenticación, roles, propiedad, validación, errores y los 13 recursos.
+- `npm run test:api`: verifica autenticación, roles, propiedad, validación, errores, los 13 recursos y los endpoints de los objetivos 6–10.
+- `npm run test:frontend`: verifica que P01–P20 y las acciones construidas estén publicadas.

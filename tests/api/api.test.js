@@ -1,10 +1,15 @@
 'use strict';
 
+/** RF01–RF15/HU01–HU28: contratos HTTP, permisos por rol y aislamiento.
+ * Usa cuentas y SQLite temporales; valida respuestas, datos y rechazos.
+ */
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const request = require('supertest');
+const crypto = require('node:crypto');
 
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'studyquest-api-'));
 process.env.DATABASE_STORAGE = path.join(directory, 'database.sqlite');
@@ -69,6 +74,8 @@ async function run() {
   await request(app).delete(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken)).expect(204);
   assert.equal((await login('inactiva@test.local')).status, 403);
   await request(app).get('/api/materias').expect(401);
+  await request(app).get('/api/estadisticas/semanales').expect(401);
+  await request(app).get('/api/exportacion/datos').expect(401);
   await request(app).post('/api/insignias').set(auth(studentToken)).send({ nombre: 'No permitido', descripcion: 'X', condicion: 'x' }).expect(403);
   await request(app).post('/api/materias').set(auth(reviewerToken)).send({ nombre: 'No permitido' }).expect(403);
 
@@ -90,9 +97,14 @@ async function run() {
   }).expect(201);
   const taskId = task.body.dato.id_tarea;
   await request(app).get(`/api/tareas/${taskId}`).set(auth(studentToken)).expect(200);
+  await request(app).patch(`/api/tareas/${taskId}/completar`).set(auth(secondToken)).expect(404);
   await request(app).put(`/api/tareas/${taskId}`).set(auth(studentToken)).send({ prioridad: 'Media' }).expect(200);
   await request(app).patch(`/api/tareas/${taskId}/completar`).set(auth(studentToken)).expect(200)
-    .expect(({ body }) => assert.equal(body.dato.estado, 'Completada'));
+    .expect(({ body }) => {
+      assert.equal(body.dato.estado, 'Completada');
+      assert.equal(body.gamificacion.puntos_otorgados, 10);
+    });
+  await request(app).patch(`/api/tareas/${taskId}/completar`).set(auth(studentToken)).expect(409);
 
   await request(app).get('/api/preferencias').set(auth(studentToken)).expect(200);
   await request(app).put('/api/preferencias').set(auth(studentToken)).send({ tema: 'teal', modo_oscuro: true }).expect(200);
@@ -117,14 +129,48 @@ async function run() {
   await request(app).get('/api/notificaciones').set(auth(studentToken)).expect(200);
   await request(app).patch(`/api/notificaciones/${notificationId}/leida`).set(auth(studentToken)).expect(204);
 
+  const administrativeOrigin = crypto.randomUUID();
+  await request(app).post('/api/puntos').set(auth(adminToken)).send({
+    id_cuenta: studentRegistration.body.cuenta.id_cuenta, cantidad: 10, origen: 'Sesion', id_origen: administrativeOrigin
+  }).expect(400);
   const point = await request(app).post('/api/puntos').set(auth(adminToken)).send({
-    id_cuenta: studentRegistration.body.cuenta.id_cuenta, cantidad: 10, origen: 'Tarea', id_origen: taskId
+    id_cuenta: studentRegistration.body.cuenta.id_cuenta, cantidad: 10, origen: 'Sesion',
+    id_origen: administrativeOrigin, motivo: 'Ajuste autorizado de prueba'
   }).expect(201);
   const pointId = point.body.dato.id_punto;
   await request(app).get(`/api/puntos/${pointId}`).set(auth(studentToken)).expect(200);
   await request(app).get(`/api/puntos/${pointId}`).set(auth(secondToken)).expect(403);
   await request(app).get('/api/puntos').set(auth(studentToken)).expect(200)
-    .expect(({ body }) => assert.equal(body.total, 10));
+    .expect(({ body }) => assert.equal(body.total, 25));
+
+  const hoy = new Date().toISOString().slice(0, 10);
+  await request(app).get(`/api/estadisticas/semanales?fecha_inicio=${hoy}&fecha_fin=${hoy}`)
+    .set(auth(studentToken)).expect(200).expect(({ body }) => {
+      assert.equal(body.dato.tareas_completadas, 1);
+      assert.equal(body.dato.minutos_estudiados, 30);
+      assert.equal(body.dato.puntos_obtenidos, 25);
+    });
+  await request(app).get(`/api/estadisticas/institucionales?fecha_inicio=${hoy}&fecha_fin=${hoy}`)
+    .set(auth(studentToken)).expect(403);
+  await request(app).get(`/api/estadisticas/institucionales?fecha_inicio=${hoy}&fecha_fin=${hoy}`)
+    .set(auth(reviewerToken)).expect(200).expect(({ body }) => {
+      assert.equal(body.dato.estudiantes_activos, 2);
+      assert.equal('cuentas' in body.dato, false);
+    });
+  await request(app).get('/api/exportacion/datos').set(auth(reviewerToken)).expect(403);
+  await request(app).get('/api/exportacion/datos').set(auth(studentToken)).expect(200)
+    .expect('Content-Type', /application\/json/)
+    .expect('Content-Disposition', /datos\.json/)
+    .expect(({ body }) => {
+      assert.deepEqual(Object.keys(body).sort(), [
+        'cuenta', 'generado_en', 'insignias', 'materias', 'metas', 'notificaciones',
+        'puntos', 'preferencia_visual', 'recordatorios', 'retos', 'sesiones_estudio',
+        'tareas', 'version_exportacion'
+      ].sort());
+      assert.equal(body.cuenta.correo, 'uno@test.local');
+      assert.equal('contrasena_hash' in body.cuenta, false);
+      assert.ok(body.tareas.every(item => item.id_cuenta === studentRegistration.body.cuenta.id_cuenta));
+    });
 
   const badge = await request(app).post('/api/insignias').set(auth(adminToken)).send({
     nombre: 'API completa', descripcion: 'Completó las pruebas API', condicion: 'api_completa', icono: 'api.svg'
@@ -135,6 +181,10 @@ async function run() {
 
   await request(app).post('/api/cuenta-insignias').set(auth(adminToken)).send({
     id_cuenta: studentRegistration.body.cuenta.id_cuenta, id_insignia: badgeId
+  }).expect(400);
+  await request(app).post('/api/cuenta-insignias').set(auth(adminToken)).send({
+    id_cuenta: studentRegistration.body.cuenta.id_cuenta, id_insignia: badgeId,
+    motivo: 'Asignación autorizada de prueba'
   }).expect(201);
   await request(app).get('/api/cuenta-insignias').set(auth(studentToken)).expect(200)
     .expect(({ body }) => assert.ok(body.datos.some(item => item.id_insignia === badgeId)));
@@ -164,9 +214,11 @@ async function run() {
   await request(app).delete(`/api/metas/${goalId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/retos/${challengeId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/niveles/${levelId}`).set(auth(adminToken)).expect(204);
-  await request(app).delete(`/api/cuenta-insignias/${studentRegistration.body.cuenta.id_cuenta}/${badgeId}`).set(auth(adminToken)).expect(204);
+  await request(app).delete(`/api/cuenta-insignias/${studentRegistration.body.cuenta.id_cuenta}/${badgeId}`).set(auth(adminToken)).expect(400);
+  await request(app).delete(`/api/cuenta-insignias/${studentRegistration.body.cuenta.id_cuenta}/${badgeId}`).set(auth(adminToken)).send({ motivo: 'Asignación de prueba' }).expect(204);
   await request(app).delete(`/api/insignias/${badgeId}`).set(auth(adminToken)).expect(204);
-  await request(app).delete(`/api/puntos/${pointId}`).set(auth(adminToken)).expect(204);
+  await request(app).delete(`/api/puntos/${pointId}`).set(auth(adminToken)).expect(400);
+  await request(app).delete(`/api/puntos/${pointId}`).set(auth(adminToken)).send({ motivo: 'Movimiento de prueba' }).expect(204);
   await request(app).delete(`/api/notificaciones/${notificationId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/recordatorios/${reminderId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/sesiones/${sessionId}`).set(auth(studentToken)).expect(204);

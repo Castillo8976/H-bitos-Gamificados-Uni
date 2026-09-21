@@ -36,6 +36,10 @@
 | **RN19** | Si el navegador rechaza el permiso de notificaciones, el recordatorio se guarda igual en base de datos pero no dispara notificación nativa. | `recordatorio` | RF04 / CU10 (A1) | Flujo alternativo A1 de CU10 |
 | **RN20** | Una sesión de estudio debe registrar una duración entera mayor que cero; puede asociarse a una tarea propia o permanecer sin tarea para representar estudio libre. | `sesion_estudio`, `tarea` | RF10 / CU04, CU12 | `sesionEstudioCrud.crearSesionEstudio()`, `actualizarSesionEstudio()` |
 | **RN21** | El estudiante solo puede consultar o modificar registros asociados a su propia cuenta; las operaciones globales requieren permisos administrativos y la consulta institucional es de solo lectura. | Todas las entidades dependientes de `cuenta` | RF01–RF15 / CU01–CU16 | Validación de propietario y rol antes de cada operación |
+| **RN22** | Completar una tarea acredita 10 puntos y registrar una sesión válida acredita 5; cada evento se identifica por cuenta, origen e `id_origen`. | `tarea`, `sesion_estudio`, `punto` | RF03, RF07, RF10 / CU03, CU04 | `GamificacionService` · CRF-003 |
+| **RN23** | El mismo evento no puede acreditarse dos veces; tarea, recompensa, progreso, insignias y notificaciones se confirman o revierten dentro de una transacción. | `tarea`, `punto`, `reto`, `meta`, `cuenta_insignia`, `notificacion` | RF03, RF05–RF07, RF15 / CU03, CU06 | índice `uq_punto_evento` y transacción `IMMEDIATE` |
+| **RN24** | Una condición automática de reto usa `metrica:objetivo`: `tareas`, `sesiones`, `pomodoros` o `minutos`. Una sesión Pomodoro suma simultáneamente una sesión, un Pomodoro y sus minutos; una sesión libre suma una sesión y sus minutos. | `reto`, `meta`, `sesion_estudio` | RF06, RF10, RF15 / CU04, CU06 | `GamificacionService.actualizarRetos()` · `actualizarMetas()` · CRF-003 |
+| **RN25** | Los indicadores institucionales son agregados globales de estudiantes activos y no exponen identificadores, nombres, correos ni filas individuales. | `cuenta`, `tarea`, `sesion_estudio`, `punto` | RF11 / CU16 | `EstadisticasService.obtenerIndicadoresInstitucionales()` |
 
 ---
 
@@ -52,4 +56,4 @@ Varias reglas de negocio existen específicamente para cumplir un RNF, no solo u
 
 ## Estado de validación
 
-El catálogo RN01–RN21 cubre las restricciones identificadas en los requisitos, casos de uso, modelos y operaciones CRUD vigentes. RN20 formaliza la duración y asociación opcional de las sesiones; RN21 formaliza la propiedad de datos y los límites de los roles. Toda modificación futura de código o alcance deberá revisar este catálogo y actualizar la matriz de trazabilidad antes de aprobarse.
+El catálogo RN01–RN25 documenta las restricciones identificadas en los requisitos, casos de uso, modelos y operaciones vigentes. RN22–RN25 describen el flujo transaccional, la idempotencia, las condiciones automáticas y la privacidad institucional implementadas bajo CRF-003, pendiente de aprobación formal para Línea Base 1. Su presencia en este catálogo no acredita cumplimiento de todas las rutas: los pendientes se detallan en M17. Toda modificación futura de código o alcance deberá revisar este catálogo y actualizar la matriz de trazabilidad antes de aprobarse.

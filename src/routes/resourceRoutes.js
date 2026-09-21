@@ -1,10 +1,15 @@
 'use strict';
 
+/** Contratos de 13 entidades (RF01–RF15/HU01–HU27; M15).
+ * Orden: autenticación, rol, campos permitidos, validadores y controlador.
+ * Los permisos visuales no sustituyen la autorización del servidor.
+ */
+
 const express = require('express');
 const controllers = require('../controllers/resourceControllers');
 const asyncHandler = require('../middlewares/asyncHandler');
 const { authenticateRequest, authorize } = require('../middlewares/authentication');
-const { requireFields, allowFields, enumField, positiveInteger, nonNegativeInteger, booleanField } = require('../validators/requestValidator');
+const { requireFields, allowFields, enumField, positiveInteger, nonNegativeInteger, booleanField, nonBlankText } = require('../validators/requestValidator');
 
 const router = express.Router();
 const studentOrAdmin = authorize('Estudiante', 'Administrador');
@@ -28,7 +33,7 @@ router.get('/tareas', studentOrAdmin, wrap(controllers.tasks.list));
 router.get('/tareas/:id', studentOrAdmin, wrap(controllers.tasks.get));
 router.post('/tareas', studentOrAdmin, allowFields('id_cuenta', 'id_materia', 'nombre', 'fecha_entrega', 'prioridad'), requireFields('nombre', 'fecha_entrega', 'prioridad'), enumField('prioridad', ['Alta','Media','Baja']), wrap(controllers.tasks.create));
 router.put('/tareas/:id', studentOrAdmin, allowFields('id_materia', 'nombre', 'fecha_entrega', 'prioridad'), enumField('prioridad', ['Alta','Media','Baja']), wrap(controllers.tasks.update));
-router.patch('/tareas/:id/completar', studentOrAdmin, wrap(controllers.tasks.complete));
+router.patch('/tareas/:id/completar', authorize('Estudiante'), wrap(controllers.tasks.complete));
 router.delete('/tareas/:id', studentOrAdmin, wrap(controllers.tasks.remove));
 
 router.get('/preferencias', studentOrAdmin, wrap(controllers.preferences.get));
@@ -36,7 +41,7 @@ router.put('/preferencias', studentOrAdmin, allowFields('tema', 'modo_oscuro', '
 
 router.get('/sesiones', studentOrAdmin, wrap(controllers.sessions.list));
 router.get('/sesiones/:id', studentOrAdmin, wrap(controllers.sessions.get));
-router.post('/sesiones', studentOrAdmin, allowFields('id_cuenta','id_tarea','duracion_minutos','modo_enfoque'), requireFields('duracion_minutos'), positiveInteger('duracion_minutos'), booleanField('modo_enfoque'), wrap(controllers.sessions.create));
+router.post('/sesiones', authorize('Estudiante'), allowFields('id_tarea','duracion_minutos','modo_enfoque'), requireFields('duracion_minutos'), positiveInteger('duracion_minutos'), booleanField('modo_enfoque'), wrap(controllers.sessions.create));
 router.put('/sesiones/:id', studentOrAdmin, allowFields('id_tarea','duracion_minutos','modo_enfoque'), positiveInteger('duracion_minutos'), booleanField('modo_enfoque'), wrap(controllers.sessions.update));
 router.delete('/sesiones/:id', studentOrAdmin, wrap(controllers.sessions.remove));
 
@@ -54,8 +59,8 @@ router.delete('/notificaciones/:id', studentOrAdmin, wrap(controllers.notificati
 
 router.get('/puntos', studentOrAdmin, wrap(controllers.points.list));
 router.get('/puntos/:id', studentOrAdmin, wrap(controllers.points.get));
-router.post('/puntos', admin, allowFields('id_cuenta','cantidad','origen','id_origen'), requireFields('id_cuenta','cantidad','origen'), positiveInteger('cantidad'), enumField('origen', ['Tarea','Reto','Sesion']), wrap(controllers.points.create));
-router.delete('/puntos/:id', admin, wrap(controllers.points.remove));
+router.post('/puntos', admin, allowFields('id_cuenta','cantidad','origen','id_origen','motivo'), requireFields('id_cuenta','cantidad','origen','motivo'), positiveInteger('cantidad'), enumField('origen', ['Tarea','Reto','Sesion']), nonBlankText('motivo'), wrap(controllers.points.create));
+router.delete('/puntos/:id', admin, allowFields('motivo'), requireFields('motivo'), nonBlankText('motivo'), wrap(controllers.points.remove));
 
 router.get('/insignias', wrap(controllers.badges.list));
 router.get('/insignias/:id', wrap(controllers.badges.get));
@@ -64,8 +69,8 @@ router.put('/insignias/:id', admin, allowFields('nombre','descripcion','condicio
 router.delete('/insignias/:id', admin, wrap(controllers.badges.remove));
 
 router.get('/cuenta-insignias', studentOrAdmin, wrap(controllers.accountBadges.list));
-router.post('/cuenta-insignias', admin, allowFields('id_cuenta','id_insignia'), requireFields('id_cuenta','id_insignia'), wrap(controllers.accountBadges.create));
-router.delete('/cuenta-insignias/:id_cuenta/:id_insignia', admin, wrap(controllers.accountBadges.remove));
+router.post('/cuenta-insignias', admin, allowFields('id_cuenta','id_insignia','motivo'), requireFields('id_cuenta','id_insignia','motivo'), nonBlankText('motivo'), wrap(controllers.accountBadges.create));
+router.delete('/cuenta-insignias/:id_cuenta/:id_insignia', admin, allowFields('motivo'), requireFields('motivo'), nonBlankText('motivo'), wrap(controllers.accountBadges.remove));
 
 router.get('/niveles', wrap(controllers.levels.list));
 router.get('/niveles/:id', wrap(controllers.levels.get));

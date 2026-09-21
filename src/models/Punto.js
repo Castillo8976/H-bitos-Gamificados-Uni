@@ -153,7 +153,9 @@ const Punto = sequelize.define('punto', {
   fecha: {
     type: DataTypes.DATEONLY,    // Solo fecha: YYYY-MM-DD (sin hora ni zona horaria)
     allowNull: false,            // Campo obligatorio: toda transacción debe tener fecha
-    defaultValue: DataTypes.NOW  // Se asigna automáticamente con la fecha actual del servidor
+    // RF07/HU07: usar el mismo día UTC que E11 (CURRENT_DATE) y gamificación.
+    // DATEONLY + NOW convertía al día local y excluía ajustes del tablero nocturno.
+    defaultValue: () => new Date().toISOString().slice(0, 10)
   }
 
 }, {
@@ -167,7 +169,12 @@ const Punto = sequelize.define('punto', {
    *                         La auditoría temporal se gestiona con el campo `fecha`.
    */
   tableName: 'punto',
-  timestamps: false
+  timestamps: false,
+  indexes: [{
+    name: 'uq_punto_evento', unique: true,
+    fields: ['id_cuenta', 'origen', 'id_origen'],
+    where: { id_origen: { [require('sequelize').Op.ne]: null } }
+  }]
 });
 
 
