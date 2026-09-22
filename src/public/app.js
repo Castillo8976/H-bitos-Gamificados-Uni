@@ -684,7 +684,7 @@ async function guardarSesion() {
   if (estado.temporizador.transcurrido < 1) return avisar('Inicia el cronómetro antes de guardar.', 'error');
   const duracion = Math.max(1, Math.ceil(estado.temporizador.transcurrido / 60));
   const respuesta = await api('/sesiones', { method: 'POST', body: JSON.stringify({
-    id_tarea: $('#pomodoro-tarea').value || null, duracion_minutos: duracion, modo_enfoque: true
+    id_tarea: $('#pomodoro-tarea').value || null, duracion_minutos: duracion, modo_enfoque: estado.temporizador.modo === 'pomodoro'
   }) });
   detenerTemporizador();
   const sesiones = await api('/sesiones');
