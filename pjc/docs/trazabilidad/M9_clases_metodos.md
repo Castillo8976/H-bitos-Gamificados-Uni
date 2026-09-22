@@ -45,6 +45,8 @@ mantienen la lógica fuera de los controladores HTTP.
 
 > **Nota de corrección (septiembre 2026):** `NivelCuenta` y `Notificacion` forman parte de las 13 clases de entidad del modelo vigente. El archivo oficial editable es `docs/diseno/fase3-componentes/E12-diagrama-clases.drawio`; `DiagramaClases.png` y `DiagramaClasesActualizado.svg` se conservan únicamente como exportaciones o referencias históricas y no determinan el conteo actual.
 
+> **Nota de corrección (22 de septiembre de 2026 — cierre del punto 6 de Construcción):** `E12-diagrama-clases.drawio` fue actualizado para que cada clase muestre el **nombre exacto de cada método**, uno por fila, tal como aparece en el código y en esta tabla (antes el gráfico agrupaba varios métodos en una sola línea, p. ej. `actualizar()/eliminar()`). El gráfico incluye las clases de servicio reales (`GamificacionService`, `EstadisticasService` y `ExportadorDatos`) con sus métodos públicos y las dependencias («usa») hacia las entidades que coordinan. Los adaptadores CRUD se documentan como servicios existentes en `src/services`, sin inventar clases que no estén implementadas.
+
 ---
 
 ## Equivalencia E7 → clase UML → comportamiento
