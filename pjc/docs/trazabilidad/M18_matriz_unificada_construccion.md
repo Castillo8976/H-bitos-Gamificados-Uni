@@ -59,7 +59,7 @@ contra el código fuente, no solo contra la documentación.
 | 2 | RF06 · HU18 | ✅ Cerrada | Pantalla/botón (rol correcto) | P08 muestra `editar-reto` / `eliminar-reto` para el estudiante dueño; el backend verifica propiedad. |
 | 3 | RF10/RF11 · HU21 | ✅ Cerrada | Pantalla/botón | P08 muestra el historial y acciones `editar-sesion` / `eliminar-sesion`, conectadas a `PUT/DELETE /api/sesiones/:id`. |
 | 4 | RF15 · HU17 | ✅ Cerrada | Pantalla/botón | P08 muestra `editar-meta` / `eliminar-meta`, conectadas a `PUT/DELETE /api/metas/:id`. |
-| 5 | RF12 · HU12 | 🟡 Documental | Matrices | La funcionalidad existe; queda como referencia explícita de RF12/HU12 en la documentación de Pomodoro. |
+| 5 | RF12 · HU12 | ✅ Cerrada | Matrices | M16 identifica explícitamente la acción de modo de enfoque y su evidencia de Chrome. |
 | 6 | RF08 · HU07/HU08 | ✅ Cerrada | Matriz | M16 identifica RF08 en la fila del tablero; M15 ya lo documentaba. |
 
 **Conclusión:** las cuatro cadenas que estaban rotas ya tienen pantalla, acción y llamada al
