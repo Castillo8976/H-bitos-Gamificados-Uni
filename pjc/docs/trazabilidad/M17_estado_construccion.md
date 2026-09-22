@@ -124,11 +124,16 @@ historial. La actualización actual de M17 todavía debe guardarse y publicarse.
 ### 🟡 10. Pantallas acordes a los prototipos aprobados — Parcial
 
 Tenemos un frontend funcional y adaptable, con vistas por rol y referencias
-P01–P20/W01–W06. Probamos recorridos reales en Chrome.
+P01–P20/W01–W06. Probamos recorridos reales en Chrome y tenemos evidencia de
+la mayoría de los módulos dentro de la SPA de [src/public/index.html](../../src/public/index.html).
 
-**Falta:** Comparar cada campo y acción con su prototipo y completar las
-interacciones pendientes de perfil, sesiones, metas y catálogos. Las diferencias
-de alcance deben quedar justificadas mediante CRF.
+**Falta:** Comparar cada campo y acción con su prototipo, completar la
+validación de detalle para perfil, sesiones, metas y catálogos, y documentar
+las diferencias de alcance mediante CRF. La evidencia formal de esta
+comparación queda recogida en [M17_pantallas_prototipos_validacion.md](M17_pantallas_prototipos_validacion.md).
+
+**Estado objetivo del punto 10:** la cobertura funcional está presente, pero no
+está cerrada la equivalencia exacta de cada pantalla con su prototipo aprobado.
 
 ### 🟡 11. Documentación del código y README — Parcial
 
