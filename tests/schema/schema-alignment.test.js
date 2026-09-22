@@ -180,6 +180,19 @@ async function run() {
     }
   }
 
+  const puntoIndexes = await sequelize.query('PRAGMA index_list(punto)', { type: sequelize.QueryTypes.SELECT });
+  const puntoEventoIndex = puntoIndexes.find(index => index.name === 'uq_punto_evento');
+  assert.ok(puntoEventoIndex, 'Falta el índice parcial uq_punto_evento de idempotencia');
+  assert.equal(puntoEventoIndex.unique, 1, 'uq_punto_evento debe ser único');
+
+  await sequelize.query("INSERT INTO cuenta (id_cuenta, nombre, correo, contrasena_hash, rol) VALUES ('acct-idempotencia', 'Cuenta prueba', 'idempotencia@test.local', 'hash', 'Estudiante')");
+  await sequelize.query("INSERT INTO punto (id_punto, id_cuenta, cantidad, origen, id_origen, fecha) VALUES ('p-1', 'acct-idempotencia', 10, 'Tarea', 'tarea-001', '2026-09-21')");
+  await assert.rejects(
+    () => sequelize.query("INSERT INTO punto (id_punto, id_cuenta, cantidad, origen, id_origen, fecha) VALUES ('p-2', 'acct-idempotencia', 10, 'Tarea', 'tarea-001', '2026-09-21')"),
+    /UNIQUE|constraint.*uq_punto_evento/i
+  );
+  await sequelize.query("INSERT INTO punto (id_punto, id_cuenta, cantidad, origen, id_origen, fecha) VALUES ('p-3', 'acct-idempotencia', 10, 'Tarea', NULL, '2026-09-21')");
+
   const expectedForeignKeys = [
     ['preferencia_visual','id_cuenta','cuenta','id_cuenta','CASCADE'],
     ['materia','id_cuenta','cuenta','id_cuenta','CASCADE'],

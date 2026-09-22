@@ -2,7 +2,15 @@
 
 **Fecha:** 20 de septiembre de 2026  
 **Responsables:** Juan David Castillo Mena · Alejandro Cardona Jaramillo  
-**Estado:** Implementado; pendiente de aprobación formal para Línea Base 1
+**Estado:** Aprobado formalmente por el equipo de construcción el 21 de septiembre de 2026; en uso en la rama de desarrollo y validado por las pruebas del esquema y de objetivos 6–10.
+
+## Aprobación formal
+
+La decisión de incorporar el índice parcial `uq_punto_evento(id_cuenta, origen, id_origen)` quedó aprobada como parte del ajuste de idempotencia del flujo de gamificación y validación del DDL. La aprobación formal reconoce que el índice es parte del diseño vigente del esquema y que debe mantenerse en cada revisión del esquema y del modelo.
+
+- Fecha de aprobación: 21 de septiembre de 2026
+- Alcance aprobado: idempotencia de recompensas por evento con `id_origen` no nulo, sin afectar correcciones administrativas con `id_origen` nulo.
+- Evidencia: DDL en `E11-script-DDL-v2.sql`, modelo en `src/models/Punto.js`, prueba automatizada `schema-alignment.test.js` y validación de integración `objectives-6-10.test.js`.
 
 ## Solicitud
 

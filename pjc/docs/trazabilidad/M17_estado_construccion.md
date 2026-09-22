@@ -54,16 +54,17 @@ Los archivos del frontend están en `public`; `views` documenta su papel en MVC.
 **Falta:** Nada esencial en la estructura actual. Debemos mantener README y E6
 alineados cuando cambiemos la organización.
 
-### 🟡 3. Código idéntico al DDL aprobado — Parcial
+### ✅ 3. Código idéntico al DDL aprobado — Cumple
 
 Inicializamos SQLite desde E11 y tenemos la prueba automática
 E7 → E11 → modelos → SQLite. Verificamos las 13 tablas, la ausencia de
-`reporte` y la integridad de la base.
+`reporte`, la integridad de la base y la presencia del índice parcial de
+idempotencia `uq_punto_evento` en `punto`.
 
-**Falta:** Formalizar la aprobación del índice de idempotencia incorporado
-mediante CRF-003. Tenemos alineación técnica con el DDL vigente, pero el criterio
-también exige que el cambio esté aprobado. Debemos repetir la validación cada
-vez que modifiquemos el esquema.
+**Evidencia cerrada:** CRF-003 quedó formalmente aprobado el 21 de septiembre de
+2026 y la validación del esquema se repite en cada ejecución del conjunto de
+pruebas del módulo de esquema, incluyendo la comprobación de la restricción de
+idempotencia.
 
 ### ✅ 4. Código acorde al diccionario E7 — Cumple
 
