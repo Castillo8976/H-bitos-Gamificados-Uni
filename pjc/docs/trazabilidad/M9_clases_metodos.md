@@ -37,6 +37,7 @@ mantienen la lógica fuera de los controladores HTTP.
 | `GamificacionService` | `completarTareaConGamificacion`, `registrarSesionConGamificacion` | CU03, CU04, CU06 · HU03, HU05–HU07, HU10, HU15, HU17 | RF03, RF05–RF07, RF10, RF15 · RN22–RN24 |
 | `EstadisticasService` | `obtenerEstadisticasSemana`, `obtenerIndicadoresInstitucionales` | CU05, CU16 · HU08, HU11, HU28 | RF08, RF11, RF15 · RN14, RN21, RN25 |
 | `ExportadorDatos` | `exportarDatosPersonales` | CU09 · HU14 | RF14 · RN21 |
+| `CorreccionAdministrativaService` | `otorgarPuntos`, `retirarPuntos`, `asignarInsignia`, `revocarInsignia`; soporte `autorizar`, `mensaje`, `ejecutar` | CU14 · HU26/HU27 | RF05, RF07, RF01 · RN07, RN11, RN21 · CRF-004 |
 
 > **Nota de corrección (agosto 2026):** la clase `Reporte` fue **eliminada** por decisión del equipo (ver `E7-diccionario-datos.md` y `10-reglas-de-negocio.md` RN14). Sus responsabilidades se redistribuyeron: `obtenerEstadisticas` pasó a ser un cálculo en tiempo real sobre `Tarea`/`SesionEstudio`/`Punto`, y `exportar` pasó a una clase utilitaria `ExportadorDatos` que no depende de una tabla propia.
 

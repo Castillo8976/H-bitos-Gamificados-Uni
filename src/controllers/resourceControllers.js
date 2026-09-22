@@ -16,6 +16,7 @@ const nivel = require('../services/nivelCuentaService');
 const reto = require('../services/retoService');
 const meta = require('../services/metaService');
 const gamificacion = require('../services/gamificacionService');
+const correcciones = require('../services/correccionAdministrativaService');
 
 /** RF01/HU27: identifica el rol ya autenticado por el middleware. */
 function isAdmin(user) {
@@ -221,16 +222,12 @@ const points = {
   get: async (req, res) => res.json({ dato: ensureOwned(await punto.obtenerPunto(req.params.id), req.user) }),
   /** RF07/HU07/HU26: Crea el registro mediante el servicio (movimientos de puntos). */
   create: async (req, res) => {
-    const movimiento = await punto.otorgarPuntos(req.body.id_cuenta, req.body.cantidad, req.body.origen, req.body.id_origen || null);
-    await notificacion.crearNotificacion(req.body.id_cuenta, 'Sistema', `Corrección de puntos: ${req.body.motivo}`);
+    const movimiento = await correcciones.otorgarPuntos(req.user.id, req.body);
     res.status(201).json({ dato: movimiento });
   },
   /** RF07/HU07/HU26: Elimina el registro mediante el servicio (movimientos de puntos). */
   remove: async (req, res) => {
-    const movimiento = await punto.obtenerPunto(req.params.id);
-    if (!movimiento) throw new HttpError(404, 'Movimiento de puntos no encontrado');
-    await punto.eliminarPunto(req.params.id);
-    await notificacion.crearNotificacion(movimiento.id_cuenta, 'Sistema', `Corrección de puntos: ${req.body.motivo}`);
+    await correcciones.retirarPuntos(req.user.id, req.params.id, req.body.motivo);
     res.status(204).send();
   }
 };
@@ -258,18 +255,12 @@ const accountBadges = {
   },
   /** RF05/HU26: Crea el registro mediante el servicio (insignias asignadas). */
   create: async (req, res) => {
-    const resultado = await cuentaInsignia.desbloquearInsignia(req.body.id_cuenta, req.body.id_insignia);
-    if (!resultado.desbloqueada) throw new HttpError(409, 'La cuenta ya tiene asignada esta insignia');
-    await notificacion.crearNotificacion(req.body.id_cuenta, 'Sistema', `Corrección de insignia: ${req.body.motivo}`);
+    const resultado = await correcciones.asignarInsignia(req.user.id, req.body.id_cuenta, req.body.id_insignia, req.body.motivo);
     res.status(201).json(resultado);
   },
   /** RF05/HU26: Elimina el registro mediante el servicio (insignias asignadas). */
   remove: async (req, res) => {
-    if (!await cuentaInsignia.tieneInsignia(req.params.id_cuenta, req.params.id_insignia)) {
-      throw new HttpError(404, 'Asignación de insignia no encontrada');
-    }
-    await cuentaInsignia.revocarInsignia(req.params.id_cuenta, req.params.id_insignia);
-    await notificacion.crearNotificacion(req.params.id_cuenta, 'Sistema', `Corrección de insignia: ${req.body.motivo}`);
+    await correcciones.revocarInsignia(req.user.id, req.params.id_cuenta, req.params.id_insignia, req.body.motivo);
     res.status(204).send();
   }
 };

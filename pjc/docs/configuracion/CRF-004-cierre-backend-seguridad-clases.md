@@ -34,11 +34,32 @@ RF10/HU10; RF13/HU13; RF15/HU15. RN04 y RN21.
 semanas y credenciales) y casos HTTP negativos en `tests/api/api.test.js`.
 `npm run test:api` ejecuta ambas; `npm test` incluye este comando.
 
+## Avance 2 — Correcciones administrativas atómicas
+
+- `CorreccionAdministrativaService` coordina otorgar/retirar puntos y
+  asignar/revocar insignias con su notificación dentro de una transacción SQLite
+  `IMMEDIATE`. Si el aviso falla, revertimos la corrección completa.
+- Comprobamos el rol y estado del administrador en la base dentro de la
+  transacción. Un registro inexistente o una insignia duplicada no generan avisos.
+- La notificación conserva el identificador del administrador y el motivo.
+  Rechazamos motivos que no quepan completos junto al prefijo en los 200
+  caracteres de E7; no truncamos silenciosamente la justificación.
+- Conservamos los endpoints y contratos de respuesta. No agregamos tablas ni
+  cambiamos los puntos o insignias ajenos a la corrección solicitada.
+- La notificación sigue el ciclo de vida de E7; no constituye por sí sola un
+  registro de auditoría inmutable. No presentamos esta solución como tal.
+
+**RF/HU:** RF05/RF07/HU26, RF01/HU27. **Evidencia:**
+`tests/integration/admin-corrections.test.js` fuerza un error real al insertar
+la notificación y comprueba rollback en las cuatro operaciones. También prueba
+rol, cuenta inactiva, motivo, duplicados y recursos inexistentes. La regresión
+de API conserva el contrato HTTP.
+
 ## Trabajo restante de esta solicitud
 
 1. Completar condiciones verificadas de retos y tratamiento coherente de
    cambios/eliminaciones históricas, sin permitir recompensas arbitrarias.
-2. Agrupar correcciones administrativas y su notificación en transacciones.
+2. Incorporar el servicio de correcciones ya implementado al diagrama de clases.
 3. Crear/reprogramar recordatorios con tareas y procesar vencidos una sola vez;
    verificar permisos del navegador y persistencia del aviso interno.
 4. Reforzar intentos de acceso, revocación de sesiones y protección HTTP.

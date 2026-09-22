@@ -43,6 +43,21 @@ Esta matriz enlaza los requisitos aprobados con la construcción HTTP. Los servi
 
 ## Evidencia
 
+### Correcciones administrativas — CRF-004
+
+| RF / HU | Clase y método | Endpoint | Acción | Prueba |
+|---|---|---|---|---|
+| RF07 / HU26 | `CorreccionAdministrativaService.otorgarPuntos` | `POST /api/puntos` | Asignar puntos con motivo | `admin-corrections.test.js`: alta, permisos y rollback |
+| RF07 / HU26 | `CorreccionAdministrativaService.retirarPuntos` | `DELETE /api/puntos/:id` | Eliminar movimiento incorrecto | `admin-corrections.test.js`: retiro, ausencia y rollback |
+| RF05 / HU26 | `CorreccionAdministrativaService.asignarInsignia` | `POST /api/cuenta-insignias` | Asignar insignia con motivo | `admin-corrections.test.js`: alta, duplicado y rollback |
+| RF05 / HU26 | `CorreccionAdministrativaService.revocarInsignia` | `DELETE /api/cuenta-insignias/:id_cuenta/:id_insignia` | Revocar asignación | `admin-corrections.test.js`: revocación, ausencia y rollback |
+
+Las cuatro acciones pertenecen a P17 y verifican administrador activo en el
+servicio, además de la autorización HTTP. El diagrama gráfico se actualizará
+en la etapa de correspondencia de clases; esta matriz no sustituye ese cambio.
+
+### Comandos de verificación
+
 - `npm run test:architecture`: verifica límites MVC.
 - `npm run test:schema`: verifica E7 → E11 → modelos → SQLite.
 - `npm run test:integration`: verifica la capa de servicios/datos.
