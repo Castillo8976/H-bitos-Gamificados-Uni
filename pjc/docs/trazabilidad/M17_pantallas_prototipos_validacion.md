@@ -46,15 +46,29 @@ La situación real es:
 
 - Sí existe una cobertura funcional de la mayoría de las pantallas del mapa de navegación.
 - Sí están implementados los flujos principales de acceso, tareas, Pomodoro, gamificación, configuración y administración.
-- No está cerrada la validación “campo por campo / acción por acción” para toda la pantalla secundaria y los paneles de administración y reportes.
+- La comparación campo por campo y acción por acción de los seis wireframes principales deja diferencias verificables entre el prototipo y la construcción.
 
-En consecuencia, el criterio de construcción debe mantenerse en estado Parental de acuerdo con la hoja M17: funcionalmente cubierto, pero no cerrado formalmente como equivalente exacto del prototipo aprobado.
+## 3.1 Matriz de diferencias verificadas
+
+La siguiente matriz se levantó comparando `entregable_16_wireframes.md`, `entregable_17_prototipo_interactivo.md` y `src/public/index.html`. Una diferencia solo puede aceptarse como válida si está respaldada por un requisito, el mapa de navegación o un CRF aprobado.
+
+| Prototipo | Elementos que sí coinciden | Diferencias o elementos faltantes | Acción de cierre |
+|---|---|---|---|
+| W01 / P01 Login | Correo, contraseña, inicio de sesión y creación de cuenta | La construcción usa pestañas en lugar del enlace “Regístrate aquí” y añade textos informativos de marca | Registrar la decisión visual en CRF o ajustar al flujo del prototipo |
+| W02 / P03 Dashboard | Resumen, tareas, Pomodoro y acceso a módulos | Falta avatar/configuración en la cabecera, falta la barra inferior y el bloque de logros; se usa navegación lateral y se muestran métricas adicionales | CRF para la navegación y componentes adicionales, o ajustar la pantalla |
+| W03 / P04 Tareas | Búsqueda, materia, prioridad, estado, limpieza, creación, edición y eliminación | “En progreso” todavía no es un estado persistido en el modelo | Implementar el estado o justificarlo mediante CRF |
+| W04 / P06 Pomodoro | Tarea opcional, contador, iniciar, pausa/reanudación, detener/guardar, cancelar, selector de modo y aviso de enfoque | El modo libre y el descanso automático aún no cambian el comportamiento del cronómetro; la notificación depende del permiso del navegador | Completar el comportamiento o aprobar CRF de reducción/diferencia |
+| W05 / P08 Gamificación | Puntos, nivel, progreso, tabs Insignias/Reto/Historial, historial de puntos, retos y metas, modal de recompensa | El historial muestra movimientos de puntos; no existe un historial separado de insignias por fecha | Implementar el detalle restante o justificarlo mediante CRF |
+| W06 / P13 Configuración | Tema, modo oscuro, avatar, edición de nombre, correo y exportación | Faltan toggles de notificaciones, permiso del navegador y eliminación de datos | Implementar controles con soporte de API o aprobar CRF con alcance y riesgo |
+
+Las pantallas P02 y P05–P20 que no tienen wireframe independiente requieren además una validación contra el mapa de navegación, los requisitos y las acciones documentadas. Su existencia funcional no demuestra por sí sola equivalencia visual exacta.
 
 ## 4. Criterio de cierre recomendado
 
-Para cerrar este punto, se requieren dos condiciones adicionales:
+Para cerrar este punto, se requieren estas condiciones:
 
-1. Una matriz de validación visual pantalla a pantalla con campos y acciones comparadas contra un prototipo aprobado.
-2. CRF formal para las pantallas o diferencias de alcance que no sean equivalentes 1:1 con el diseño aprobado.
+1. Decidir para cada diferencia si se implementa el elemento del prototipo o se conserva la variante construida.
+2. Crear y aprobar un CRF por cada diferencia de alcance que no sea equivalente 1:1, indicando motivo, responsable, impacto, artefactos afectados y aprobación OCI.
+3. Repetir la revisión visual y adjuntar evidencia de las pantallas corregidas o de los CRF aprobados.
 
-Hasta que esto ocurra, la condición de pantallas acordes a prototipos sigue siendo parcial, aunque la funcionalidad del sistema esté operativa.
+Después de esta implementación, el punto 10 queda **Parcial avanzado**: las diferencias principales de tareas, Pomodoro, gamificación y perfil ya tienen controles visibles y funcionales, pero aún faltan los comportamientos de modo libre/descanso, preferencias de notificaciones, eliminación de datos y la decisión formal sobre estados o elementos no respaldados por el alcance actual.

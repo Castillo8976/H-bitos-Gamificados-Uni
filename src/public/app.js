@@ -288,6 +288,9 @@ function renderizarResumen() {
   $('#metrica-sesiones').textContent = estado.sesiones.length;
   $('#gamificacion-puntos').textContent = estado.totalPuntos || 0;
   $('#gamificacion-nivel').textContent = nivel;
+  const nivelBase = [...estado.niveles].sort((a, b) => a.puntos_minimos - b.puntos_minimos).filter(item => item.puntos_minimos <= Number(estado.totalPuntos || 0)).at(-1);
+  const siguiente = [...estado.niveles].sort((a, b) => a.puntos_minimos - b.puntos_minimos).find(item => item.puntos_minimos > Number(estado.totalPuntos || 0));
+  $('#progreso-nivel').value = siguiente && nivelBase ? Math.min(100, Math.round(((estado.totalPuntos - nivelBase.puntos_minimos) / (siguiente.puntos_minimos - nivelBase.puntos_minimos)) * 100)) : 100;
   const proximas = [...pendientes].sort((a, b) => String(a.fecha_entrega).localeCompare(String(b.fecha_entrega))).slice(0, 3);
   $('#dashboard-tareas').innerHTML = proximas.length ? proximas.map(tarea => `
     <div class="item prioridad-${escapar(tarea.prioridad.toLowerCase())}">
@@ -315,14 +318,17 @@ function renderizarMaterias() {
       <div class="acciones"><button class="boton secundario pequeno" data-accion="editar-materia" data-id="${escapar(materia.id_materia)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-materia" data-id="${escapar(materia.id_materia)}">Eliminar</button></div>
     </div></div>`).join('') : estadoVacio('Aún no hay materias registradas.');
   $('#tarea-materia').innerHTML = `<option value="">Sin materia</option>${opcionesMaterias()}`;
+  $('#filtro-materia').innerHTML = `<option value="">Todas</option>${opcionesMaterias()}`;
 }
 
 /** RF02/HU02 y RF09/HU09: muestra tareas filtradas y acciones disponibles. */
 function renderizarTareas() {
   const texto = $('#buscar-tarea').value.trim().toLowerCase();
   const prioridad = $('#filtro-prioridad').value;
+  const idMateria = $('#filtro-materia').value;
   const situacion = $('#filtro-estado').value;
-  const filtradas = estado.tareas.filter(tarea => (!texto || tarea.nombre.toLowerCase().includes(texto)) && (!prioridad || tarea.prioridad === prioridad) && (!situacion || tarea.estado === situacion));
+  const hoy = new Date().toISOString().slice(0, 10);
+  const filtradas = estado.tareas.filter(tarea => (!texto || tarea.nombre.toLowerCase().includes(texto)) && (!idMateria || tarea.id_materia === idMateria) && (!prioridad || tarea.prioridad === prioridad) && (!situacion || (situacion === 'Vencida' ? tarea.estado !== 'Completada' && tarea.fecha_entrega < hoy : tarea.estado === situacion)));
   $('#lista-tareas').innerHTML = filtradas.length ? filtradas.map(tarea => `
     <div class="item prioridad-${escapar(tarea.prioridad.toLowerCase())} ${tarea.estado === 'Completada' ? 'completada' : ''}">
       <div class="item-fila"><div><strong>${escapar(tarea.nombre)}</strong><br><small>${escapar(materiaDe(tarea.id_materia))} · vence ${escapar(fechaLegible(tarea.fecha_entrega))}</small></div><span class="chip">${escapar(tarea.prioridad)} · ${escapar(tarea.estado)}</span></div>
@@ -346,6 +352,8 @@ function renderizarGamificacion() {
     ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
   ];
   $('#lista-retos-metas').innerHTML = avances.length ? avances.join('') : estadoVacio('No tienes retos o metas registrados.');
+  const movimientos = [...estado.puntos].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
+  $('#lista-historial-gamificacion').innerHTML = movimientos.length ? movimientos.map(item => `<div class="item"><strong>${escapar(item.cantidad)} puntos · ${escapar(item.origen)}</strong><small>${escapar(fechaLegible(item.fecha))}</small></div>`).join('') : estadoVacio('Aún no tienes movimientos de puntos.');
   renderizarSesiones();
 }
 
@@ -541,6 +549,7 @@ function aplicarPreferencias() {
   document.documentElement.dataset.tema = tema;
   document.documentElement.classList.toggle('modo-oscuro', oscuro);
   $('#form-preferencias').elements.tema.value = tema;
+  if ($('#form-preferencias').elements.avatar) $('#form-preferencias').elements.avatar.value = estado.preferencias?.avatar || '😊';
   $('#form-preferencias').elements.modo_oscuro.checked = oscuro;
 }
 
@@ -892,7 +901,13 @@ function registrarEventos() {
       } catch (error) { avisar(error.message, 'error'); }
     });
   });
-  ['buscar-tarea', 'filtro-prioridad', 'filtro-estado'].forEach(id => $(`#${id}`).addEventListener('input', renderizarTareas));
+  ['buscar-tarea', 'filtro-materia', 'filtro-prioridad', 'filtro-estado'].forEach(id => $(`#${id}`).addEventListener('input', renderizarTareas));
+  $('#limpiar-filtros').addEventListener('click', () => { $('#buscar-tarea').value = ''; $('#filtro-materia').value = ''; $('#filtro-prioridad').value = ''; $('#filtro-estado').value = ''; renderizarTareas(); });
+  $$('[data-panel-gamificacion]').forEach(tab => tab.addEventListener('click', () => {
+    const historial = tab.dataset.panelGamificacion === 'historial';
+    $('#panel-historial-gamificacion').hidden = !historial;
+    $$('.tab-gamificacion').forEach(item => item.classList.toggle('activo', item === tab));
+  }));
   $('#iniciar-temporizador').addEventListener('click', alternarTemporizador);
   $('#guardar-temporizador').addEventListener('click', () => guardarSesion().catch(error => avisar(error.message, 'error')));
   $('#cancelar-temporizador').addEventListener('click', () => detenerTemporizador());
@@ -921,7 +936,7 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget;
     duranteEnvio(f, async () => {
       try {
-        const respuesta = await api('/preferencias', { method: 'PUT', body: JSON.stringify({ tema: f.elements.tema.value, modo_oscuro: f.elements.modo_oscuro.checked }) });
+        const respuesta = await api('/preferencias', { method: 'PUT', body: JSON.stringify({ avatar: f.elements.avatar.value, tema: f.elements.tema.value, modo_oscuro: f.elements.modo_oscuro.checked }) });
         estado.preferencias = respuesta.dato; aplicarPreferencias(); avisar('Preferencias guardadas.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
