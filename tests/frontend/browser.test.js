@@ -20,6 +20,8 @@ const { inicializarEsquema } = require('../../src/config/schema');
 const authService = require('../../src/services/authService');
 const Cuenta = require('../../src/models/Cuenta');
 const app = require('../../src/app');
+const planificador = require('../../src/services/planificadorRecordatoriosService');
+const Notificacion = require('../../src/models/Notificacion');
 
 const esperar = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -126,6 +128,25 @@ async function run() {
     assert.equal(await cdp.evaluar("document.activeElement===document.querySelector('#form-tarea [name=nombre]')"), true);
     await cdp.evaluar(`(()=>{const f=document.querySelector('#form-tarea');f.elements.nombre.value='Tarea desde Chrome';f.elements.fecha_entrega.value='2027-12-31';f.elements.prioridad.value='Alta';f.requestSubmit()})()`);
     await esperarCondicion(cdp, "document.querySelector('#lista-tareas [data-accion=completar-tarea]')");
+    // RF04/HU25: backend real y notificación nativa simulada para controlar permisos.
+    // No se afirma entrega por el sistema operativo; sí persistencia y no repetición.
+    await cdp.evaluar(`window.NotificacionOriginal=window.Notification; window.avisosPrueba=[];
+      window.Notification=class { static permission='granted'; static async requestPermission(){return this.permission;}
+      constructor(titulo, opciones){window.avisosPrueba.push(opciones);} }`);
+    assert.equal(await planificador.procesarPendientes(new Date('2027-12-30T12:00:00Z')), 1);
+    await cdp.evaluar('actualizarAvisos()');
+    assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1);
+    await cdp.evaluar('actualizarAvisos()');
+    assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1);
+    const estudianteId = await cdp.evaluar('estado.cuenta.id_cuenta');
+    await Notificacion.create({ id_notificacion: 'prueba-denegado', id_cuenta: estudianteId, tipo: 'Sistema', mensaje: 'Aviso con permiso denegado' });
+    await cdp.evaluar("Notification.permission='denied';solicitarPermisoAvisos().then(()=>actualizarAvisos())");
+    assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1);
+    assert.equal(await cdp.evaluar("document.querySelector('#lista-notificaciones').textContent.includes('Aviso con permiso denegado')"), true);
+    await Notificacion.create({ id_notificacion: 'prueba-enfoque', id_cuenta: estudianteId, tipo: 'Sistema', mensaje: 'Aviso sin interrumpir enfoque' });
+    await cdp.evaluar("Notification.permission='granted';estado.temporizador.activo=true;actualizarAvisos()");
+    assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1);
+    await cdp.evaluar('estado.temporizador.activo=false;window.Notification=window.NotificacionOriginal');
     await cdp.evaluar("document.querySelector('#lista-tareas [data-accion=completar-tarea]').click()");
     await esperarCondicion(cdp, "document.querySelector('#modal-recompensa').open");
     assert.equal(await cdp.evaluar("document.querySelector('#detalle-recompensa').textContent.includes('puntos')"), true);

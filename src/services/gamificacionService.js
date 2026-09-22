@@ -14,6 +14,7 @@ const CuentaInsignia = require('../models/CuentaInsignia');
 const NivelCuenta = require('../models/NivelCuenta');
 const Notificacion = require('../models/Notificacion');
 const { fechaIso, semanaIso, semanaActual } = require('./periodoService');
+const planificador = require('./planificadorRecordatoriosService');
 
 const PUNTOS_TAREA = 10;
 const PUNTOS_SESION = 5;
@@ -170,6 +171,7 @@ async function completarTarea(idCuenta, idTarea, opciones = {}) {
 
     const puntosAntes = Number(await Punto.sum('cantidad', { where: { id_cuenta: idCuenta }, transaction }) || 0);
     await tarea.update({ estado: 'Completada', fecha_completada: fechaIso(ahora) }, { transaction });
+    await planificador.cancelarDeTarea(tarea.id_tarea, transaction);
     const recompensa = await otorgarUnaVez(idCuenta, PUNTOS_TAREA, 'Tarea', tarea.id_tarea, transaction, ahora);
     if (opciones.fallarEn === 'despues_puntos') throw new Error('Fallo controlado para verificar rollback');
 

@@ -46,7 +46,7 @@ responsive conectada a la API real. Permite probar:
 - Consulta de puntos, nivel, insignias, retos y metas.
 - Recompensa transaccional al completar tareas o guardar sesiones.
 - Tablero semanal calculado en tiempo real y exportación JSON.
-- Creación y administración de recordatorios.
+- Creación y administración de recordatorios; programación automática al crear tareas.
 - Lectura y eliminación de notificaciones.
 - Temas de color y modo oscuro.
 - Administración de usuarios, insignias, niveles, retos y correcciones.
@@ -66,6 +66,22 @@ Variables opcionales:
 - `JWT_EXPIRES_IN`: duración del token; por defecto `2h`.
 
 ## Autenticación y API
+
+### Recordatorios automáticos
+
+El servidor procesa pendientes cada 60 segundos en lotes de hasta 100. Crear
+una tarea programa un aviso para el día UTC anterior a su entrega; cambiar la
+fecha lo reprograma, completar cancela pendientes y eliminar aplica cascada.
+E7 usa DATE: la precisión es de día, no de hora. Si el aviso ya venció, se recoge
+en el siguiente ciclo. Al reiniciar se recuperan los avisos pendientes guardados.
+
+La interfaz consulta avisos cada 15 segundos. El botón **Habilitar avisos del
+navegador** solicita permiso; si se deniega, los avisos siguen disponibles dentro
+de la aplicación. Las alertas nativas requieren la aplicación abierta y no se
+muestran durante enfoque. No hay entrega web push con navegador cerrado.
+El detalle y los límites están en CRF-004.
+
+### Rutas de acceso
 
 ```text
 POST /api/auth/registro

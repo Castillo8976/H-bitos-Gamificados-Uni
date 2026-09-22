@@ -58,6 +58,22 @@ en la etapa de correspondencia de clases; esta matriz no sustituye ese cambio.
 
 ### Comandos de verificación
 
+### Recordatorios automáticos — CRF-004
+
+| RF / HU | Clase y método | Entrada / acción | Prueba |
+|---|---|---|---|
+| RF02/RF04 · HU02/HU25 | `TareaService.crearTarea`, `PlanificadorRecordatoriosService.sincronizarAutomatico` | P05, guardar tarea → `POST /api/tareas` | `reminders.test.js`: creación y rollback |
+| RF02/RF04 · HU19/HU25 | `TareaService.actualizarTarea`, `sincronizarAutomatico` | P05, editar → `PUT /api/tareas/:id` | Reprogramación y desactivación conservada |
+| RF03/RF04 · HU03/HU25 | `GamificacionService.completarTareaConGamificacion`, `cancelarDeTarea` | P04, completar | Cancelación de pendientes |
+| RF04 · HU04/HU24/HU25 | `PlanificadorRecordatoriosService.procesarPendientes`, `iniciar`, `detener` | Ciclo de servidor; frontend `actualizarAvisos` | Envío único, rollback y ciclo periódico |
+| RF04 · HU04/HU24 | `solicitarPermisoAvisos`, `iniciarRecepcionAvisos`, `detenerRecepcionAvisos` | P19, habilitar avisos y recepción durante sesión | Chrome: permiso denegado, no repetición y enfoque |
+
+Los métodos de recepción son funciones del cliente, no tablas. La persistencia
+de avisos es independiente del permiso de Notification. Los límites de precisión
+DATE y entrega nativa están documentados en README y CRF-004.
+
+### Ejecución de pruebas
+
 - `npm run test:architecture`: verifica límites MVC.
 - `npm run test:schema`: verifica E7 → E11 → modelos → SQLite.
 - `npm run test:integration`: verifica la capa de servicios/datos.

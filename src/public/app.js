@@ -20,6 +20,9 @@
 const API = '/api';
 const CLAVE_TOKEN = 'studyquest_token';
 const DURACION_POMODORO = 25 * 60;
+let temporizadorAvisos = null;
+let generacionAvisos = 0;
+let avisosConocidos = new Set();
 
 const estado = {
   token: sessionStorage.getItem(CLAVE_TOKEN),
@@ -124,6 +127,7 @@ function seleccionarAcceso(nombre) {
 /** Cierra la sesión local incluso si el token ya venció en el servidor. */
 /** RF01/HU01: solicita revocación, limpia el token y vuelve al acceso. */
 async function cerrarSesion() {
+  detenerRecepcionAvisos();
   try { if (estado.token) await api('/auth/logout', { method: 'POST' }); }
   catch (_) { /* El estado local siempre debe limpiarse. */ }
   sessionStorage.removeItem(CLAVE_TOKEN);
@@ -192,6 +196,7 @@ async function cargarAplicacion() {
     mostrarAplicacion();
     prepararPeriodos();
     navegar('dashboard');
+    iniciarRecepcionAvisos();
   } catch (error) {
     if (error.status === 401) return cerrarSesion();
     avisar(error.message, 'error');
@@ -464,6 +469,63 @@ function renderizarNotificaciones() {
     <div class="item ${item.leida ? 'completada' : ''}"><div class="item-fila"><div><strong>${escapar(item.tipo)}</strong><br><span>${escapar(item.mensaje)}</span><br><small>${escapar(fechaLegible(item.fecha))}</small></div><div class="acciones">${!item.leida ? `<button class="boton secundario pequeno" data-accion="leer-notificacion" data-id="${escapar(item.id_notificacion)}">Marcar leída</button>` : ''}<button class="boton peligro pequeno" data-accion="eliminar-notificacion" data-id="${escapar(item.id_notificacion)}">Eliminar</button></div></div></div>`).join('') : estadoVacio('No tienes notificaciones.');
 }
 
+/** RF04/HU24/HU25: detiene consultas y descarta respuestas de sesiones anteriores. */
+function detenerRecepcionAvisos() {
+  generacionAvisos += 1;
+  clearTimeout(temporizadorAvisos);
+  avisosConocidos = new Set();
+}
+
+/** RF04/HU24: refresca avisos sin escrituras ni duplicación de datos académicos.
+ * Solo muestra avisos nativos nuevos con permiso; durante enfoque no interrumpe.
+ * La notificación interna persiste aunque el navegador cierre o deniegue permiso.
+ */
+async function actualizarAvisos(generacion = generacionAvisos) {
+  const token = estado.token;
+  if (!token || estado.cuenta?.rol !== 'Estudiante') return;
+  const [avisos, recordatorios] = await Promise.all([api('/notificaciones'), api('/recordatorios')]);
+  if (generacion !== generacionAvisos || token !== estado.token) return;
+  for (const aviso of avisos.datos) {
+    if (!avisosConocidos.has(aviso.id_notificacion) && !aviso.leida && !estado.temporizador.activo &&
+      'Notification' in window && Notification.permission === 'granted') {
+      try { new Notification('StudyQuest', { body: aviso.mensaje, tag: aviso.id_notificacion }); }
+      catch (_) { /* El aviso interno no depende de soporte de notificación nativa. */ }
+    }
+    avisosConocidos.add(aviso.id_notificacion);
+  }
+  estado.notificaciones = avisos.datos;
+  estado.recordatorios = recordatorios.datos;
+  renderizarNotificaciones(); renderizarRecordatorios();
+}
+
+/** RF04/HU24: consulta cada 15 segundos sin solapar solicitudes ni repetir avisos al entrar. */
+function iniciarRecepcionAvisos() {
+  detenerRecepcionAvisos();
+  const generacion = generacionAvisos;
+  avisosConocidos = new Set(estado.notificaciones.map(item => item.id_notificacion));
+  const ciclo = async () => {
+    if (generacion !== generacionAvisos) return;
+    try { await actualizarAvisos(generacion); }
+    catch (error) {
+      if (generacion !== generacionAvisos) return;
+      if (error.status === 401) { await cerrarSesion(); return; }
+      // Fallos transitorios de red se reintentan sin llenar la pantalla de errores.
+    }
+    if (generacion === generacionAvisos) temporizadorAvisos = setTimeout(ciclo, 15000);
+  };
+  temporizadorAvisos = setTimeout(ciclo, 15000);
+}
+
+/** RF04/HU04 · RN19: solicita permiso mediante una acción explícita del usuario. */
+async function solicitarPermisoAvisos() {
+  if (!('Notification' in window)) return avisar('Este navegador conserva los avisos dentro de la aplicación.');
+  try {
+    const permiso = await Notification.requestPermission();
+    avisar(permiso === 'granted' ? 'Avisos del navegador habilitados mientras la aplicación esté abierta.' :
+      'Seguiremos guardando los avisos dentro de la aplicación.');
+  } catch (_) { avisar('No se pudo activar el permiso; tus avisos permanecen en la aplicación.'); }
+}
+
 /** RF13/HU13: aplica el tema persistido a la interfaz. */
 function aplicarPreferencias() {
   const tema = estado.preferencias?.tema || 'purple';
@@ -630,11 +692,13 @@ async function manejarAccion(evento) {
       const respuesta = await api(`/tareas/${id}/completar`, { method: 'PATCH' });
       estado.tareas = estado.tareas.map(item => item.id_tarea === id ? respuesta.dato : item);
       renderizarTareas(); await recargarGamificacion(); mostrarRecompensa(respuesta.gamificacion);
+      await actualizarAvisos();
       avisar('Tarea completada y progreso actualizado.', 'exito');
     }
     if (accion === 'eliminar-tarea' && confirm('¿Deseas eliminar esta tarea?')) {
       await api(`/tareas/${id}`, { method: 'DELETE' });
       estado.tareas = estado.tareas.filter(item => item.id_tarea !== id);
+      await actualizarAvisos();
       renderizarTareas(); renderizarResumen(); avisar('Tarea eliminada.', 'exito');
     }
     if (accion === 'alternar-recordatorio') {
@@ -776,6 +840,7 @@ function registrarEventos() {
         const datos = { nombre: f.elements.nombre.value, fecha_entrega: f.elements.fecha_entrega.value, prioridad: f.elements.prioridad.value, id_materia: f.elements.id_materia.value || null };
         const respuesta = await api(id ? `/tareas/${id}` : '/tareas', { method: id ? 'PUT' : 'POST', body: JSON.stringify(datos) });
         estado.tareas = id ? estado.tareas.map(item => item.id_tarea === id ? respuesta.dato : item) : [...estado.tareas, respuesta.dato];
+        await actualizarAvisos();
         cerrarTarea(); renderizarTareas(); renderizarResumen(); avisar(`Tarea ${id ? 'actualizada' : 'creada'}.`, 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
@@ -800,6 +865,7 @@ function registrarEventos() {
       } catch (error) { avisar(error.message, 'error'); }
     });
   });
+  $('#habilitar-avisos').addEventListener('click', solicitarPermisoAvisos);
   $('#marcar-notificaciones').addEventListener('click', async () => {
     try { await api('/notificaciones/leidas', { method: 'PATCH' }); estado.notificaciones = estado.notificaciones.map(item => ({ ...item, leida: true })); renderizarNotificaciones(); }
     catch (error) { avisar(error.message, 'error'); }

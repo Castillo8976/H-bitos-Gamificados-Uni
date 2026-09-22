@@ -55,13 +55,41 @@ la notificación y comprueba rollback en las cuatro operaciones. También prueba
 rol, cuenta inactiva, motivo, duplicados y recursos inexistentes. La regresión
 de API conserva el contrato HTTP.
 
+## Avance 3 — Recordatorios automáticos
+
+- `TareaService` crea tarea y recordatorio en una transacción. Cambiar nombre
+  actualiza el aviso; cambiar entrega lo reprograma, conservando una
+  desactivación explícita. Un UUID determinista identifica el aviso automático
+  sin agregar columnas ni sobrescribir los manuales.
+- Completar tarea cancela avisos pendientes dentro de la transacción de
+  gamificación; eliminar conserva la cascada de E11.
+- `PlanificadorRecordatoriosService` procesa hasta 100 avisos por ciclo de
+  60 segundos, sin superposición. Confirma el marcado y la notificación juntos.
+  Filtra cuentas activas y tareas pendientes de la misma cuenta.
+- El frontend consulta cada 15 segundos y descarta respuestas de sesiones
+  anteriores. Solicita permiso nativo mediante una acción explícita; denegarlo
+  no impide leer el aviso interno. Durante enfoque evita avisos nativos.
+
+**Precisión y límites:** E7 define DATE sin hora. Programamos el día UTC anterior
+a la entrega, no una hora exacta. Para una tarea de hoy, el aviso queda vencido
+y se recoge en el siguiente ciclo. El servidor debe estar encendido; recupera
+pendientes al reiniciar. Con navegador cerrado permanece el aviso interno,
+pero no implementamos web push ni generamos avisos retrospectivos para todas
+las tareas antiguas al arrancar.
+
+**RF/HU:** RF02/HU02/HU19; RF03/HU03; RF04/HU04/HU24/HU25.
+**Pruebas:** `reminders.test.js` cubre bisiestos, reprogramación, no repetición,
+rollback, cancelación, cascada y ciclo periódico. Chrome usa backend real y
+simula Notification para verificar permiso denegado y supresión en enfoque;
+no certifica entrega del sistema operativo.
+
 ## Trabajo restante de esta solicitud
 
 1. Completar condiciones verificadas de retos y tratamiento coherente de
    cambios/eliminaciones históricas, sin permitir recompensas arbitrarias.
 2. Incorporar el servicio de correcciones ya implementado al diagrama de clases.
-3. Crear/reprogramar recordatorios con tareas y procesar vencidos una sola vez;
-   verificar permisos del navegador y persistencia del aviso interno.
+3. Completar la revisión de operaciones manuales de recordatorios y sus casos
+   negativos junto a las restantes reglas del backend.
 4. Reforzar intentos de acceso, revocación de sesiones y protección HTTP.
 5. Completar perfil y edición administrativa desde la interfaz.
 6. Actualizar las clases y métodos en los archivos gráficos vigentes, M9 y
