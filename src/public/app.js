@@ -266,15 +266,15 @@ function nivelActual() {
     .filter(nivel => nivel.puntos_minimos <= total).at(-1)?.nombre || 'Sin nivel';
 }
 
-/** RF01/HU20: presenta el perfil consultado; no implementa su edición. */
+/** RF01/HU20: presenta el perfil y prepara su formulario de edición. */
 function renderizarUsuario() {
   const nombreCorto = estado.cuenta.nombre.split(' ')[0];
   $('#usuario-nombre').textContent = estado.cuenta.nombre;
   $('#usuario-correo').textContent = estado.cuenta.correo;
   $('#usuario-rol').textContent = estado.cuenta.rol;
   $('#saludo-nombre').textContent = nombreCorto;
-  $('#perfil-nombre').textContent = estado.cuenta.nombre;
-  $('#perfil-correo').textContent = estado.cuenta.correo;
+  if ($('#perfil-nombre')) $('#perfil-nombre').value = estado.cuenta.nombre;
+  if ($('#perfil-correo')) $('#perfil-correo').value = estado.cuenta.correo;
   $('#perfil-rol').textContent = estado.cuenta.rol;
 }
 
@@ -342,10 +342,18 @@ function renderizarGamificacion() {
     return `<div class="item insignia ${asignacion ? 'obtenida' : 'bloqueada'}" title="${escapar(insignia.descripcion)} · Condición: ${escapar(insignia.condicion)}"><strong>${asignacion ? '🏅' : '🔒'} ${escapar(insignia.nombre)}</strong><small>${asignacion ? `Obtenida ${escapar(fechaLegible(asignacion.fecha_obtenida))}` : `Condición: ${escapar(insignia.condicion)}`}</small></div>`;
   }).join('') : estadoVacio('El catálogo de insignias está vacío.');
   const avances = [
-    ...estado.retos.map(reto => ({ titulo: reto.descripcion, detalle: `Reto · progreso ${reto.progreso}${reto.completado ? ' · completado' : ''}` })),
-    ...estado.metas.map(meta => ({ titulo: meta.descripcion, detalle: `Meta · ${meta.valor_actual}/${meta.valor_objetivo}${meta.cumplida ? ' · cumplida' : ''}` }))
+    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button></div></div></div>`),
+    ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
   ];
-  $('#lista-retos-metas').innerHTML = avances.length ? avances.map(item => `<div class="item"><strong>${escapar(item.titulo)}</strong><small>${escapar(item.detalle)}</small></div>`).join('') : estadoVacio('No tienes retos o metas registrados.');
+  $('#lista-retos-metas').innerHTML = avances.length ? avances.join('') : estadoVacio('No tienes retos o metas registrados.');
+  renderizarSesiones();
+}
+
+/** RF10/RF11/HU21: muestra el historial propio y sus acciones de edición. */
+function renderizarSesiones() {
+  const lista = $('#lista-sesiones');
+  if (!lista) return;
+  lista.innerHTML = estado.sesiones.length ? estado.sesiones.map(sesion => `<div class="item"><div class="item-fila"><div><strong>${escapar(fechaLegible(sesion.fecha))}</strong><br><small>${escapar(sesion.duracion_minutos)} minutos · ${sesion.modo_enfoque ? 'Pomodoro' : 'Libre'}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-sesion" data-id="${escapar(sesion.id_sesion)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-sesion" data-id="${escapar(sesion.id_sesion)}">Eliminar</button></div></div></div>`).join('') : estadoVacio('Aún no tienes sesiones registradas.');
 }
 
 /** RF11/HU08: construye tarjetas reutilizables de indicadores. */
@@ -701,6 +709,45 @@ async function manejarAccion(evento) {
       await actualizarAvisos();
       renderizarTareas(); renderizarResumen(); avisar('Tarea eliminada.', 'exito');
     }
+    if (accion === 'editar-reto') {
+      const reto = estado.retos.find(item => item.id_reto === id);
+      const descripcion = prompt('Descripción del reto', reto.descripcion);
+      if (descripcion === null || !descripcion.trim()) return;
+      const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion: descripcion.trim() }) });
+      estado.retos = estado.retos.map(item => item.id_reto === id ? respuesta.dato : item);
+      renderizarGamificacion(); avisar('Reto actualizado.', 'exito');
+    }
+    if (accion === 'eliminar-reto' && confirm('¿Deseas eliminar este reto?')) {
+      await api(`/retos/${id}`, { method: 'DELETE' });
+      estado.retos = estado.retos.filter(item => item.id_reto !== id);
+      renderizarGamificacion(); avisar('Reto eliminado.', 'exito');
+    }
+    if (accion === 'editar-meta') {
+      const meta = estado.metas.find(item => item.id_meta === id);
+      const descripcion = prompt('Descripción de la meta', meta.descripcion);
+      if (descripcion === null || !descripcion.trim()) return;
+      const respuesta = await api(`/metas/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion: descripcion.trim() }) });
+      estado.metas = estado.metas.map(item => item.id_meta === id ? respuesta.dato : item);
+      renderizarGamificacion(); avisar('Meta actualizada.', 'exito');
+    }
+    if (accion === 'eliminar-meta' && confirm('¿Deseas eliminar esta meta?')) {
+      await api(`/metas/${id}`, { method: 'DELETE' });
+      estado.metas = estado.metas.filter(item => item.id_meta !== id);
+      renderizarGamificacion(); avisar('Meta eliminada.', 'exito');
+    }
+    if (accion === 'editar-sesion') {
+      const sesion = estado.sesiones.find(item => item.id_sesion === id);
+      const duracion = Number(prompt('Duración en minutos', sesion.duracion_minutos));
+      if (!Number.isInteger(duracion) || duracion < 1) return avisar('La duración debe ser un entero positivo.', 'error');
+      const respuesta = await api(`/sesiones/${id}`, { method: 'PUT', body: JSON.stringify({ duracion_minutos: duracion, modo_enfoque: Boolean(sesion.modo_enfoque) }) });
+      estado.sesiones = estado.sesiones.map(item => item.id_sesion === id ? respuesta.dato : item);
+      renderizarSesiones(); renderizarResumen(); avisar('Sesión actualizada.', 'exito');
+    }
+    if (accion === 'eliminar-sesion' && confirm('¿Deseas eliminar esta sesión?')) {
+      await api(`/sesiones/${id}`, { method: 'DELETE' });
+      estado.sesiones = estado.sesiones.filter(item => item.id_sesion !== id);
+      renderizarSesiones(); renderizarResumen(); avisar('Sesión eliminada.', 'exito');
+    }
     if (accion === 'alternar-recordatorio') {
       await api(`/recordatorios/${id}`, { method: 'PATCH', body: JSON.stringify({ activo: boton.dataset.activo !== 'true' }) });
       const respuesta = await api('/recordatorios'); estado.recordatorios = respuesta.datos; renderizarRecordatorios();
@@ -876,6 +923,15 @@ function registrarEventos() {
       try {
         const respuesta = await api('/preferencias', { method: 'PUT', body: JSON.stringify({ tema: f.elements.tema.value, modo_oscuro: f.elements.modo_oscuro.checked }) });
         estado.preferencias = respuesta.dato; aplicarPreferencias(); avisar('Preferencias guardadas.', 'exito');
+      } catch (error) { avisar(error.message, 'error'); }
+    });
+  });
+  $('#form-perfil').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        const respuesta = await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'PUT', body: JSON.stringify({ nombre: f.elements.nombre.value.trim(), correo: f.elements.correo.value.trim() }) });
+        estado.cuenta = respuesta.dato; renderizarUsuario(); avisar('Perfil actualizado.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
   });

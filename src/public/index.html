@@ -120,6 +120,7 @@
           <div class="encabezado-vista"><div><p class="eyebrow">Progreso</p><h2>Juega y aprende</h2></div></div>
           <div class="rejilla metricas dos"><article class="tarjeta metrica"><span>Puntos totales</span><strong id="gamificacion-puntos">0</strong></article><article class="tarjeta metrica"><span>Nivel</span><strong id="gamificacion-nivel">Principiante</strong></article></div>
           <div class="rejilla dashboard-columnas"><article class="tarjeta bloque"><div class="titulo-bloque"><h3>Catálogo de insignias</h3><span id="total-insignias" class="chip">0</span></div><div id="lista-insignias" class="lista"></div></article><article class="tarjeta bloque"><h3>Retos y metas</h3><div id="lista-retos-metas" class="lista"></div></article></div>
+          <article class="tarjeta bloque"><h3>Historial de sesiones</h3><div id="lista-sesiones" class="lista"></div></article>
         </section>
 
         <section id="vista-estadisticas" class="vista" data-seccion="estadisticas" hidden>
@@ -144,7 +145,7 @@
 
         <section id="vista-configuracion" class="vista" data-seccion="configuracion" hidden>
           <div class="encabezado-vista"><div><p class="eyebrow">Personalización</p><h2>Configuración</h2></div></div>
-          <div class="rejilla editor-lista"><article class="tarjeta bloque"><h3>Perfil</h3><dl class="datos-perfil"><div><dt>Nombre</dt><dd id="perfil-nombre">—</dd></div><div><dt>Correo</dt><dd id="perfil-correo">—</dd></div><div><dt>Rol</dt><dd id="perfil-rol">—</dd></div></dl><button class="boton secundario" type="button" data-vista="exportacion">Exportar mis datos</button></article><article class="tarjeta bloque"><h3>Preferencias visuales</h3><form id="form-preferencias" class="formulario"><label>Tema<select name="tema"><option value="purple">Violeta</option><option value="teal">Teal</option><option value="amber">Ámbar</option><option value="coral">Coral</option><option value="blue">Azul</option><option value="green">Verde</option></select></label><label class="fila-toggle"><input name="modo_oscuro" type="checkbox"> Activar modo oscuro</label><button class="boton primario" type="submit">Guardar preferencias</button></form></article></div>
+          <div class="rejilla editor-lista"><article class="tarjeta bloque"><h3>Perfil</h3><form id="form-perfil" class="formulario"><label>Nombre<input name="nombre" required></label><label>Correo<input name="correo" type="email" required></label><button class="boton primario" type="submit">Guardar perfil</button></form><p class="texto-secundario">Rol: <span id="perfil-rol">—</span></p><button class="boton secundario" type="button" data-vista="exportacion">Exportar mis datos</button></article><article class="tarjeta bloque"><h3>Preferencias visuales</h3><form id="form-preferencias" class="formulario"><label>Tema<select name="tema"><option value="purple">Violeta</option><option value="teal">Teal</option><option value="amber">Ámbar</option><option value="coral">Coral</option><option value="blue">Azul</option><option value="green">Verde</option></select></label><label class="fila-toggle"><input name="modo_oscuro" type="checkbox"> Activar modo oscuro</label><button class="boton primario" type="submit">Guardar preferencias</button></form></article></div>
         </section>
 
         <section id="vista-exportacion" class="vista" data-seccion="exportacion" hidden>

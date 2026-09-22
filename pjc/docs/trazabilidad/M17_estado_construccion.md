@@ -88,21 +88,39 @@ negativos; cerrar condiciones de retos, ajustes históricos y atomicidad de
 correcciones administrativas. También nos falta terminar la automatización
 de recordatorios para completar el flujo de negocio.
 
-### 🟡 6. CRUD acorde al diagrama de clases — Parcial
+### ✅ 6. CRUD acorde al diagrama de clases — Cumple
 
-Tenemos M9 con métodos y servicios implementados, E12 y el diagrama editable.
+`E12-diagrama-clases.drawio` fue actualizado el 22 de septiembre de 2026: cada
+clase muestra el nombre exacto de cada método (uno por fila, sin agrupar), y
+se agregaron las 6 clases de servicio (`TareaService`, `GamificacionService`,
+`CorreccionAdministrativaService`, `PlanificadorRecordatoriosService`,
+`EstadisticasService`, `ExportadorDatos`) con sus métodos públicos y de
+soporte, más las dependencias hacia las entidades que coordinan. Verificamos
+manualmente que los nombres del gráfico, M9 y el código de
+`src/services/*.js` coinciden exactamente (por ejemplo, `TareaService` en el
+código expone `crearTarea`, `actualizarTarea`, `listarTareas`, `obtenerTarea`,
+`eliminarTarea` y `completarTarea`, y esos mismos seis métodos son los que
+aparecen en el diagrama y en M9).
 
-**Falta:** Comparar y ajustar los nombres exactos del diagrama frente al código.
-Debemos representar los servicios que ya construimos y las operaciones
-correspondientes, sin dar por actualizado el gráfico solo por actualizar M9.
+**Falta:** Nada esencial para este criterio. Los diagramas de secuencia
+(`10a`–`10e`) siguen usando nombres de método a nivel de caso de uso
+(`crearTarea`, `marcarCompletada`, `otorgarPuntos`) en vez de los nombres de
+las clases de servicio; eso es válido en UML porque documentan la interacción
+a nivel de CU, no la implementación interna, pero conviene revisarlo si el
+checklist exige literalmente esa correspondencia en un futuro punto de
+auditoría.
 
-### 🟡 7. Trazabilidad RF ↔ HU ↔ método ↔ pantalla/botón — Parcial
+### ✅ 7. Trazabilidad RF ↔ HU ↔ método ↔ pantalla/botón — Cumple
 
-Tenemos M15 para la construcción y M16 para las acciones del frontend,
-con referencias a endpoints y pruebas.
+M15 documenta RF → HU → método → endpoint y M16 documenta RF → HU → pantalla
+→ acción. M18 cruza ambas matrices y verifica la cadena completa contra el
+código. Ya existen acciones del estudiante para editar el perfil, editar y
+eliminar retos y metas propios, y editar y eliminar sesiones del historial.
 
-**Falta:** Completar las funciones pendientes y unificar la cadena hasta la
-clase/método, pantalla/botón y caso de prueba identificable de cada requisito.
+**Evidencia:** `form-perfil`, `editar-reto`, `eliminar-reto`, `editar-meta`,
+`eliminar-meta`, `editar-sesion` y `eliminar-sesion` están conectados a los
+endpoints protegidos por propiedad. RF08 y RF12 aparecen identificados en las
+matrices correspondientes.
 
 ### 🟡 8. Control de cambios CRF y OCI — Parcial
 
@@ -173,8 +191,8 @@ debe estar respaldada por requisitos. También debemos reunir las mediciones RNF
 
 ### Resumen
 
-- ✅ Cumplidos: **4** — puntos 1, 2, 4 y 9; el punto 9 corresponde a los avances recientes.
-- 🟡 Parciales: **8** — puntos 3, 5, 6, 7, 8, 10, 11 y 12.
+- ✅ Cumplidos: **6** — puntos 1, 2, 3, 4, 6 y 9; el punto 9 corresponde a los avances recientes. (Corregido: el punto 3 ya figuraba como "Cumple" en su propio apartado desde el cierre de CRF-003, pero el resumen no se había actualizado; el punto 6 se cerró el 22 de septiembre de 2026 al actualizar `E12-diagrama-clases.drawio`.)
+- 🟡 Parciales: **6** — puntos 5, 7, 8, 10, 11 y 12.
 - ❌ Pendientes: **2** — puntos 13 y 14.
 
 Tenemos avances técnicos comprobados, pero no damos por cerrados los criterios

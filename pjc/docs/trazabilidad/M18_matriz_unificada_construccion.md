@@ -51,22 +51,17 @@ contra el código fuente, no solo contra la documentación.
 | RF15 | HU15 | CU05 | `Meta.crearMeta` | *(automático — se crea junto con el ciclo semanal)* | P08 Gamificación | *(sin botón — sugerida por el sistema)* | `tests/integration/objectives-6-10.test.js` | ✅ (por diseño, sin botón) |
 | RF15 | HU17 | CU05 | `Meta.actualizarMeta`, `eliminarMeta` | `PUT/DELETE /api/metas/:id` | *(ninguna vista de Estudiante)* | *(no existe)* | — | ❌ **Rota.** HU17: *"Como Estudiante, quiero editar o eliminar una meta semanal"*. `renderizarGamificacion()` solo muestra las metas como texto de solo lectura (`$('#lista-retos-metas')`), sin ningún `data-accion` de edición o eliminación, ni en el backend hay ruta consumida desde el cliente para ello. |
 
-## Cadenas rotas o parciales (resumen)
+## Cadenas cerradas y pendientes de validación visual
 
 | # | RF · HU | Tipo de ruptura | Eslabón faltante | Qué falta para cerrarla |
 |---|---|---|---|---|
-| 1 | RF01 · HU20 | ❌ Rota | Pantalla/botón | Un formulario de edición de perfil (nombre/correo) en P13, conectado a `PUT /api/cuentas/:id` (el endpoint y el método `actualizarCuenta` ya existen). |
-| 2 | RF06 · HU18 | ❌ Rota | Pantalla/botón (para el rol correcto) | Un `data-accion="editar-reto"` / `"eliminar-reto"` visible para el **Estudiante** dueño del reto (hoy solo existe la variante administrativa). |
-| 3 | RF10/RF11 · HU21 | ❌ Rota | Pantalla/botón | Una vista de historial de sesiones con acciones de editar/eliminar, conectada a `PUT/DELETE /api/sesiones/:id` (ya implementados). |
-| 4 | RF15 · HU17 | ❌ Rota | Pantalla/botón | Un `data-accion="editar-meta"` / `"eliminar-meta"` en la tarjeta de meta dentro de Gamificación, conectado a `PUT/DELETE /api/metas/:id` (ya implementados). |
-| 5 | RF12 · HU12 | 🟡 Parcial | Documentación (M15/M16) | Agregar una fila explícita RF12/HU12 en M15 y M16; el código y la prueba de Chrome ya existen, solo falta que la matriz lo nombre. |
-| 6 | RF08 · HU07/HU08 | 🟡 Parcial | Documentación (M16) | Ajustar la fila de P08–P10 en M16 para incluir "RF08" en el rótulo, no solo RF05–RF07. |
+| 1 | RF01 · HU20 | ✅ Cerrada | Pantalla/botón | `form-perfil` actualiza nombre/correo mediante `PUT /api/cuentas/:id`. |
+| 2 | RF06 · HU18 | ✅ Cerrada | Pantalla/botón (rol correcto) | P08 muestra `editar-reto` / `eliminar-reto` para el estudiante dueño; el backend verifica propiedad. |
+| 3 | RF10/RF11 · HU21 | ✅ Cerrada | Pantalla/botón | P08 muestra el historial y acciones `editar-sesion` / `eliminar-sesion`, conectadas a `PUT/DELETE /api/sesiones/:id`. |
+| 4 | RF15 · HU17 | ✅ Cerrada | Pantalla/botón | P08 muestra `editar-meta` / `eliminar-meta`, conectadas a `PUT/DELETE /api/metas/:id`. |
+| 5 | RF12 · HU12 | 🟡 Documental | Matrices | La funcionalidad existe; queda como referencia explícita de RF12/HU12 en la documentación de Pomodoro. |
+| 6 | RF08 · HU07/HU08 | ✅ Cerrada | Matriz | M16 identifica RF08 en la fila del tablero; M15 ya lo documentaba. |
 
-**Conclusión:** de las 15 RF (28 HU), **4 cadenas están rotas de verdad** (backend implementado,
-sin pantalla/botón para la HU específica) y **2 son solo un vacío de rotulado en la
-documentación** (la funcionalidad y la prueba ya existen). Las 4 rotas coinciden exactamente con
-brechas que **M17 ya venía señalando de forma general** ("edición de perfil", "CRUD visual de
-metas/retos del estudiante", "historial de sesiones editable"); esta matriz las ancla ahora a la
-HU exacta y al método de backend exacto que ya está listo para consumirse, así que cerrar cada
-una es estrictamente trabajo de frontend (agregar botón + `data-accion` + llamada a la API
-existente), no de backend.
+**Conclusión:** las cuatro cadenas que estaban rotas ya tienen pantalla, acción y llamada al
+endpoint protegido. El punto 7 puede marcarse como **Cumple**. La validación visual exacta de
+los prototipos pertenece al punto 10 y permanece separada en M17-A.
