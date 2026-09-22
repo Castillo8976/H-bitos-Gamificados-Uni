@@ -24,6 +24,7 @@ router.get('/cuentas', admin, wrap(controllers.accounts.list));
 router.get('/cuentas/:id', studentOrAdmin, wrap(controllers.accounts.get));
 router.put('/cuentas/:id', studentOrAdmin, allowFields('nombre', 'correo', 'activa', 'rol'), booleanField('activa'), enumField('rol', ['Estudiante','Administrador','Revisor institucional']), wrap(controllers.accounts.update));
 router.delete('/cuentas/:id', studentOrAdmin, wrap(controllers.accounts.deactivate));
+router.delete('/cuentas/:id/datos', authorize('Estudiante'), wrap(controllers.accounts.deleteData));
 
 router.get('/materias', studentOrAdmin, wrap(controllers.subjects.list));
 router.get('/materias/:id', studentOrAdmin, wrap(controllers.subjects.get));
@@ -34,12 +35,12 @@ router.delete('/materias/:id', studentOrAdmin, wrap(controllers.subjects.remove)
 router.get('/tareas', studentOrAdmin, wrap(controllers.tasks.list));
 router.get('/tareas/:id', studentOrAdmin, wrap(controllers.tasks.get));
 router.post('/tareas', studentOrAdmin, allowFields('id_cuenta', 'id_materia', 'nombre', 'fecha_entrega', 'prioridad'), requireFields('nombre', 'fecha_entrega', 'prioridad'), enumField('prioridad', ['Alta','Media','Baja']), wrap(controllers.tasks.create));
-router.put('/tareas/:id', studentOrAdmin, allowFields('id_materia', 'nombre', 'fecha_entrega', 'prioridad'), enumField('prioridad', ['Alta','Media','Baja']), wrap(controllers.tasks.update));
+router.put('/tareas/:id', studentOrAdmin, allowFields('id_materia', 'nombre', 'fecha_entrega', 'prioridad', 'estado'), enumField('prioridad', ['Alta','Media','Baja']), enumField('estado', ['Pendiente','En progreso','Completada']), wrap(controllers.tasks.update));
 router.patch('/tareas/:id/completar', authorize('Estudiante'), wrap(controllers.tasks.complete));
 router.delete('/tareas/:id', studentOrAdmin, wrap(controllers.tasks.remove));
 
 router.get('/preferencias', studentOrAdmin, wrap(controllers.preferences.get));
-router.put('/preferencias', studentOrAdmin, allowFields('tema', 'modo_oscuro', 'avatar'), enumField('tema', ['purple','teal','amber','coral','blue','green']), booleanField('modo_oscuro'), wrap(controllers.preferences.update));
+router.put('/preferencias', studentOrAdmin, allowFields('tema', 'modo_oscuro', 'avatar', 'notificaciones_recordatorios', 'notificaciones_retos'), enumField('tema', ['purple','teal','amber','coral','blue','green']), booleanField('modo_oscuro'), booleanField('notificaciones_recordatorios'), booleanField('notificaciones_retos'), wrap(controllers.preferences.update));
 
 router.get('/sesiones', studentOrAdmin, wrap(controllers.sessions.list));
 router.get('/sesiones/:id', studentOrAdmin, wrap(controllers.sessions.get));

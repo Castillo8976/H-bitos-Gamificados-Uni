@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS preferencia_visual (
     CHECK (tema IN ('purple','teal','amber','coral','blue','green')),
   modo_oscuro INTEGER NOT NULL DEFAULT 0 CHECK (modo_oscuro IN (0,1)),
   avatar VARCHAR(50),
+  notificaciones_recordatorios INTEGER NOT NULL DEFAULT 1 CHECK (notificaciones_recordatorios IN (0,1)),
+  notificaciones_retos INTEGER NOT NULL DEFAULT 1 CHECK (notificaciones_retos IN (0,1)),
   fecha_actualizado DATE NOT NULL DEFAULT CURRENT_DATE,
   CONSTRAINT pk_preferencia_visual PRIMARY KEY (id_preferencia),
   CONSTRAINT uq_preferencia_visual_cuenta UNIQUE (id_cuenta),
@@ -61,7 +63,7 @@ CREATE TABLE IF NOT EXISTS tarea (
   fecha_entrega DATE NOT NULL,
   prioridad VARCHAR(10) NOT NULL CHECK (prioridad IN ('Alta','Media','Baja')),
   estado VARCHAR(15) NOT NULL DEFAULT 'Pendiente'
-    CHECK (estado IN ('Pendiente','Completada')),
+    CHECK (estado IN ('Pendiente','En progreso','Completada')),
   fecha_completada DATE,
   CONSTRAINT pk_tarea PRIMARY KEY (id_tarea),
   CONSTRAINT fk_tarea_cuenta FOREIGN KEY (id_cuenta)

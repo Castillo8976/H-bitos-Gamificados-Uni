@@ -32,7 +32,7 @@ const estado = {
   recordatorios: [], notificaciones: [], preferencias: null,
   estadisticas: null, institucionales: null, cuentasAdmin: [], retosAdmin: [],
   puntosAdmin: [], insigniasCuentaAdmin: [],
-  temporizador: { restante: DURACION_POMODORO, transcurrido: 0, intervalo: null, activo: false }
+  temporizador: { restante: DURACION_POMODORO, transcurrido: 0, intervalo: null, activo: false, modo: 'pomodoro', descanso: false }
 };
 
 const $ = selector => document.querySelector(selector);
@@ -332,7 +332,7 @@ function renderizarTareas() {
   $('#lista-tareas').innerHTML = filtradas.length ? filtradas.map(tarea => `
     <div class="item prioridad-${escapar(tarea.prioridad.toLowerCase())} ${tarea.estado === 'Completada' ? 'completada' : ''}">
       <div class="item-fila"><div><strong>${escapar(tarea.nombre)}</strong><br><small>${escapar(materiaDe(tarea.id_materia))} · vence ${escapar(fechaLegible(tarea.fecha_entrega))}</small></div><span class="chip">${escapar(tarea.prioridad)} · ${escapar(tarea.estado)}</span></div>
-      <div class="acciones"><button class="boton secundario pequeno" data-accion="ver-tarea" data-id="${escapar(tarea.id_tarea)}">Detalle</button>${tarea.estado !== 'Completada' ? `<button class="boton primario pequeno" data-accion="completar-tarea" data-id="${escapar(tarea.id_tarea)}">Completar</button>` : ''}<button class="boton secundario pequeno" data-accion="editar-tarea" data-id="${escapar(tarea.id_tarea)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-tarea" data-id="${escapar(tarea.id_tarea)}">Eliminar</button></div>
+      <div class="acciones"><button class="boton secundario pequeno" data-accion="ver-tarea" data-id="${escapar(tarea.id_tarea)}">Detalle</button>${tarea.estado === 'Pendiente' ? `<button class="boton secundario pequeno" data-accion="iniciar-tarea" data-id="${escapar(tarea.id_tarea)}">En progreso</button>` : ''}${tarea.estado !== 'Completada' ? `<button class="boton primario pequeno" data-accion="completar-tarea" data-id="${escapar(tarea.id_tarea)}">Completar</button>` : ''}<button class="boton secundario pequeno" data-accion="editar-tarea" data-id="${escapar(tarea.id_tarea)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-tarea" data-id="${escapar(tarea.id_tarea)}">Eliminar</button></div>
     </div>`).join('') : estadoVacio('No hay tareas que coincidan con los filtros.');
   const opciones = opcionesTareas();
   $('#pomodoro-tarea').innerHTML = `<option value="">Sesión libre</option>${opciones}`;
@@ -551,6 +551,8 @@ function aplicarPreferencias() {
   $('#form-preferencias').elements.tema.value = tema;
   if ($('#form-preferencias').elements.avatar) $('#form-preferencias').elements.avatar.value = estado.preferencias?.avatar || '😊';
   $('#form-preferencias').elements.modo_oscuro.checked = oscuro;
+  $('#form-preferencias').elements.notificaciones_recordatorios.checked = estado.preferencias?.notificaciones_recordatorios !== false;
+  $('#form-preferencias').elements.notificaciones_retos.checked = estado.preferencias?.notificaciones_retos !== false;
 }
 
 /** RF08/HU08: coordina el refresco visual con los datos ya cargados. */
@@ -591,6 +593,12 @@ function limpiarMateria() {
 
 /** RF10/HU10: representa los segundos restantes del cronómetro. */
 function actualizarReloj() {
+  if (estado.temporizador.modo === 'libre') {
+    const minutosLibres = Math.floor(estado.temporizador.transcurrido / 60).toString().padStart(2, '0');
+    const segundosLibres = (estado.temporizador.transcurrido % 60).toString().padStart(2, '0');
+    $('#reloj').textContent = `${minutosLibres}:${segundosLibres}`;
+    return;
+  }
   const minutos = Math.floor(estado.temporizador.restante / 60).toString().padStart(2, '0');
   const segundos = (estado.temporizador.restante % 60).toString().padStart(2, '0');
   $('#reloj').textContent = `${minutos}:${segundos}`;
@@ -615,18 +623,29 @@ function alternarTemporizador() {
   $('#iniciar-temporizador').textContent = 'Pausar';
   $('#guardar-temporizador').hidden = false;
   $('#cancelar-temporizador').hidden = false;
-  $('#estado-temporizador').textContent = 'Modo enfoque activo.';
+  $('#estado-temporizador').textContent = estado.temporizador.descanso ? 'Descanso activo.' : 'Modo enfoque activo.';
   $('#tarjeta-temporizador').classList.add('enfoque');
   estado.temporizador.intervalo = window.setInterval(() => {
-    estado.temporizador.restante -= 1;
-    estado.temporizador.transcurrido += 1;
+    if (estado.temporizador.modo === 'libre') {
+      estado.temporizador.transcurrido += 1;
+    } else if (!estado.temporizador.descanso) {
+      estado.temporizador.restante -= 1;
+      estado.temporizador.transcurrido += 1;
+    } else {
+      estado.temporizador.restante -= 1;
+    }
     actualizarReloj();
-    if (estado.temporizador.restante <= 0) {
-      clearInterval(estado.temporizador.intervalo);
-      estado.temporizador.activo = false;
-      $('#estado-temporizador').textContent = 'Pomodoro finalizado. Guarda la sesión.';
-      $('#iniciar-temporizador').hidden = true;
+    if (estado.temporizador.modo === 'pomodoro' && estado.temporizador.restante <= 0 && !estado.temporizador.descanso) {
+      estado.temporizador.descanso = true;
+      estado.temporizador.restante = 5 * 60;
+      $('#estado-temporizador').textContent = 'Pomodoro finalizado. Descanso de 5 minutos.';
+      $('#tarjeta-temporizador').classList.remove('enfoque');
       avisarFinPomodoro();
+    } else if (estado.temporizador.modo === 'pomodoro' && estado.temporizador.restante <= 0 && estado.temporizador.descanso) {
+      estado.temporizador.descanso = false;
+      estado.temporizador.restante = DURACION_POMODORO;
+      $('#estado-temporizador').textContent = 'Descanso finalizado. Nuevo ciclo de enfoque.';
+      $('#tarjeta-temporizador').classList.add('enfoque');
     }
   }, 1000);
 }
@@ -648,7 +667,8 @@ function avisarFinPomodoro() {
 /** RF10/HU10: cancela el intervalo y opcionalmente restablece el reloj. */
 function detenerTemporizador(restablecer = true) {
   clearInterval(estado.temporizador.intervalo);
-  estado.temporizador = { restante: DURACION_POMODORO, transcurrido: 0, intervalo: null, activo: false };
+  const modo = estado.temporizador.modo;
+  estado.temporizador = { restante: modo === 'libre' ? 0 : DURACION_POMODORO, transcurrido: 0, intervalo: null, activo: false, modo, descanso: false };
   if (!restablecer || !$('#reloj')) return;
   actualizarReloj();
   $('#iniciar-temporizador').hidden = false;
@@ -697,6 +717,11 @@ async function manejarAccion(evento) {
       renderizarMaterias(); renderizarResumen(); avisar('Materia eliminada.', 'exito');
     }
     if (accion === 'editar-tarea') return abrirTarea(estado.tareas.find(item => item.id_tarea === id));
+    if (accion === 'iniciar-tarea') {
+      const respuesta = await api(`/tareas/${id}`, { method: 'PUT', body: JSON.stringify({ estado: 'En progreso' }) });
+      estado.tareas = estado.tareas.map(item => item.id_tarea === id ? respuesta.dato : item);
+      renderizarTareas(); renderizarResumen(); avisar('Tarea marcada En progreso.', 'exito');
+    }
     if (accion === 'ver-tarea') {
       const tarea = estado.tareas.find(item => item.id_tarea === id);
       $('#detalle-tarea-nombre').textContent = tarea.nombre;
@@ -908,6 +933,13 @@ function registrarEventos() {
     $('#panel-historial-gamificacion').hidden = !historial;
     $$('.tab-gamificacion').forEach(item => item.classList.toggle('activo', item === tab));
   }));
+  $$('input[name="modo-temporizador"]').forEach(input => input.addEventListener('change', () => {
+    if (estado.temporizador.activo) return;
+    estado.temporizador.modo = input.value;
+    estado.temporizador.descanso = false;
+    estado.temporizador.restante = input.value === 'libre' ? 0 : DURACION_POMODORO;
+    actualizarReloj();
+  }));
   $('#iniciar-temporizador').addEventListener('click', alternarTemporizador);
   $('#guardar-temporizador').addEventListener('click', () => guardarSesion().catch(error => avisar(error.message, 'error')));
   $('#cancelar-temporizador').addEventListener('click', () => detenerTemporizador());
@@ -936,7 +968,7 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget;
     duranteEnvio(f, async () => {
       try {
-        const respuesta = await api('/preferencias', { method: 'PUT', body: JSON.stringify({ avatar: f.elements.avatar.value, tema: f.elements.tema.value, modo_oscuro: f.elements.modo_oscuro.checked }) });
+        const respuesta = await api('/preferencias', { method: 'PUT', body: JSON.stringify({ avatar: f.elements.avatar.value, tema: f.elements.tema.value, modo_oscuro: f.elements.modo_oscuro.checked, notificaciones_recordatorios: f.elements.notificaciones_recordatorios.checked, notificaciones_retos: f.elements.notificaciones_retos.checked }) });
         estado.preferencias = respuesta.dato; aplicarPreferencias(); avisar('Preferencias guardadas.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
@@ -952,6 +984,11 @@ function registrarEventos() {
   });
   $('#form-preferencias').elements.tema.addEventListener('change', evento => { document.documentElement.dataset.tema = evento.target.value; });
   $('#form-preferencias').elements.modo_oscuro.addEventListener('change', evento => { document.documentElement.classList.toggle('modo-oscuro', evento.target.checked); });
+  $('#eliminar-datos').addEventListener('click', async () => {
+    if (!confirm('Esta acción eliminará permanentemente todos tus datos. Exporta primero si deseas conservar una copia. ¿Continuar?')) return;
+    try { await api(`/cuentas/${estado.cuenta.id_cuenta}/datos`, { method: 'DELETE' }); await cerrarSesion(); }
+    catch (error) { avisar(error.message, 'error'); }
+  });
 
   $('#cerrar-recompensa').addEventListener('click', () => $('#modal-recompensa').close());
   $('#cerrar-detalle-tarea').addEventListener('click', () => $('#modal-detalle-tarea').close());

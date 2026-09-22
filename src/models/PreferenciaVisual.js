@@ -126,6 +126,9 @@ const PreferenciaVisual = sequelize.define('preferencia_visual', {
     allowNull: true             // Campo opcional: el usuario puede no haber definido un avatar
   },
 
+  notificaciones_recordatorios: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+  notificaciones_retos: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+
   /**
    * Fecha de la última modificación de las preferencias visuales.
    * Debe actualizarse en el controlador cada vez que el usuario guarde cambios.

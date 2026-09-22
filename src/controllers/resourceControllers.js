@@ -84,6 +84,11 @@ const accounts = {
     if (!isAdmin(req.user) && req.params.id !== req.user.id) throw new HttpError(403, 'No puede desactivar otra cuenta');
     await cuenta.actualizarCuenta(req.params.id, { activa: false });
     res.status(204).send();
+  },
+  deleteData: async (req, res) => {
+    if (req.params.id !== req.user.id) throw new HttpError(403, 'Solo puede eliminar sus propios datos');
+    await cuenta.eliminarCuenta(req.user.id);
+    res.status(204).send();
   }
 };
 

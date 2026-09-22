@@ -177,7 +177,7 @@ const Tarea = sequelize.define('tarea', {
     defaultValue: 'Pendiente',  // Toda tarea nueva comienza en estado Pendiente
     validate: {
       // Validación en capa de aplicación: solo acepta los dos estados del ciclo de vida
-      isIn: [['Pendiente', 'Completada']]
+      isIn: [['Pendiente', 'En progreso', 'Completada']]
     }
   },
 

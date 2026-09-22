@@ -59,7 +59,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **nombre** | VARCHAR(120) | No | Título descriptivo de la tarea. |
 | **fecha_entrega** | DATE | No | Fecha límite para completar la tarea. |
 | **prioridad** | VARCHAR(10) | No | CHECK IN ('Alta','Media','Baja'). Chip visual en UI. |
-| **estado** | VARCHAR(15) | No | CHECK IN ('Pendiente','Completada'). DEFAULT 'Pendiente'. |
+| **estado** | VARCHAR(15) | No | CHECK IN ('Pendiente','En progreso','Completada'). DEFAULT 'Pendiente'. |
 | **fecha_completada** | DATE | Sí | NULL mientras esté pendiente. Se asigna al marcar completada. |
 
 > **Reglas:** prioridad restringida a {Alta, Media, Baja} · al completar suma puntos (RF03) · filtrable por materia/prioridad/fecha (RF09) · genera recordatorio automático (RF04).
@@ -184,6 +184,8 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **tema** | VARCHAR(20) | No | CHECK IN ('purple','teal','amber','coral','blue','green'). |
 | **modo_oscuro** | BOOLEAN/INT | No | TRUE = modo oscuro activo. DEFAULT FALSE. |
 | **avatar** | VARCHAR(50) | Sí | Nombre del avatar seleccionado. Nullable. |
+| **notificaciones_recordatorios** | BOOLEAN/INT | No | TRUE = alertas de recordatorios activas. DEFAULT TRUE. |
+| **notificaciones_retos** | BOOLEAN/INT | No | TRUE = alertas de retos activas. DEFAULT TRUE. |
 | **fecha_actualizado** | DATE | No | Última modificación. DEFAULT CURRENT_DATE. |
 
 > **Reglas:** relación 1:1 con cuenta garantizada por UNIQUE en id_cuenta · se crea automáticamente al registrar cuenta · se carga al iniciar sesión.

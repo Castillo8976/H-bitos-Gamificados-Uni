@@ -38,7 +38,7 @@ const expected = {
   reto: ['id_reto','id_cuenta','descripcion','condicion','puntos_recompensa','semana','progreso','completado'],
   meta: ['id_meta','id_cuenta','semana','descripcion','valor_objetivo','valor_actual','cumplida'],
   recordatorio: ['id_recordatorio','id_tarea','id_cuenta','fecha_programada','mensaje','enviado','activo'],
-  preferencia_visual: ['id_preferencia','id_cuenta','tema','modo_oscuro','avatar','fecha_actualizado'],
+  preferencia_visual: ['id_preferencia','id_cuenta','tema','modo_oscuro','avatar','notificaciones_recordatorios','notificaciones_retos','fecha_actualizado'],
   nivel_cuenta: ['id_nivel','nombre','descripcion','puntos_minimos','orden','icono'],
   notificacion: ['id_notificacion','id_cuenta','tipo','mensaje','leida','fecha']
 };
@@ -144,7 +144,7 @@ async function run() {
     nivel_cuenta: ['puntos_minimos >= 0', 'orden > 0'],
     preferencia_visual: ["tema IN ('purple','teal','amber','coral','blue','green')", 'modo_oscuro IN (0,1)'],
     materia: ['activa IN (0,1)'],
-    tarea: ["prioridad IN ('Alta','Media','Baja')", "estado IN ('Pendiente','Completada')"],
+    tarea: ["prioridad IN ('Alta','Media','Baja')", "estado IN ('Pendiente','En progreso','Completada')"],
     sesion_estudio: ['duracion_minutos > 0', 'modo_enfoque IN (0,1)'],
     punto: ['cantidad > 0', "origen IN ('Tarea','Reto','Sesion')"],
     reto: ['puntos_recompensa > 0', 'progreso >= 0', 'completado IN (0,1)'],
