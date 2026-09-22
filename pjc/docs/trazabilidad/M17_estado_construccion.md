@@ -92,15 +92,12 @@ de recordatorios para completar el flujo de negocio.
 
 `E12-diagrama-clases.drawio` fue actualizado el 22 de septiembre de 2026: cada
 clase muestra el nombre exacto de cada método (uno por fila, sin agrupar), y
-se agregaron las 6 clases de servicio (`TareaService`, `GamificacionService`,
-`CorreccionAdministrativaService`, `PlanificadorRecordatoriosService`,
-`EstadisticasService`, `ExportadorDatos`) con sus métodos públicos y de
-soporte, más las dependencias hacia las entidades que coordinan. Verificamos
-manualmente que los nombres del gráfico, M9 y el código de
-`src/services/*.js` coinciden exactamente (por ejemplo, `TareaService` en el
-código expone `crearTarea`, `actualizarTarea`, `listarTareas`, `obtenerTarea`,
-`eliminarTarea` y `completarTarea`, y esos mismos seis métodos son los que
-aparecen en el diagrama y en M9).
+se incluyen las tres clases de servicio reales (`GamificacionService`,
+`EstadisticasService` y `ExportadorDatos`) con sus métodos públicos y las
+dependencias hacia las entidades que coordinan. Los CRUD de tareas, materias y
+las demás entidades se mantienen como servicios existentes en
+`src/services/*.js`, sin inventar clases adicionales. Verificamos manualmente
+que los nombres del gráfico, M9 y el código coinciden exactamente.
 
 **Falta:** Nada esencial para este criterio. Los diagramas de secuencia
 (`10a`–`10e`) siguen usando nombres de método a nivel de caso de uso
