@@ -9,6 +9,7 @@ const express = require('express');
 const controllers = require('../controllers/resourceControllers');
 const asyncHandler = require('../middlewares/asyncHandler');
 const { authenticateRequest, authorize } = require('../middlewares/authentication');
+const { validateEntityRequest } = require('../validators/entityValidator');
 const { requireFields, allowFields, enumField, positiveInteger, nonNegativeInteger, booleanField, nonBlankText } = require('../validators/requestValidator');
 
 const router = express.Router();
@@ -17,6 +18,7 @@ const admin = authorize('Administrador');
 const wrap = handler => asyncHandler(handler);
 
 router.use(authenticateRequest);
+router.use(validateEntityRequest);
 
 router.get('/cuentas', admin, wrap(controllers.accounts.list));
 router.get('/cuentas/:id', studentOrAdmin, wrap(controllers.accounts.get));

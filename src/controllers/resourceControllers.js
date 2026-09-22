@@ -25,7 +25,19 @@ function isAdmin(user) {
 /** RF01/HU27: permite seleccionar cuenta al administrador; otros usan su ID. */
 function accountId(req) {
   if (isAdmin(req.user) && req.body.id_cuenta) return req.body.id_cuenta;
+  if (req.body.id_cuenta && req.body.id_cuenta !== req.user.id) {
+    throw new HttpError(403, 'No puede crear registros para otra cuenta');
+  }
   return req.user.id;
+}
+
+/** RF02/HU02 y RN21: una relación siempre une registros de la misma cuenta,
+ * incluso cuando un administrador tiene permiso para gestionar ambas cuentas.
+ */
+function ensureSameAccount(record, idCuenta) {
+  if (!record) throw new HttpError(404, 'Registro relacionado no encontrado');
+  if (record.id_cuenta !== idCuenta) throw new HttpError(403, 'La relación pertenece a otra cuenta');
+  return record;
 }
 
 /** RF01/HU20: rechaza registros ausentes o ajenos; permite supervisión administrativa. */
@@ -58,6 +70,9 @@ const accounts = {
   /** RF01/HU20/HU27: Actualiza los campos permitidos por la ruta (cuentas). */
   update: async (req, res) => {
     if (!isAdmin(req.user) && req.params.id !== req.user.id) throw new HttpError(403, 'No puede actualizar otra cuenta');
+    if (!isAdmin(req.user) && ['rol', 'activa'].some(key => Object.hasOwn(req.body, key))) {
+      throw new HttpError(403, 'Solo el administrador puede cambiar rol o estado de una cuenta');
+    }
     const allowed = isAdmin(req.user) ? ['nombre', 'correo', 'activa', 'rol'] : ['nombre', 'correo'];
     const data = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
     if (!Object.keys(data).length) throw new HttpError(400, 'No hay campos permitidos para actualizar');
@@ -97,13 +112,13 @@ const tasks = {
   get: async (req, res) => res.json({ dato: ensureOwned(await tarea.obtenerTarea(req.params.id), req.user) }),
   /** RF02/HU02/HU19: Crea el registro mediante el servicio (tareas). */
   create: async (req, res) => {
-    if (req.body.id_materia) ensureOwned(await materia.obtenerMateria(req.body.id_materia), req.user);
+    if (req.body.id_materia) ensureSameAccount(await materia.obtenerMateria(req.body.id_materia), accountId(req));
     res.status(201).json({ dato: await tarea.crearTarea(accountId(req), req.body.nombre, req.body.fecha_entrega, req.body.prioridad, req.body.id_materia || null) });
   },
   /** RF02/HU02/HU19: Actualiza los campos permitidos por la ruta (tareas). */
   update: async (req, res) => {
-    ensureOwned(await tarea.obtenerTarea(req.params.id), req.user);
-    if (req.body.id_materia) ensureOwned(await materia.obtenerMateria(req.body.id_materia), req.user);
+    const actual = ensureOwned(await tarea.obtenerTarea(req.params.id), req.user);
+    if (req.body.id_materia) ensureSameAccount(await materia.obtenerMateria(req.body.id_materia), actual.id_cuenta);
     res.json({ dato: await updated(tarea.obtenerTarea, req.params.id, tarea.actualizarTarea, req.body) });
   },
   /** RF02/HU02/HU19: Completa el registro (tareas). */
@@ -141,8 +156,8 @@ const sessions = {
   },
   /** RF10/HU10/HU18: Actualiza los campos permitidos por la ruta (sesiones). */
   update: async (req, res) => {
-    ensureOwned(await sesion.obtenerSesionEstudio(req.params.id), req.user);
-    if (req.body.id_tarea) ensureOwned(await tarea.obtenerTarea(req.body.id_tarea), req.user);
+    const actual = ensureOwned(await sesion.obtenerSesionEstudio(req.params.id), req.user);
+    if (req.body.id_tarea) ensureSameAccount(await tarea.obtenerTarea(req.body.id_tarea), actual.id_cuenta);
     res.json({ dato: await updated(sesion.obtenerSesionEstudio, req.params.id, sesion.actualizarSesionEstudio, req.body) });
   },
   /** RF10/HU10/HU18: Elimina el registro mediante el servicio (sesiones). */
@@ -159,7 +174,7 @@ const reminders = {
   get: async (req, res) => res.json({ dato: ensureOwned(await recordatorio.obtenerRecordatorio(req.params.id), req.user) }),
   /** RF04/HU25: Crea el registro mediante el servicio (recordatorios). */
   create: async (req, res) => {
-    ensureOwned(await tarea.obtenerTarea(req.body.id_tarea), req.user);
+    ensureSameAccount(await tarea.obtenerTarea(req.body.id_tarea), accountId(req));
     res.status(201).json({ dato: await recordatorio.crearRecordatorio(req.body.id_tarea, accountId(req), req.body.fecha_programada, req.body.mensaje) });
   },
   /** RF04/HU25: Actualiza los campos permitidos por la ruta (recordatorios). */

@@ -81,13 +81,38 @@ async function run() {
 
   await request(app).get('/api/auth/perfil').set(auth(studentToken)).expect(200)
     .expect(({ body }) => assert.equal('contrasena_hash' in body.cuenta, false));
+
+  // RF01/HU01 y RF02/HU02: entradas hostiles no llegan al ORM ni producen 500.
+  await request(app).post('/api/auth/login').send({ correo: {}, contrasena: 'ClaveSegura123!' }).expect(400);
+  await request(app).post('/api/auth/registro').send({
+    nombre: 'Inválida', correo: 'invalid@test.local', contrasena: 'á'.repeat(37), materia: { nombre: 'Materia' }
+  }).expect(400);
+  for (const cambios of [
+    { nombre: ' ' }, { nombre: 'a'.repeat(121) }, { nombre: {} },
+    { fecha_entrega: '2026-02-29' }, { fecha_entrega: '2000-01-01' }
+  ]) {
+    await request(app).post('/api/tareas').set(auth(studentToken)).send({
+      nombre: 'Rechazar entrada', fecha_entrega: '2027-12-30', prioridad: 'Alta', ...cambios
+    }).expect(400);
+  }
+  await request(app).post('/api/materias').set(auth(studentToken)).send([]).expect(400);
+  await request(app).post('/api/sesiones').set(auth(studentToken)).send({ duracion_minutos: Number.MAX_SAFE_INTEGER + 1 }).expect(400);
+  await request(app).put('/api/preferencias').set(auth(studentToken)).send({ avatar: 'a'.repeat(51) }).expect(400);
+  await request(app).post('/api/metas').set(auth(studentToken)).send({ semana: '2025-W53', descripcion: 'Meta', valor_objetivo: 1 }).expect(400);
   await request(app).get('/api/cuentas').set(auth(adminToken)).expect(200);
+  await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
+    .send({ nombre: 'Intento de escalada', rol: 'Administrador' }).expect(403);
   await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
     .send({ nombre: 'Estudiante Actualizado' }).expect(200);
 
   const subject = await request(app).post('/api/materias').set(auth(studentToken))
     .send({ nombre: 'Ingeniería de Software III', horario: 'Sábado' }).expect(201);
   const subjectId = subject.body.dato.id_materia;
+  // RN21: el permiso administrativo no autoriza relaciones entre propietarios distintos.
+  await request(app).post('/api/tareas').set(auth(adminToken)).send({
+    id_cuenta: secondRegistration.body.cuenta.id_cuenta, id_materia: subjectId,
+    nombre: 'Relación cruzada', fecha_entrega: '2027-12-31', prioridad: 'Alta'
+  }).expect(403);
   await request(app).get('/api/materias').set(auth(studentToken)).expect(200);
   await request(app).get(`/api/materias/${subjectId}`).set(auth(secondToken)).expect(403);
   await request(app).put(`/api/materias/${subjectId}`).set(auth(studentToken)).send({ horario: 'Sábado 08:00' }).expect(200);
