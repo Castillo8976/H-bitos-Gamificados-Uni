@@ -153,15 +153,20 @@ comparación queda recogida en [M17_pantallas_prototipos_validacion.md](M17_pant
 **Estado objetivo del punto 10:** la cobertura funcional está presente, pero no
 está cerrada la equivalencia exacta de cada pantalla con su prototipo aprobado.
 
-### 🟡 11. Documentación del código y README — Parcial
+### 🟡 11. Documentación del código y README — Parcial avanzado
 
 Tenemos el README actualizado y comentarios RF/HU en controladores, servicios
 nuevos, funciones del frontend, validadores, autenticación y soporte HTTP.
 Los CRUD existentes también cuentan con documentación.
 
-**Falta:** Completar la revisión de clases y métodos del código existente para
-asegurar referencias RF/HU consistentes en todos los casos, y mantenerlas en
-cada nuevo desarrollo.
+**Evidencia:** README raíz y `src/public/README.md` reflejan el modo Libre,
+descanso Pomodoro, `En progreso`, preferencias de alertas y eliminación de
+datos. `eliminarCuenta()` y `deleteData()` incluyen referencia explícita a
+RF01/HU20.
+
+**Falta:** Terminar la revisión método por método de los CRUD heredados para
+asegurar referencias RF/HU consistentes en todos los bloques Javadoc y mantener
+esa referencia en cada nuevo desarrollo.
 
 ### 🟡 12. Autenticación, usuarios y roles — Parcial
 

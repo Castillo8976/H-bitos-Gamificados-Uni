@@ -85,6 +85,7 @@ const accounts = {
     await cuenta.actualizarCuenta(req.params.id, { activa: false });
     res.status(204).send();
   },
+  /** RF01/HU20: elimina únicamente los datos de la cuenta autenticada. */
   deleteData: async (req, res) => {
     if (req.params.id !== req.user.id) throw new HttpError(403, 'Solo puede eliminar sus propios datos');
     await cuenta.eliminarCuenta(req.user.id);

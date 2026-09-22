@@ -57,6 +57,7 @@ const crypto = require('crypto');         // Módulo nativo de Node.js para gene
  *   'Baja'
  * );
  */
+/** @implements RF02 @implements HU02 */
 async function crearTarea(id_cuenta, nombre, fecha_entrega, prioridad, id_materia = null) {
   const tarea = await Tarea.create({
     id_tarea: crypto.randomUUID(), // UUID v4 como identificador primario único
@@ -94,6 +95,7 @@ async function crearTarea(id_cuenta, nombre, fecha_entrega, prioridad, id_materi
  * const tareas = await listarTareas('550e8400-e29b-41d4-a716-446655440000');
  * // [{ id_tarea: '...', nombre: '...', estado: 'Pendiente', prioridad: 'Alta' }, ...]
  */
+/** @implements RF02 @implements HU09 */
 async function listarTareas(id_cuenta) {
   // WHERE id_cuenta = id_cuenta: garantiza aislamiento de datos entre usuarios
   const tareas = await Tarea.findAll({ where: { id_cuenta } });
@@ -130,6 +132,7 @@ async function listarTareas(id_cuenta) {
  * const tarea = await obtenerTarea('550e8400-e29b-41d4-a716-446655440000');
  * if (!tarea) console.log('La tarea no existe');
  */
+/** @implements RF02 @implements HU19 */
 async function obtenerTarea(id) {
   // findByPk busca por clave primaria; retorna null si no hay coincidencia
   const tarea = await Tarea.findByPk(id);
@@ -168,6 +171,7 @@ async function obtenerTarea(id) {
  *   prioridad: 'Alta'
  * });
  */
+/** @implements RF02 @implements HU19 */
 async function actualizarTarea(id, datos) {
   // Desestructura el primer elemento: número de filas afectadas por el UPDATE
   const [filas] = await Tarea.update(datos, {
@@ -205,6 +209,7 @@ async function actualizarTarea(id, datos) {
  * await completarTarea('550e8400-e29b-41d4-a716-446655440000');
  * // Resultado en BD: estado = 'Completada', fecha_completada = '2026-05-08'
  */
+/** @implements RF03 @implements HU03 */
 async function completarTarea(id) {
   // Obtiene la fecha actual del servidor en formato YYYY-MM-DD
   // .toISOString() → '2026-05-08T21:54:00.000Z'
@@ -240,6 +245,7 @@ async function completarTarea(id) {
  * @example
  * await eliminarTarea('550e8400-e29b-41d4-a716-446655440000');
  */
+/** @implements RF02 @implements HU19 */
 async function eliminarTarea(id) {
   // destroy retorna un entero directamente (no un arreglo como update)
   const filas = await Tarea.destroy({

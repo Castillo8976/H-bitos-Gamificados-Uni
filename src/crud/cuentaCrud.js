@@ -35,6 +35,7 @@ const bcrypt = require('bcryptjs');          // Librería para hash seguro de co
  * @example
  * const nueva = await crearCuenta('Juan Pérez', 'juan@email.com', 'miClave123');
  */
+/** @implements RF01 @implements HU01 */
 async function crearCuenta(nombre, correo, contrasena) {
   // Genera el hash de la contraseña con 10 rondas de sal (balance seguridad/rendimiento)
   const hash = await bcrypt.hash(contrasena, 10);
@@ -71,6 +72,7 @@ async function crearCuenta(nombre, correo, contrasena) {
  * const cuentas = await listarCuentas();
  * // [{ id_cuenta: '...', nombre: '...', correo: '...' }, ...]
  */
+/** @implements RF01 @implements HU27 */
 async function listarCuentas() {
   const cuentas = await Cuenta.findAll();
 
@@ -104,6 +106,7 @@ async function listarCuentas() {
  * const cuenta = await obtenerCuenta('550e8400-e29b-41d4-a716-446655440000');
  * if (!cuenta) console.log('No encontrada');
  */
+/** @implements RF01 @implements HU20 @implements HU27 */
 async function obtenerCuenta(id) {
   // findByPk busca por clave primaria; retorna null si no existe el registro
   const cuenta = await Cuenta.findByPk(id);
@@ -135,6 +138,7 @@ async function obtenerCuenta(id) {
  * @example
  * await actualizarCuenta('550e8400-...', { nombre: 'Pedro López' });
  */
+/** @implements RF01 @implements HU20 @implements HU27 */
 async function actualizarCuenta(id, datos) {
   // Desestructura el primer elemento del arreglo que indica filas afectadas
   const [filas] = await Cuenta.update(datos, {
@@ -152,6 +156,7 @@ async function actualizarCuenta(id, datos) {
 
 /**
  * Elimina de forma permanente una cuenta de la base de datos.
+ * @implements RF01 - Gestión de cuenta y privacidad de datos propios (HU20).
  *
  * `Cuenta.destroy` retorna el número de filas eliminadas. Si es 0,
  * significa que no se encontró ninguna cuenta con el UUID indicado.

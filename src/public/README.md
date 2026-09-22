@@ -38,6 +38,12 @@ Completar una tarea o guardar una sesión consume el resultado transaccional del
 servidor y presenta puntos, insignias, retos, metas y nivel en el modal de
 recompensa. Las pantallas nunca calculan ni simulan premios por su cuenta.
 
+El temporizador ofrece Pomodoro 25/5 y modo Libre. El modo Libre se guarda con
+`modo_enfoque: false`; las sesiones Pomodoro usan `modo_enfoque: true`. El
+estudiante también puede marcar tareas como `En progreso`, editar su perfil,
+administrar sus metas y retos, editar o eliminar sesiones, configurar alertas
+y eliminar sus datos después de una confirmación explícita.
+
 La correspondencia entre RF, HU, pantalla, acción y endpoint está registrada en
 `pjc/docs/trazabilidad/M16_trazabilidad_frontend.md`.
 
@@ -49,7 +55,7 @@ La prueba estática comprueba publicación y controles, mientras `test:browser`
 ejecuta un recorrido real de tarea, sesión, recompensa, exportación y roles.
 No demuestra que todas las acciones de todos los prototipos estén construidas.
 
-Todavía faltan, entre otros, edición del perfil/avatar, historial editable de
-sesiones, flujos completos de metas y retos, filtros adicionales y recordatorios
-automáticos. El detalle y la prioridad se mantienen en M17. Las restricciones
-de seguridad deben aplicarse en el backend, incluso si un botón está oculto.
+La equivalencia visual final con todos los prototipos, la aprobación OCI del
+CRF-005 y el historial separado de insignias permanecen como actividades de
+cierre documentadas en M17. Las restricciones de seguridad deben aplicarse en
+el backend, incluso si un botón está oculto.

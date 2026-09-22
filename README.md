@@ -42,13 +42,15 @@ responsive conectada a la API real. Permite probar:
 - Resumen del estudiante.
 - Creación, edición y eliminación de materias.
 - Creación, consulta, edición, completado y eliminación de tareas.
-- Cronómetro Pomodoro y registro de sesiones.
+- Cronómetro Pomodoro 25/5, modo Libre, descansos automáticos y registro de sesiones.
+- Cambio de tareas a estado `En progreso`.
 - Consulta de puntos, nivel, insignias, retos y metas.
 - Recompensa transaccional al completar tareas o guardar sesiones.
 - Tablero semanal calculado en tiempo real y exportación JSON.
 - Creación y administración de recordatorios; programación automática al crear tareas.
 - Lectura y eliminación de notificaciones.
-- Temas de color y modo oscuro.
+- Temas de color, modo oscuro, avatar y preferencias de alertas.
+- Eliminación confirmada de los datos propios, con exportación JSON previa opcional.
 - Administración de usuarios, insignias, niveles, retos y correcciones.
 - Indicadores institucionales agregados para el Revisor institucional.
 
@@ -189,4 +191,4 @@ No se ha declarado Línea Base 1.
 
 ## Registro de cambios
 
-La adopción definitiva de SQLite y la unificación de los artefactos se documenta en [CRF-001](pjc/docs/configuracion/CRF-001-unificacion-linea-tecnica.md). Los roles se formalizan en [CRF-002](pjc/docs/configuracion/CRF-002-incorporacion-roles.md) y los objetivos 6–10 en [CRF-003](pjc/docs/configuracion/CRF-003-flujo-gamificacion-estadisticas-roles.md).
+La adopción definitiva de SQLite y la unificación de los artefactos se documenta en [CRF-001](pjc/docs/configuracion/CRF-001-unificacion-linea-tecnica.md). Los roles se formalizan en [CRF-002](pjc/docs/configuracion/CRF-002-incorporacion-roles.md), los objetivos 6–10 en [CRF-003](pjc/docs/configuracion/CRF-003-flujo-gamificacion-estadisticas-roles.md) y el cierre de alcance de pantallas en [CRF-005](pjc/docs/configuracion/CRF-005-cierre-validacion-pantallas.md).

@@ -50,6 +50,7 @@ const crypto = require('crypto');             // Módulo nativo de Node.js para 
  *   'Inglés Técnico'
  * );
  */
+/** @implements RF01 @implements HU01 */
 async function crearMateria(id_cuenta, nombre, horario = null) {
   const materia = await Materia.create({
     id_materia: crypto.randomUUID(), // UUID v4 como identificador primario único
@@ -84,6 +85,7 @@ async function crearMateria(id_cuenta, nombre, horario = null) {
  * const materias = await listarMaterias('550e8400-e29b-41d4-a716-446655440000');
  * // [{ id_materia: '...', nombre: 'Bases de Datos' }, ...]
  */
+/** @implements RF01 @implements HU16 */
 async function listarMaterias(id_cuenta) {
   // WHERE id_cuenta = id_cuenta: filtra solo las materias del usuario indicado
   const materias = await Materia.findAll({ where: { id_cuenta } });
@@ -118,6 +120,7 @@ async function listarMaterias(id_cuenta) {
  * const materia = await obtenerMateria('550e8400-e29b-41d4-a716-446655440000');
  * if (!materia) console.log('La materia no existe');
  */
+/** @implements RF01 @implements HU16 */
 async function obtenerMateria(id) {
   // findByPk busca por clave primaria; retorna null si no hay coincidencia
   const materia = await Materia.findByPk(id);
@@ -158,6 +161,7 @@ async function obtenerMateria(id) {
  *   horario: 'Martes y Jueves 14:00–16:00'
  * });
  */
+/** @implements RF01 @implements HU16 */
 async function actualizarMateria(id, datos) {
   // Desestructura el primer elemento del arreglo: número de filas afectadas
   const [filas] = await Materia.update(datos, {
@@ -187,6 +191,7 @@ async function actualizarMateria(id, datos) {
  * @example
  * await eliminarMateria('550e8400-e29b-41d4-a716-446655440000');
  */
+/** @implements RF01 @implements HU16 */
 async function eliminarMateria(id) {
   // destroy retorna un entero directamente (no un arreglo como update)
   const filas = await Materia.destroy({
