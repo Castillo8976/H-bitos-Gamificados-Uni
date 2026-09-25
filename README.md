@@ -14,14 +14,43 @@ La raíz de este repositorio es el único directorio ejecutable. `pjc/` contiene
 
 El diccionario [E7](pjc/docs/diseno/fase2-datos/E7-diccionario-datos.md) define los nombres y tipos aprobados. El script [E11](pjc/docs/diseno/fase2-datos/E11-script-DDL-v2.sql) es la fuente física del esquema SQLite. Los modelos Sequelize consumen ese esquema, pero no lo crean con `sequelize.sync()`.
 
-## Instalación e inicio
+## Requisitos previos
+
+Antes de instalar el proyecto se necesita:
+
+- Node.js 20.17 o superior. Se recomienda Node.js 24 LTS o una versión compatible.
+- npm, incluido con Node.js.
+- Git, si se clonará el repositorio.
+- Google Chrome únicamente para ejecutar `npm run test:browser`.
+- No se necesita instalar SQLite ni levantar un servidor de base de datos externo:
+	la aplicación usa el archivo local `database.sqlite`.
+
+Para comprobar las versiones instaladas:
 
 ```bash
+node --version
+npm --version
+git --version
+```
+
+## Instalación e inicio
+
+Los siguientes comandos se ejecutan desde la raíz del repositorio, donde están
+`package.json` y `database.sqlite`:
+
+```bash
+git clone https://github.com/Castillo8976/H-bitos-Gamificados-Uni.git
+cd H-bitos-Gamificados-Uni
 npm install
 npm start
 ```
 
-La API queda disponible en `http://localhost:3000`. Para verificarla:
+Si el proyecto ya está descargado, basta con abrir una terminal en la carpeta
+del repositorio y ejecutar `npm install` una vez. Después, `npm start` inicia el
+servidor y conserva la terminal ocupada mientras la aplicación está activa.
+
+La API queda disponible en `http://localhost:3000` y la interfaz web en la misma
+dirección. Para verificar el estado del servidor:
 
 ```bash
 curl http://localhost:3000/api/health
@@ -32,6 +61,145 @@ Respuesta esperada:
 ```json
 {"estado":"ok","servicio":"studyquest-api","base_datos":"sqlite"}
 ```
+
+Para detener el servidor presiona `Ctrl+C` en la terminal.
+
+### Configuración opcional
+
+Las variables pueden definirse antes de ejecutar `npm start`. En PowerShell:
+
+```powershell
+$env:PORT = "3001"
+$env:DATABASE_STORAGE = "C:\ruta\studyquest-dev.sqlite"
+$env:JWT_SECRET = "cambie-esta-clave"
+$env:JWT_EXPIRES_IN = "2h"
+npm start
+```
+
+En CMD:
+
+```cmd
+set PORT=3001
+set DATABASE_STORAGE=C:\ruta\studyquest-dev.sqlite
+set JWT_SECRET=cambie-esta-clave
+set JWT_EXPIRES_IN=2h
+npm start
+```
+
+En Linux o macOS:
+
+```bash
+PORT=3001 DATABASE_STORAGE=./studyquest-dev.sqlite JWT_SECRET=cambie-esta-clave npm start
+```
+
+`PORT` usa `3000` por defecto y `DATABASE_STORAGE` usa `database.sqlite` en la
+raíz. `JWT_SECRET` es obligatoria cuando `NODE_ENV=production`; en desarrollo
+se utiliza un secreto predeterminado, que no debe usarse en un despliegue real.
+
+## Comandos útiles
+
+```bash
+npm start                    # Inicia la API y el frontend
+npm test                     # Ejecuta toda la suite principal
+npm run test:architecture    # Verifica las responsabilidades MVC
+npm run test:schema          # Verifica E7, E11, modelos y SQLite
+npm run test:integration     # Verifica datos, transacciones y gamificación
+npm run test:api             # Verifica contratos HTTP, autenticación y roles
+npm run test:frontend        # Verifica la publicación del frontend
+npm run test:browser         # Recorrido real con Chrome/CDP
+npm run bootstrap:account    # Crea o prepara una cuenta administrativa
+```
+
+El comando `npm run bootstrap:account` utiliza estas variables:
+
+```powershell
+$env:BOOTSTRAP_NAME = "Administrador"
+$env:BOOTSTRAP_EMAIL = "admin@studyquest.local"
+$env:BOOTSTRAP_PASSWORD = "cambie-esta-clave"
+$env:BOOTSTRAP_ROLE = "Administrador"
+npm run bootstrap:account
+```
+
+La contraseña del ejemplo debe cambiarse antes de usar la cuenta.
+
+## Errores comunes
+
+### `node` o `npm` no se reconoce como comando
+
+Node.js no está instalado o no quedó agregado al `PATH`. Instala Node.js 20.17+
+desde su sitio oficial, cierra y vuelve a abrir la terminal, y confirma con
+`node --version` y `npm --version`.
+
+### `Cannot find module` o faltan dependencias
+
+Las dependencias no están instaladas o `node_modules` quedó incompleto. Desde la
+raíz del proyecto ejecuta:
+
+```bash
+npm install
+```
+
+Si el problema continúa, cierra el servidor y reinstala las dependencias:
+
+```bash
+rm -rf node_modules
+npm install
+```
+
+En PowerShell usa `Remove-Item -Recurse -Force node_modules` en lugar de
+`rm -rf node_modules`.
+
+### `EADDRINUSE: address already in use`
+
+El puerto configurado ya está ocupado. Puedes iniciar la aplicación en otro
+puerto:
+
+```powershell
+$env:PORT = "3001"
+npm start
+```
+
+En Windows, para localizar y detener el proceso que usa el puerto 3000:
+
+```powershell
+Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue
+Stop-Process -Id <PID> -Force
+```
+
+Sustituye `<PID>` por el identificador mostrado por el primer comando.
+
+### `SQLITE_CANTOPEN` o no se puede abrir la base de datos
+
+La carpeta indicada en `DATABASE_STORAGE` no existe o no tiene permisos de
+escritura. Elige una ruta existente o elimina la variable para usar la ruta
+predeterminada:
+
+```powershell
+Remove-Item Env:DATABASE_STORAGE -ErrorAction SilentlyContinue
+npm start
+```
+
+No borres `database.sqlite` salvo que quieras reiniciar los datos locales. El
+servidor inicializa el esquema aprobado automáticamente al arrancar.
+
+### `JWT_SECRET es obligatoria en producción`
+
+Define un secreto antes de iniciar con `NODE_ENV=production`:
+
+```powershell
+$env:NODE_ENV = "production"
+$env:JWT_SECRET = "use-un-secreto-largo-y-privado"
+npm start
+```
+
+No publiques el secreto ni lo guardes en el repositorio.
+
+### Falla `npm run test:browser`
+
+Esta prueba necesita Google Chrome, el puerto CDP `9333` libre y un entorno que
+pueda ejecutar Chrome en modo headless. Las pruebas normales no dependen de
+Chrome; ejecuta `npm test` para validar la aplicación sin esa prueba. Si el
+puerto está ocupado, cierra el proceso que lo utiliza y vuelve a intentarlo.
 
 ## Frontend funcional
 
