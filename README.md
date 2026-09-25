@@ -18,11 +18,11 @@ El diccionario [E7](pjc/docs/diseno/fase2-datos/E7-diccionario-datos.md) define 
 
 Antes de instalar el proyecto se necesita:
 
-- Node.js 20.17 o superior. Se recomienda Node.js 24 LTS o una versión compatible.
-- npm, incluido con Node.js.
-- Git, si se clonará el repositorio.
-- Google Chrome únicamente para ejecutar `npm run test:browser`.
-- No se necesita instalar SQLite ni levantar un servidor de base de datos externo:
+- [Node.js 20.17 o superior](https://nodejs.org/en/download). Se recomienda Node.js 24 LTS o una versión compatible.
+- [npm](https://www.npmjs.com/), incluido automáticamente con Node.js.
+- [Git](https://git-scm.com/downloads), si se clonará el repositorio.
+- [Google Chrome](https://www.google.com/chrome/), únicamente para ejecutar `npm run test:browser`.
+- No se necesita instalar [SQLite](https://www.sqlite.org/download.html) ni levantar un servidor de base de datos externo:
 	la aplicación usa el archivo local `database.sqlite`.
 
 Para comprobar las versiones instaladas:
