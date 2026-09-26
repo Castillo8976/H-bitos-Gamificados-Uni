@@ -30,12 +30,19 @@ class TareaService {
 
   /** RF02/HU19: actualiza datos editables y reprograma solo el aviso automático. */
   async actualizarTarea(id, datos) {
-    const permitidos = ['nombre', 'fecha_entrega', 'prioridad', 'id_materia'];
+    const permitidos = ['nombre', 'fecha_entrega', 'prioridad', 'id_materia', 'estado'];
     if (Object.keys(datos).some(campo => !permitidos.includes(campo))) throw new HttpError(400, 'Campos de tarea no editables');
     const cambios = validator.validar('tareas', datos);
     return sequelize.transaction({ type: Transaction.TYPES.IMMEDIATE }, async transaction => {
       const tarea = await Tarea.findByPk(id, { transaction });
       if (!tarea) throw new HttpError(404, 'Tarea no encontrada');
+      // RF02/RF03: completar conserva el camino transaccional de recompensas.
+      if ('estado' in cambios && !['Pendiente', 'En progreso'].includes(cambios.estado)) {
+        throw new HttpError(400, 'Utilice la acción Completar para finalizar la tarea');
+      }
+      if ('estado' in cambios && tarea.estado === 'Completada') {
+        throw new HttpError(409, 'No se puede reabrir una tarea completada');
+      }
       if (cambios.fecha_entrega && cambios.fecha_entrega !== tarea.fecha_entrega) {
         validator.validar('tareas', cambios, { crear: true });
       }
@@ -43,7 +50,7 @@ class TareaService {
         throw new HttpError(403, 'La materia no pertenece a la cuenta');
       }
       await tarea.update(cambios, { transaction });
-      if (tarea.estado === 'Pendiente' && ('nombre' in cambios || 'fecha_entrega' in cambios)) {
+      if (tarea.estado !== 'Completada' && ('nombre' in cambios || 'fecha_entrega' in cambios)) {
         await planificador.sincronizarAutomatico(tarea, transaction);
       }
       return tarea;

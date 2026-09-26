@@ -68,7 +68,7 @@ class PlanificadorRecordatoriosService {
         include: [
           { model: Cuenta, attributes: [], where: { activa: true }, required: true },
           { model: Tarea, attributes: [], where: {
-            estado: 'Pendiente', id_cuenta: { [Op.col]: 'recordatorio.id_cuenta' }
+            estado: { [Op.in]: ['Pendiente', 'En progreso'] }, id_cuenta: { [Op.col]: 'recordatorio.id_cuenta' }
           }, required: true }
         ],
         order: [['fecha_programada', 'ASC'], ['id_recordatorio', 'ASC']],

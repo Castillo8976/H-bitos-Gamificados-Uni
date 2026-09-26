@@ -6,7 +6,7 @@
     "start": "node src/server.js",
     "test": "node tests/architecture/mvc.test.js && npm run test:schema && npm run test:integration && npm run test:api && node tests/frontend/static.test.js",
     "test:architecture": "node tests/architecture/mvc.test.js",
-    "test:schema": "node tests/schema/schema-alignment.test.js && node tests/schema/point-date.test.js",
+    "test:schema": "node tests/schema/schema-alignment.test.js && node tests/schema/point-date.test.js && node tests/schema/task-migration.test.js",
     "test:integration": "node tests/integration/current-layer.test.js && node tests/integration/objectives-6-10.test.js && node tests/integration/admin-corrections.test.js && node tests/integration/reminders.test.js",
     "test:api": "node tests/api/input-validation.test.js && node tests/api/api.test.js",
     "test:frontend": "node tests/frontend/static.test.js",
