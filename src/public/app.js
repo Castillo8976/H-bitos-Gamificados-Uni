@@ -273,8 +273,8 @@ function renderizarUsuario() {
   $('#usuario-correo').textContent = estado.cuenta.correo;
   $('#usuario-rol').textContent = estado.cuenta.rol;
   $('#saludo-nombre').textContent = nombreCorto;
-  if ($('#perfil-nombre')) $('#perfil-nombre').value = estado.cuenta.nombre;
-  if ($('#perfil-correo')) $('#perfil-correo').value = estado.cuenta.correo;
+  $('#form-perfil').elements.nombre.value = estado.cuenta.nombre;
+  $('#form-perfil').elements.correo.value = estado.cuenta.correo;
   $('#perfil-rol').textContent = estado.cuenta.rol;
 }
 
@@ -502,7 +502,14 @@ async function actualizarAvisos(generacion = generacionAvisos) {
   const [avisos, recordatorios] = await Promise.all([api('/notificaciones'), api('/recordatorios')]);
   if (generacion !== generacionAvisos || token !== estado.token) return;
   for (const aviso of avisos.datos) {
-    if (!avisosConocidos.has(aviso.id_notificacion) && !aviso.leida && !estado.temporizador.activo &&
+    // RF13/HU13: las preferencias silencian alertas nativas, no borran el historial.
+    // E7 clasifica recordatorios como Sistema; reconocemos el prefijo del
+    // planificador y los mensajes manuales conservados en la lista de avisos.
+    const esRecordatorio = aviso.tipo === 'Sistema' &&
+      (aviso.mensaje.startsWith('Recordatorio:') || recordatorios.datos.some(item => item.mensaje === aviso.mensaje));
+    const silenciado = (aviso.tipo === 'Reto' && estado.preferencias?.notificaciones_retos === false) ||
+      (esRecordatorio && estado.preferencias?.notificaciones_recordatorios === false);
+    if (!silenciado && !avisosConocidos.has(aviso.id_notificacion) && !aviso.leida && !estado.temporizador.activo &&
       'Notification' in window && Notification.permission === 'granted') {
       try { new Notification('StudyQuest', { body: aviso.mensaje, tag: aviso.id_notificacion }); }
       catch (_) { /* El aviso interno no depende de soporte de notificación nativa. */ }

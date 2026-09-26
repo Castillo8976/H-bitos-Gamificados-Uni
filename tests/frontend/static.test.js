@@ -18,6 +18,11 @@ async function run() {
   await request(app).get('/admin').expect(200).expect('Content-Type', /html/);
   await request(app).get('/revisor').expect(200).expect('Content-Type', /html/);
   assert.match(pagina.text, /id="form-login"/);
+  // RF01/HU20: evita seleccionar formularios duplicados u obsoletos.
+  const ids = [...pagina.text.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(new Set(ids).size, ids.length, 'Cada identificador HTML debe ser único');
+  assert.match(pagina.text, /name="notificaciones_recordatorios"/);
+  assert.match(pagina.text, /name="notificaciones_retos"/);
   assert.match(pagina.text, /id="form-registro"/);
   assert.match(pagina.text, /data-seccion="dashboard"/);
   assert.match(pagina.text, /data-seccion="tareas"/);

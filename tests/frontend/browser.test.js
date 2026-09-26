@@ -121,6 +121,8 @@ async function run() {
 
     await autenticar(cdp, 'estudiante-browser@test.local');
     assert.equal(await cdp.evaluar("document.querySelector('#usuario-rol').textContent"), 'Estudiante');
+    assert.equal(await cdp.evaluar("document.querySelector('#form-perfil').elements.nombre.value"), 'Estudiante Browser');
+    assert.equal(await cdp.evaluar("document.querySelectorAll('#form-preferencias').length"), 1);
     assert.deepEqual(await cdp.evaluar(`Array.from(document.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(e=>!e.labels?.length&&!e.getAttribute('aria-label')&&!e.getAttribute('aria-labelledby')).map(e=>e.id||e.name)`), []);
 
     // P04/P05 y objetivo 6: la acción real crea y completa una tarea y abre la recompensa.
@@ -128,6 +130,8 @@ async function run() {
     assert.equal(await cdp.evaluar("document.activeElement===document.querySelector('#form-tarea [name=nombre]')"), true);
     await cdp.evaluar(`(()=>{const f=document.querySelector('#form-tarea');f.elements.nombre.value='Tarea desde Chrome';f.elements.fecha_entrega.value='2027-12-31';f.elements.prioridad.value='Alta';f.requestSubmit()})()`);
     await esperarCondicion(cdp, "document.querySelector('#lista-tareas [data-accion=completar-tarea]')");
+    await cdp.evaluar("document.querySelector('#lista-tareas [data-accion=iniciar-tarea]').click()");
+    await esperarCondicion(cdp, "document.querySelector('#lista-tareas').textContent.includes('En progreso')");
     // RF04/HU25: backend real y notificación nativa simulada para controlar permisos.
     // No se afirma entrega por el sistema operativo; sí persistencia y no repetición.
     await cdp.evaluar(`window.NotificacionOriginal=window.Notification; window.avisosPrueba=[];
@@ -139,6 +143,35 @@ async function run() {
     await cdp.evaluar('actualizarAvisos()');
     assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1);
     const estudianteId = await cdp.evaluar('estado.cuenta.id_cuenta');
+    // RF13/HU13: guardar controles reales persiste preferencias y silencia solo
+    // las alertas nativas. La bandeja interna conserva ambos avisos.
+    await cdp.evaluar(`(()=>{document.querySelector('[data-vista=configuracion]').click();
+      const f=document.querySelector('#form-preferencias');
+      f.elements.notificaciones_recordatorios.checked=false;
+      f.elements.notificaciones_retos.checked=false;f.requestSubmit();})()`);
+    await esperarCondicion(cdp, 'estado.preferencias.notificaciones_retos === false && estado.preferencias.notificaciones_recordatorios === false');
+    assert.equal(await cdp.evaluar("api('/preferencias').then(r=>r.dato.notificaciones_retos)"), false);
+    await Notificacion.bulkCreate([
+      { id_notificacion: 'prueba-reto-silenciado', id_cuenta: estudianteId, tipo: 'Reto', mensaje: 'Reto silenciado' },
+      { id_notificacion: 'prueba-recordatorio-silenciado', id_cuenta: estudianteId, tipo: 'Sistema', mensaje: 'Recordatorio: silenciado' }
+    ]);
+    await cdp.evaluar('actualizarAvisos()');
+    assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1);
+    assert.equal(await cdp.evaluar("estado.notificaciones.filter(n=>n.id_notificacion.endsWith('-silenciado')).length"), 2);
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-preferencias');
+      f.elements.notificaciones_recordatorios.checked=true;
+      f.elements.notificaciones_retos.checked=true;f.requestSubmit();})()`);
+    await esperarCondicion(cdp, 'estado.preferencias.notificaciones_retos === true && estado.preferencias.notificaciones_recordatorios === true');
+    await cdp.evaluar('actualizarAvisos()');
+    assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1, 'No reproduce avisos antiguos al reactivar');
+    await Notificacion.bulkCreate([
+      { id_notificacion: 'prueba-reto-reactivado', id_cuenta: estudianteId, tipo: 'Reto', mensaje: 'Reto reactivado' },
+      { id_notificacion: 'prueba-recordatorio-reactivado', id_cuenta: estudianteId, tipo: 'Sistema', mensaje: 'Recordatorio: reactivado' }
+    ]);
+    await cdp.evaluar('actualizarAvisos()');
+    assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 3);
+    await cdp.evaluar('window.avisosPrueba.splice(1)'); // Conserva la base de las siguientes pruebas.
+    await cdp.evaluar("document.querySelector('[data-vista=tareas]').click()");
     await Notificacion.create({ id_notificacion: 'prueba-denegado', id_cuenta: estudianteId, tipo: 'Sistema', mensaje: 'Aviso con permiso denegado' });
     await cdp.evaluar("Notification.permission='denied';solicitarPermisoAvisos().then(()=>actualizarAvisos())");
     assert.equal(await cdp.evaluar('window.avisosPrueba.length'), 1);
