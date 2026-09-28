@@ -12,7 +12,37 @@ Se identificaron **16 casos de uso específicos** derivados de las historias de 
 
 ## Caso de Uso General del Sistema
 
-**CUG01 — Gestionar hábitos de estudio mediante una plataforma web gamificada:** el Estudiante se registra y utiliza los módulos de agenda, tareas, Pomodoro, gamificación, tablero, recordatorios, notificaciones, configuración y exportación. El Administrador mantiene las cuentas y los catálogos globales autorizados. El Revisor institucional únicamente consulta indicadores agregados. El rectángulo del sistema comprende CU01–CU16 y la Notifications API permanece como sistema externo de apoyo.
+| Campo | Descripción |
+|---|---|
+| **Identificador** | CUG01 |
+| **Nombre** | Gestionar hábitos de estudio mediante una plataforma web gamificada |
+| **Actores** | Estudiante (principal), Administrador (secundario autorizado), Revisor institucional (secundario de solo lectura), Notifications API (sistema externo de apoyo) |
+| **Límite del sistema** | El rectángulo "Plataforma Web Gamificada de Hábitos de Estudio" en `02_Diagrama_de_Casos_de_Uso_General.drawio` es la **única** herramienta que representa el límite; ningún otro artefacto vuelve a dibujar ese contorno. |
+| **Alcance** | Comprende CU00 (Iniciar sesión, compartido) y CU01–CU16. El Estudiante se registra, inicia sesión y utiliza los módulos de agenda, tareas, Pomodoro, gamificación, tablero, recordatorios, notificaciones, configuración y exportación. El Administrador mantiene cuentas y catálogos globales autorizados. El Revisor institucional únicamente consulta indicadores agregados. |
+| **Precondición general** | El sistema está desplegado y accesible por URL; existe al menos una cuenta con rol Administrador para operar los catálogos. |
+| **Postcondición general** | Cada sesión de uso deja persistidos en SQLite únicamente los cambios que el rol del actor autoriza; no existen escrituras fuera del alcance de su rol. |
+| **Relaciones internas** | CU02–CU16 **incluyen** (`<<include>>`) a CU00, porque todos requieren una sesión activa como precondición común. CU06 **extiende** (`<<extend>>`) a CU03 y CU04 (evaluación de insignias/retos, condicional al resultado de completar una tarea o una sesión). CU10 **extiende** a CU02 (el recordatorio automático es un efecto opcional de crear una tarea con fecha de entrega). Ver detalle en la tabla siguiente. |
+
+### Relaciones `<<include>>` / `<<extend>>` del sistema
+
+| Relación | Origen → Destino | Tipo | Justificación |
+|---|---|---|---|
+| 1 | CU02–CU16 → **CU00 Iniciar sesión** | `<<include>>` | Los 15 casos de uso restantes del Estudiante, Administrador y Revisor comparten la misma precondición obligatoria: "el usuario tiene una sesión activa" (ver columna Precondición de cada ficha). En vez de repetir ese flujo en cada uno, se factoriza en CU00 y se incluye. |
+| 2 | CU06 → CU03 | `<<extend>>` | "Gestionar insignias y retos" solo se ejecuta **si** completar la tarea cumple la condición de una insignia o del reto activo (flujo alternativo A2 de CU03); es un comportamiento opcional, no obligatorio. |
+| 3 | CU06 → CU04 | `<<extend>>` | La misma evaluación de gamificación también puede dispararse al guardar una sesión Pomodoro (`GamificacionService.registrarSesionConGamificacion`), de forma igualmente condicional. |
+| 4 | CU10 → CU02 | `<<extend>>` | Programar el recordatorio automático de 24 horas antes es un efecto opcional de crear/editar una tarea **solo cuando** esta tiene fecha de entrega futura; no ocurre siempre que se ejecuta CU02. |
+| 5 | Notifications API → CU10, CU15 | `<<include>>` (ya existente) | El disparo de la notificación nativa del navegador es un paso obligatorio dentro de esos dos flujos cuando el permiso está concedido. |
+
+## CU00 — Iniciar sesión
+
+| Campo | Descripción |
+|---|---|
+| **Actor principal** | Estudiante, Administrador, Revisor institucional |
+| **Precondición** | El actor ya tiene una cuenta activa (creada mediante CU01 o mediante CU13 para roles administrativos). |
+| **Flujo normal** | 1. El actor ingresa correo y contraseña. 2. El sistema valida las credenciales contra `contrasena_hash` (bcrypt). 3. El sistema emite un token JWT con el rol de la cuenta. 4. El sistema redirige al Dashboard correspondiente al rol. |
+| **Flujos alternativos** | A1: Credenciales inválidas → "Correo o contraseña incorrectos". A2: Cuenta desactivada (`activa = false`) → deniega el acceso. |
+| **Postcondición** | El actor cuenta con una sesión activa (token JWT vigente) y puede ejecutar los casos de uso incluidos según su rol. |
+| **Trazabilidad** | HU01 · RF01 · RN01, RN02 |
 
 ## Modelo de Actores
 
@@ -31,6 +61,7 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 
 | ID | Nombre | RF Asociado |
 |---|---|---|
+| CU00 | Iniciar sesión | RF01 |
 | CU01 | Registrar cuenta y materias | RF01 |
 | CU02 | Gestionar tareas académicas | RF02, RF04, RF09 |
 | CU03 | Completar tarea y recibir recompensa | RF03, RF05, RF06, RF07, RF11 |
@@ -59,6 +90,8 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 | **Flujo normal** | 1. El estudiante pulsa "Crear cuenta". 2. Ingresa nombre, correo y contraseña. 3. Agrega al menos una materia con su horario. 4. El sistema valida los datos, cifra la contraseña y guarda la cuenta y la materia en SQLite mediante el servidor. 5. El sistema crea la preferencia visual predeterminada y redirige al Dashboard. |
 | **Flujos alternativos** | A1: Correo ya registrado → el sistema muestra "Este correo ya existe". A2: Contraseña débil → el sistema solicita mínimo 6 caracteres. A3: Sin materia → el sistema bloquea el registro hasta agregar al menos una. |
 | **Postcondición** | La cuenta queda activa, los datos persisten en SQLite y el estudiante accede al Dashboard. |
+
+> **Nota de diseño (22 de septiembre de 2026 — PLANEADA, pendiente de implementación):** por observación de la docente, el paso 3 debe cambiar de "escribir el nombre de la materia" a **"seleccionar la materia de un catálogo institucional"** (`CatalogoMateria`, ver `E7-diccionario-datos.md` y `E12-diagrama-clases.drawio`). El flujo normal pasado a `<select>` quedaría: *"3. Selecciona su materia de la lista del catálogo institucional vigente (y opcionalmente ingresa el horario)."* Este cambio **todavía no está implementado en el código** (el formulario de registro sigue siendo un campo de texto libre); se documenta aquí como diseño aprobado en espera de desarrollo.
 
 ---
 
@@ -191,7 +224,57 @@ Esta tabla complementa las fichas existentes sin repetir sus flujos.
 
 ---
 
-## Historias de Usuario
+## Trazabilidad CRUD Completa — 3 Casos de Uso Críticos
+
+Por instrucción de la docente, se documentan con el máximo nivel de detalle
+los 3 casos de uso que concentran más lógica de negocio y más entidades
+relacionadas del sistema. Para cada uno se muestra la cadena completa:
+**RF ↔ HU ↔ clase/método ↔ endpoint ↔ pantalla/botón ↔ prueba**, verificada
+contra el código real (no solo contra la documentación) — mismo estándar
+exigido en el punto 7 del checklist de Construcción (`M18_matriz_unificada_construccion.md`).
+
+### CU02 — Gestionar tareas académicas (CRUD completo)
+
+| Operación | HU | Clase.método | Endpoint | Pantalla / botón | Prueba |
+|---|---|---|---|---|---|
+| Crear | HU02 | `TareaService.crearTarea` | `POST /api/tareas` | P04/P05 Tareas · `#mostrar-form-tarea` → `abrirTarea()`; `#form-tarea` (submit) | `tests/api/api.test.js` |
+| Consultar (listar/filtrar) | HU09 | `TareaService.listarTareas` | `GET /api/tareas` | P04/P12 · `#buscar-tarea`, `#filtro-prioridad`, `#filtro-estado` → `renderizarTareas()` | Frontend estático |
+| Actualizar | HU19 | `TareaService.actualizarTarea` | `PUT /api/tareas/:id` | P04/P05 · `data-accion="editar-tarea"` | `tests/api/api.test.js` |
+| Eliminar | HU19 | `TareaService.eliminarTarea` | `DELETE /api/tareas/:id` | P04/P05 · `data-accion="eliminar-tarea"` | `tests/api/api.test.js` |
+| Efecto colateral (`<<extend>>`) | HU04 | `PlanificadorRecordatoriosService.sincronizarAutomatico` | *(interno, disparado por crear/actualizar tarea)* | — | `tests/integration/reminders.test.js` |
+
+**Reglas de negocio aplicables:** RN04–RN06, RN21. **Clase en el diagrama:** `Tarea` (E12), con las 6 operaciones de M9 (`crearTarea`…`eliminarTarea`) mapeadas 1 a 1 contra esta tabla.
+
+### CU03 — Completar tarea y recibir recompensa (transacción de gamificación)
+
+| Operación | HU | Clase.método | Endpoint | Pantalla / botón | Prueba |
+|---|---|---|---|---|---|
+| Completar (transacción) | HU03 | `GamificacionService.completarTareaConGamificacion` | `PATCH /api/tareas/:id/completar` | P04 Tareas · `data-accion="completar-tarea"` | `tests/integration/objectives-6-10.test.js` (`TC-O6-TAREA`) |
+| Idempotencia (no duplicar) | HU03 | `GamificacionService.completarTareaConGamificacion` (verifica `estado` antes de otorgar puntos) | mismo endpoint | mismo botón, segunda pulsación bloqueada por estado `Completada` | `TC-O6-DUPLICADO` |
+| Rollback ante fallo | HU03 | Transacción `IMMEDIATE` de Sequelize dentro del mismo método | mismo endpoint | — (comportamiento interno) | `TC-O6-ROLLBACK` |
+| Otorgar puntos (sub-operación) | HU07 | `Punto.otorgarPuntos` | *(interno, dentro de la transacción)* | reflejo en P08 · `renderizarGamificacion()` | `tests/integration/objectives-6-10.test.js` |
+| Evaluar insignias (`<<extend>>` → CU06) | HU05 | `CuentaInsignia.evaluarInsignias`, `desbloquearInsignia` | *(interno)* | animación de celebración en P04/P08 | `tests/integration/objectives-6-10.test.js` |
+| Evaluar nivel | HU07 | `NivelCuenta.evaluarNivelCuenta` | *(interno)* | reflejo en P08 | `tests/integration/objectives-6-10.test.js` |
+
+**Reglas de negocio aplicables:** RN07–RN11, RN21 (append-only en `Punto`, sin edición de movimientos históricos). **Clases en el diagrama:** `Tarea`, `Punto`, `CuentaInsignia`, `NivelCuenta`, más la clase de servicio `GamificacionService` que orquesta la transacción completa (E12).
+
+### CU06 — Gestionar insignias y retos (relaciones N:M y reglas append-only)
+
+| Operación | HU | Clase.método | Endpoint | Pantalla / botón | Prueba |
+|---|---|---|---|---|---|
+| Consultar insignias propias | HU07 | `CuentaInsignia.listarInsigniasDesbloqueadas` | `GET /api/cuenta-insignias` | P08 Gamificación · `renderizarGamificacion()` | API |
+| Desbloquear insignia (automático) | HU05 | `CuentaInsignia.desbloquearInsignia`, `evaluarInsignias` | *(interno, disparado por CU03/CU04)* | animación de celebración | `tests/integration/objectives-6-10.test.js` |
+| Editar reto propio | HU18 | `Reto.actualizarReto` | `PUT /api/retos/:id` | P08 · `data-accion="editar-reto"` | Manual (CRUD contra servidor real) |
+| Eliminar reto propio | HU18 | `Reto.eliminarReto` | `DELETE /api/retos/:id` | P08 · `data-accion="eliminar-reto"` | Manual |
+| Progreso automático del reto | HU06 | `Reto.actualizarProgresoReto`, `completarReto` | *(interno, dentro de la transacción de gamificación)* | reflejo en P08 | `tests/integration/objectives-6-10.test.js` |
+| Administrar catálogo de insignias | HU22 | `Insignia.crearInsignia`, `actualizarInsignia`, `eliminarInsignia` | `POST/PUT/DELETE /api/insignias/:id` | P17 Catálogos (Administrador) · `#form-admin-insignia` | `tests/api/api.test.js` |
+| Corregir asignación (revocar) | HU26 | `CorreccionAdministrativaService.asignarInsignia`, `revocarInsignia` | `POST /api/cuenta-insignias`, `DELETE /api/cuenta-insignias/:id_cuenta/:id_insignia` | P17 (Administrador) · `data-accion="revocar-insignia-admin"` | `tests/integration/admin-corrections.test.js` |
+
+**Reglas de negocio aplicables:** RN07–RN11, RN15, RN21. **Clases en el diagrama:** `Insignia`, `CuentaInsignia` (asociación N:M), `Reto`, más `CorreccionAdministrativaService` para las correcciones administrativas (E12).
+
+---
+
+
 
 | ID | Historia | RF |
 |---|---|---|
@@ -223,10 +306,11 @@ Esta tabla complementa las fichas existentes sin repetir sus flujos.
 | HU26 | Como Administrador, quiero consultar movimientos de puntos y asignaciones de insignias y revocar registros incorrectos, para corregir inconsistencias justificadas. | RF05, RF07 |
 | HU27 | Como Administrador, quiero consultar, actualizar o desactivar cuentas, para atender correcciones y necesidades de seguridad. | RF01, RNF12 |
 | HU28 | Como Revisor institucional, quiero consultar indicadores agregados de un periodo, para revisar el avance sin modificar datos del estudiante. | RF11 |
+| HU29 *(planeada)* | Como Administrador, quiero gestionar el catálogo de materias, para que los estudiantes seleccionen su materia en lugar de escribirla. | RF01 |
 
 > **Nota de corrección (agosto 2026):** HU16–HU19 se agregaron porque el CRUD de `materiaCrud.js`, `metaCrud.js`, `retoCrud.js` y `tareaCrud.js` ya implementa `actualizar*` y `eliminar*` para estas entidades, pero no existían historias de usuario explícitas que los sustentaran — solo aparecían como flujos alternativos dentro de otros casos de uso.
 
-Los criterios de aceptación completos y la cobertura CRUD de HU01–HU28 se encuentran en `13-historias-usuario-criterios-aceptacion.md`.
+Los criterios de aceptación completos y la cobertura CRUD de HU01–HU29 se encuentran en `13-historias-usuario-criterios-aceptacion.md`.
 
 ---
 
@@ -261,10 +345,10 @@ Los criterios de aceptación completos y la cobertura CRUD de HU01–HU28 se enc
 | **Actor principal** | Administrador |
 | **Disparador** | El Administrador abre el panel autorizado. |
 | **Precondición** | Permisos administrativos vigentes. |
-| **Flujo normal** | 1. Selecciona cuentas, insignias o niveles. 2. Consulta el registro. 3. Crea o modifica catálogos, o actualiza/desactiva una cuenta. 4. El sistema valida unicidad e integridad. 5. Persiste y confirma. |
+| **Flujo normal** | 1. Selecciona cuentas, insignias, niveles o *(PLANEADO)* el catálogo de materias. 2. Consulta el registro. 3. Crea o modifica catálogos, o actualiza/desactiva una cuenta. 4. El sistema valida unicidad e integridad. 5. Persiste y confirma. |
 | **Flujos alternativos** | A1: registro relacionado impide eliminar → informa la restricción. A2: valor duplicado → rechaza. |
 | **Postcondición** | La cuenta o catálogo queda actualizado sin romper referencias. |
-| **Trazabilidad** | HU22, HU23, HU27 · RF01, RF05, RF07 · RN01, RN02, RN11, RN15 |
+| **Trazabilidad** | HU22, HU23, HU27, HU29 *(planeada)* · RF01, RF05, RF07 · RN01, RN02, RN11, RN15, RN26 *(planeada)* |
 
 ## CU14 — Corregir movimientos y asignaciones
 

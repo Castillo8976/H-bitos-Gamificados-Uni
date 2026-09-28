@@ -24,6 +24,7 @@ El Modelo Relacional transforma las **13 entidades del MER** en tablas con tipos
 | **cuenta** | id_cuenta VARCHAR(36) | — | UNIQUE(correo) · contrasena_hash NOT NULL | RF01 · RNF12 |
 | **preferencia_visual** | id_preferencia VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta) → 1:1 · CHECK tema IN (6 valores) | RF13 |
 | **materia** | id_materia VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | nombre NOT NULL · activa DEFAULT 1 | RF01 |
+| *catalogo_materia* **(PLANEADA)** | id_catalogo_materia VARCHAR(36) | — | UNIQUE(nombre) · activo DEFAULT 1 | RF01 |
 | **tarea** | id_tarea VARCHAR(36) | id_cuenta → cuenta CASCADE · id_materia → materia SET NULL | CHECK prioridad IN (...) · CHECK estado IN (...) · fecha_completada nullable | RF02 · RF03 |
 | **sesion_estudio** | id_sesion VARCHAR(36) | id_cuenta → cuenta CASCADE · id_tarea → tarea SET NULL | CHECK duracion_minutos > 0 · modo_enfoque IN (0,1) | RF10 |
 | **insignia** | id_insignia VARCHAR(36) | — | UNIQUE(nombre) · UNIQUE(condicion) | RF05 |
@@ -65,6 +66,15 @@ materia(
   horario,
   activa
 )
+
+-- PLANEADA (pendiente de implementación; no existe aún en E11-script-DDL-v2.sql ni en el código):
+catalogo_materia(
+  id_catalogo_materia PK,
+  nombre UNIQUE NOT NULL,
+  activo
+)
+-- materia añadiría: id_catalogo_materia FK→catalogo_materia [NOT NULL, ON DELETE RESTRICT]
+-- y dejaría de escribir `nombre` libremente (se obtendría del catálogo).
 
 tarea(
   id_tarea PK,
@@ -270,6 +280,7 @@ TABLA CATÁLOGO SIN CLAVE FORÁNEA
 | tarea → sesion_estudio | SET NULL | La sesión puede existir aunque se borre la tarea |
 | cuenta → sesion_estudio | CASCADE | Sin cuenta no tiene sentido la sesión |
 | materia → tarea | SET NULL | La tarea puede existir sin materia asociada |
+| catalogo_materia → materia **(PLANEADA)** | RESTRICT | No se elimina una asignatura del catálogo con materias de estudiantes asociadas; solo se desactiva (`activo = false`) |
 | tarea → recordatorio | CASCADE | El recordatorio no tiene sentido sin tarea |
 | cuenta → recordatorio | CASCADE | Sin cuenta no tiene sentido el recordatorio |
 | cuenta → punto | CASCADE | Los puntos son del estudiante |

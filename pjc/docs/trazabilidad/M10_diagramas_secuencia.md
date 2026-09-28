@@ -81,14 +81,14 @@ end
 
 ```text
 Actor → InterfazTareas <<boundary>>: solicita crear / listar / consultar / editar / completar / eliminar
-InterfazTareas → ModuloTareas <<control>>: datos, filtros e identificadores
-ModuloTareas → Tarea <<entity>>: crearTarea() / listarTareas() / obtenerTarea() / actualizarTarea() / completarTarea() / eliminarTarea()
+InterfazTareas → TareaService <<control>>: datos, filtros e identificadores
+TareaService → Tarea <<entity>>: crearTarea() / listarTareas() / obtenerTarea() / actualizarTarea() / completarTarea() / eliminarTarea()
 Tarea → Almacenamiento <<database>>: INSERT / SELECT / UPDATE / DELETE
 opt tarea creada con fecha de entrega
-  ModuloTareas → Recordatorio <<entity>>: generarRecordatorioAutomatico()
+  PlanificadorRecordatoriosService → Recordatorio <<entity>>: sincronizarAutomatico()
 end
 alt fecha pasada, prioridad inválida, materia ajena o tarea inexistente
-  InterfazTareas ← ModuloTareas: rechaza sin modificar datos
+  InterfazTareas ← TareaService: rechaza sin modificar datos
 end
 ```
 
@@ -131,13 +131,13 @@ end
 **Trazabilidad:** CU03, CU06, CU14 · RF05 · HU05, HU26 · RN11, RN21.
 
 ```text
-Actor → ModuloRecompensas <<control>>: completa acción evaluable o solicita consulta/revocación
-ModuloRecompensas → CuentaInsignia <<entity>>: evaluarInsignias() / desbloquearInsignia() / listarInsigniasDesbloqueadas() / tieneInsignia() / revocarInsignia()
+Actor → GamificacionService <<control>>: completa acción evaluable o solicita consulta
+GamificacionService → CuentaInsignia <<entity>>: evaluarInsignias() / desbloquearInsignia() / listarInsigniasDesbloqueadas() / tieneInsignia()
 CuentaInsignia → Almacenamiento <<database>>: INSERT / SELECT / DELETE sobre la asociación
 alt la insignia ya está desbloqueada
-  ModuloRecompensas ← CuentaInsignia: no duplica la PK compuesta
+  GamificacionService ← CuentaInsignia: no duplica la PK compuesta
 else revocación administrativa autorizada
-  CuentaInsignia → Almacenamiento: DELETE de la asociación
+  CorreccionAdministrativaService → CuentaInsignia: revocarInsignia()
 end
 ```
 
@@ -167,8 +167,8 @@ end
 
 ```text
 Actor → InterfazGamificación <<boundary>>: solicita crear / listar / consultar / actualizar / completar / eliminar reto
-InterfazGamificación → ControlReto <<control>>: datos o identificador
-ControlReto → Reto <<entity>>: crearReto() / listarRetos() / obtenerReto() / actualizarProgresoReto() / completarReto() / actualizarReto() / eliminarReto()
+InterfazGamificación → Reto <<control>>: datos o identificador
+Reto → Reto <<entity>>: crearReto() / listarRetos() / obtenerReto() / actualizarProgresoReto() / completarReto() / actualizarReto() / eliminarReto()
 Reto → Almacenamiento <<database>>: persiste o consulta el reto
 alt ya completado o existe otro reto para la misma cuenta y semana
   InterfazGamificación ← ControlReto: no duplica reto ni recompensa
@@ -181,11 +181,11 @@ end
 
 ```text
 Actor → InterfazTablero <<boundary>>: solicita crear / listar / consultar / actualizar / eliminar meta
-InterfazTablero → ControlMeta <<control>>: datos o identificador
-ControlMeta → Meta <<entity>>: crearMeta() / listarMetas() / obtenerMeta() / actualizarMeta() / eliminarMeta()
+InterfazTablero → Meta <<control>>: datos o identificador
+Meta → Meta <<entity>>: crearMeta() / listarMetas() / obtenerMeta() / actualizarProgresoMeta() / actualizarMeta() / eliminarMeta()
 Meta → Almacenamiento <<database>>: persiste o consulta la meta
 opt cambia el avance
-  ControlMeta → Meta: actualizarProgresoMeta()
+  Meta → Meta: actualizarProgresoMeta()
   Meta → Meta: si valor_actual >= valor_objetivo, cumplida = true
 end
 alt objetivo inválido o meta semanal duplicada
@@ -199,14 +199,14 @@ end
 
 ```text
 Actor/Sistema → InterfazRecordatorios <<boundary>>: crea / lista / consulta / activa-desactiva / elimina
-InterfazRecordatorios → ModuloNotificaciones <<control>>: datos o identificador
-ModuloNotificaciones → Recordatorio <<entity>>: crearRecordatorio() / generarRecordatorioAutomatico() / listarRecordatorios() / obtenerRecordatorio() / toggleRecordatorio() / eliminarRecordatorio()
+InterfazRecordatorios → Recordatorio <<control>>: datos o identificador
+Recordatorio → Recordatorio <<entity>>: crearRecordatorio() / generarRecordatorioAutomatico() / listarRecordatorios() / obtenerRecordatorio() / toggleRecordatorio() / eliminarRecordatorio()
 Recordatorio → Almacenamiento <<database>>: INSERT / SELECT / UPDATE / DELETE
 opt llega fecha programada y aún no fue enviado
-  ModuloNotificaciones → Recordatorio: marcarRecordatorioEnviado()
+  Recordatorio → Recordatorio: marcarRecordatorioEnviado()
 end
 alt permiso del navegador denegado
-  ModuloNotificaciones → Almacenamiento: conserva el recordatorio sin alerta nativa
+  Notifications API: no muestra alerta nativa; el recordatorio permanece persistido
 end
 ```
 

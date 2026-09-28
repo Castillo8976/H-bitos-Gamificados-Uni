@@ -11,12 +11,12 @@
 
 | Diagrama | Entidades E7 | CU / CRUD cubierto | RF / RNF | RN | Archivo editable |
 |---|---|---|---|---|---|
-| **Act-01** Completar tarea y recibir recompensa | `tarea`, `punto`, `insignia`, `cuenta_insignia`, `reto`, `nivel_cuenta` | CU03 / `tareaCrud`, `puntoCrud`, `insigniaCrud`, `cuentaInsigniaCrud`, `retoCrud`, `nivelCuentaCrud` | RF03, RF05, RF06, RF07, RF11 | RN07–RN11, RN15, RN21 | `docs/diseno/drawio/08_Actividad_Act01_CompletarTarea.drawio` |
+| **Act-01** Completar tarea y recibir recompensa | `tarea`, `punto`, `insignia`, `cuenta_insignia`, `reto`, `nivel_cuenta` | CU03 / `GamificacionService`, `Punto`, `CuentaInsignia`, `Reto`, `NivelCuenta` | RF03, RF05, RF06, RF07, RF11 | RN07–RN11, RN15, RN21 | `docs/diseno/drawio/08_Actividad_Act01_CompletarTarea.drawio` |
 | **Act-02** Registrar cuenta | `cuenta`, `materia` | CU01 / `cuentaCrud`, `materiaCrud` | RF01, RNF12 | RN01–RN03, RN21 | `docs/diseno/drawio/Act02_RegistrarCuenta.drawio` |
-| **Act-03** Gestionar tarea (crear/editar/eliminar) | `tarea`, `materia`, `recordatorio` | CU02, CU07 / `tareaCrud`, `recordatorioCrud` | RF02, RF04, RF09 | RN04–RN06, RN21 | `docs/diseno/drawio/Act03_GestionarTarea.drawio` |
+| **Act-03** Gestionar tarea (crear/editar/eliminar) | `tarea`, `materia`, `recordatorio` | CU02, CU07 / `TareaService`, `PlanificadorRecordatoriosService`, `Recordatorio` | RF02, RF04, RF09 | RN04–RN06, RN21 | `docs/diseno/drawio/Act03_GestionarTarea.drawio` |
 | **Act-04** Sesión de estudio Pomodoro | `sesion_estudio`, `tarea` | CU04 / `sesionEstudioCrud` | RF10, RF12 | RN20, RN21 | `docs/diseno/drawio/09_Actividad_Act04_SesionPomodoro.drawio` |
-| **Act-05** Evaluar progreso de reto y meta | `reto`, `meta`, `punto`, `nivel_cuenta` | CU05, CU06 / `retoCrud`, `metaCrud`, `nivelCuentaCrud` | RF06, RF07, RF15 | RN10, RN12, RN13, RN15, RN21 | `docs/diseno/drawio/Act05_RetoMeta.drawio` |
-| **Act-06** Disparar recordatorio y notificación | `recordatorio`, `notificacion`, `cuenta`, `tarea` | CU10, CU15 / `recordatorioCrud`, `notificacionCrud` | RF04, RNF15 | RN16–RN19, RN21 | `docs/diseno/drawio/Act06_RecordatorioNotificacion.drawio` |
+| **Act-05** Evaluar progreso de reto y meta | `reto`, `meta`, `punto`, `nivel_cuenta` | CU05, CU06 / `Reto`, `Meta`, `Punto`, `NivelCuenta` | RF06, RF07, RF15 | RN10, RN12, RN13, RN15, RN21 | `docs/diseno/drawio/Act05_RetoMeta.drawio` |
+| **Act-06** Disparar recordatorio y notificación | `recordatorio`, `notificacion`, `cuenta`, `tarea` | CU10, CU15 / `Recordatorio`, `Notificacion`, `PlanificadorRecordatoriosService` | RF04, RNF15 | RN16–RN19, RN21 | `docs/diseno/drawio/Act06_RecordatorioNotificacion.drawio` |
 | **Act-07** Personalizar configuración visual | `preferencia_visual`, `cuenta` | CU08 / `preferenciaVisualCrud` | RF13, RNF04 | RN21 | `docs/diseno/drawio/Act07_PreferenciaVisual.drawio` |
 
 > **Corrección (checklist DISEÑO, ítem 6):** los 7 diagramas de actividad (Act-01 a Act-07) existen como archivos `.drawio` en `docs/diseno/drawio/`. Los SVG de Act-01 y Act-04 se conservan como exportaciones históricas; las fuentes editables vigentes son `08_Actividad_Act01_CompletarTarea.drawio` y `09_Actividad_Act04_SesionPomodoro.drawio`.

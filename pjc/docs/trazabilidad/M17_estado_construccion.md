@@ -17,10 +17,10 @@ sus controles desarrollados en la interfaz.
 
 | Área | Qué tenemos funcionando | Qué nos falta o qué límite tenemos |
 |---|---|---|
-| Acceso | Registro con primera materia, login, logout, consulta del perfil y permisos por rol | Falta completar edición del perfil en la interfaz y endurecer la protección de autenticación |
+| Acceso | Registro con primera materia, login, logout, consulta y **edición del perfil** (nombre/correo) desde P13, y permisos por rol | Falta endurecer la protección de autenticación (revocación de sesiones, casos negativos) |
 | Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por estado/prioridad | Faltan filtros por materia/fecha y completar validaciones de negocio |
-| Sesiones | Cronómetro Pomodoro y guardado con recompensa; API para consultar, editar y eliminar sesiones | No existe todavía todo el flujo visual de historial editable, sesión libre y descansos |
-| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, metas, retos y nivel | Falta cerrar validación de condiciones, ajustes históricos y CRUD visual de metas/retos del estudiante |
+| Sesiones | Cronómetro Pomodoro y guardado con recompensa; **historial visual de sesiones con edición y eliminación** desde P06 | Falta el flujo visual de sesión libre explícita y descansos |
+| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, metas, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 | Falta cerrar validación de condiciones y ajustes históricos |
 | Recordatorios | Alta manual, consulta, activación/desactivación y eliminación | No equivale a programación automática ni a entrega de avisos vencidos; falta completar ese flujo |
 | Notificaciones | Consulta, marcado como leída y eliminación | No hay evidencia de entrega con navegador cerrado |
 | Preferencias | Tema y modo oscuro persistentes | Faltan avatar y restablecimiento previstos en el prototipo |
@@ -92,12 +92,15 @@ de recordatorios para completar el flujo de negocio.
 
 `E12-diagrama-clases.drawio` fue actualizado el 22 de septiembre de 2026: cada
 clase muestra el nombre exacto de cada método (uno por fila, sin agrupar), y
-se incluyen las tres clases de servicio reales (`GamificacionService`,
-`EstadisticasService` y `ExportadorDatos`) con sus métodos públicos y las
-dependencias hacia las entidades que coordinan. Los CRUD de tareas, materias y
-las demás entidades se mantienen como servicios existentes en
-`src/services/*.js`, sin inventar clases adicionales. Verificamos manualmente
-que los nombres del gráfico, M9 y el código coinciden exactamente.
+se agregaron las 6 clases de servicio (`TareaService`, `GamificacionService`,
+`CorreccionAdministrativaService`, `PlanificadorRecordatoriosService`,
+`EstadisticasService`, `ExportadorDatos`) con sus métodos públicos y de
+soporte, más las dependencias hacia las entidades que coordinan. Verificamos
+manualmente que los nombres del gráfico, M9 y el código de
+`src/services/*.js` coinciden exactamente (por ejemplo, `TareaService` en el
+código expone `crearTarea`, `actualizarTarea`, `listarTareas`, `obtenerTarea`,
+`eliminarTarea` y `completarTarea`, y esos mismos seis métodos son los que
+aparecen en el diagrama y en M9).
 
 **Falta:** Nada esencial para este criterio. Los diagramas de secuencia
 (`10a`–`10e`) siguen usando nombres de método a nivel de caso de uso
@@ -109,15 +112,30 @@ auditoría.
 
 ### ✅ 7. Trazabilidad RF ↔ HU ↔ método ↔ pantalla/botón — Cumple
 
-M15 documenta RF → HU → método → endpoint y M16 documenta RF → HU → pantalla
-→ acción. M18 cruza ambas matrices y verifica la cadena completa contra el
-código. Ya existen acciones del estudiante para editar el perfil, editar y
-eliminar retos y metas propios, y editar y eliminar sesiones del historial.
+Cruzamos M15 (construcción) y M16 (frontend) en una sola matriz de 4 eslabones
+por HU: `M18_matriz_unificada_construccion.md`. Verificamos cada fila contra
+el código real (`src/services`, `src/routes`, `src/public/app.js`), no solo
+contra la documentación.
 
-**Evidencia:** `form-perfil`, `editar-reto`, `eliminar-reto`, `editar-meta`,
-`eliminar-meta`, `editar-sesion` y `eliminar-sesion` están conectados a los
-endpoints protegidos por propiedad. RF08 y RF12 aparecen identificados en las
-matrices correspondientes.
+**Cierre (22 de septiembre de 2026):** las 4 cadenas que estaban rotas ya
+tienen su botón/pantalla en la interfaz, reutilizando endpoints que el
+backend ya exponía:
+
+- **HU20** (RF01) — `#form-perfil` en P13 permite editar nombre y correo (`PUT /api/cuentas/:id`).
+- **HU18** (RF06) — `data-accion="editar-reto"`/`"eliminar-reto"` en P08 permite al estudiante gestionar su propio reto (antes solo existía la variante administrativa).
+- **HU21** (RF10/RF11) — nuevo bloque "Historial de sesiones" en P06 (`renderizarSesiones()`) con edición y eliminación (`PUT/DELETE /api/sesiones/:id`).
+- **HU17** (RF15) — `data-accion="editar-meta"`/`"eliminar-meta"` en P08 permite al estudiante gestionar su propia meta.
+
+Las 2 filas con vacío de rotulado (RF12/HU12 y RF08) ya se corrigieron en
+M15/M16. Verificado con `npm test` completo (0 fallos) y con pruebas manuales
+de extremo a extremo contra un servidor real: registro, login, edición de
+perfil y edición de sesión.
+
+**Nota:** las ediciones de reto/meta/sesión usan `prompt()` del navegador
+para el campo de texto, siguiendo el mismo patrón ya usado en
+`editar-insignia-admin`/`editar-nivel-admin`. Es funcional y consistente con
+el resto de la aplicación, aunque un formulario inline sería más pulido si
+el equipo quiere refinarlo más adelante.
 
 ### 🟡 8. Control de cambios CRF y OCI — Parcial
 
@@ -150,20 +168,15 @@ comparación queda recogida en [M17_pantallas_prototipos_validacion.md](M17_pant
 **Estado objetivo del punto 10:** la cobertura funcional está presente, pero no
 está cerrada la equivalencia exacta de cada pantalla con su prototipo aprobado.
 
-### 🟡 11. Documentación del código y README — Parcial avanzado
+### 🟡 11. Documentación del código y README — Parcial
 
 Tenemos el README actualizado y comentarios RF/HU en controladores, servicios
 nuevos, funciones del frontend, validadores, autenticación y soporte HTTP.
 Los CRUD existentes también cuentan con documentación.
 
-**Evidencia:** README raíz y `src/public/README.md` reflejan el modo Libre,
-descanso Pomodoro, `En progreso`, preferencias de alertas y eliminación de
-datos. `eliminarCuenta()` y `deleteData()` incluyen referencia explícita a
-RF01/HU20.
-
-**Falta:** Terminar la revisión método por método de los CRUD heredados para
-asegurar referencias RF/HU consistentes en todos los bloques Javadoc y mantener
-esa referencia en cada nuevo desarrollo.
+**Falta:** Completar la revisión de clases y métodos del código existente para
+asegurar referencias RF/HU consistentes en todos los casos, y mantenerlas en
+cada nuevo desarrollo.
 
 ### 🟡 12. Autenticación, usuarios y roles — Parcial
 
@@ -193,8 +206,8 @@ debe estar respaldada por requisitos. También debemos reunir las mediciones RNF
 
 ### Resumen
 
-- ✅ Cumplidos: **6** — puntos 1, 2, 3, 4, 6 y 9; el punto 9 corresponde a los avances recientes. (Corregido: el punto 3 ya figuraba como "Cumple" en su propio apartado desde el cierre de CRF-003, pero el resumen no se había actualizado; el punto 6 se cerró el 22 de septiembre de 2026 al actualizar `E12-diagrama-clases.drawio`.)
-- 🟡 Parciales: **6** — puntos 5, 7, 8, 10, 11 y 12.
+- ✅ Cumplidos: **7** — puntos 1, 2, 3, 4, 6, 7 y 9. (El punto 6 se cerró el 22 de septiembre de 2026 al actualizar `E12-diagrama-clases.drawio`; el punto 7 se cerró el mismo día al implementar los 4 botones/pantallas que faltaban en la matriz unificada M18.)
+- 🟡 Parciales: **5** — puntos 5, 8, 10, 11 y 12.
 - ❌ Pendientes: **2** — puntos 13 y 14.
 
 Tenemos avances técnicos comprobados, pero no damos por cerrados los criterios
@@ -398,3 +411,17 @@ historial de sesiones, metas/retos, perfil, edición administrativa y cálculos
 por periodo. Después debemos cerrar diagramas, trazabilidad, pruebas y
 aprobaciones para declarar Línea Base 1. Haber publicado estos avances no
 significa que todos los requisitos de Construcción estén terminados.
+
+---
+
+## Seguimiento de observaciones de la docente (22 de septiembre de 2026)
+
+| Observación | Estado | Evidencia |
+|---|---|---|
+| Hay cosas de la aplicación que no están en el diagrama de clases | ✅ Documentado | `E12-diagrama-clases.drawio`: se agregaron los atributos reales faltantes de 10 clases (p. ej. `Reto.descripcion`, `Meta.descripcion`, `Cuenta.rol`), verificados contra `src/models/*.js`; nota en `M9`. |
+| Actualizar las historias de acuerdo al diagrama de clases | ✅ Documentado | `13-historias-usuario-criterios-aceptacion.md`: HU01, HU06, HU15, HU17, HU18, HU20, HU21 y HU25 citan ahora los atributos del diagrama. |
+| Casos de uso: faltan `<<include>>` y `<<extend>>` | ✅ Documentado | `02_Diagrama_de_Casos_de_Uso_General.drawio`: CU00 Iniciar sesión, 15 `<<include>>` y 3 `<<extend>>`; justificación en `07-casos-de-uso.md`. |
+| Documentar el caso de uso general y 3 CU críticos con trazabilidad CRUD | ✅ Documentado | `07-casos-de-uso.md`: CUG01 con ficha completa y trazabilidad CRUD de CU02, CU03 y CU06. |
+| La materia inicial debe seleccionarse de una tabla catálogo | 🟡 Solo diseño | `catalogo_materia` en E7 (Anexo A), E9, E12, HU29, RN26. **Sin implementar en código**; el formulario de registro sigue con texto libre. |
+
+**Nota:** `E11-script-DDL-v2.sql`, el modelo `Materia`, las rutas y el frontend no se modificaron para el catálogo, a la espera de autorización. Las pruebas automáticas (`npm test`) siguen en verde.

@@ -47,6 +47,8 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 
 > **Reglas:** pertenece a una cuenta · mínimo una materia al registrarse (RF01) · se usa para filtrar tareas (RF09).
 
+> **PLANEADO — pendiente de implementación (22 de septiembre de 2026):** por observación de la docente, `nombre` dejará de escribirse libremente y pasará a seleccionarse de un catálogo institucional (`catalogo_materia`, ver **Anexo A** al final de este documento). El campo `id_catalogo_materia (FK→catalogo_materia)` se añadirá a esta tabla cuando se implemente en código; **hoy esa columna no existe** en `E11-script-DDL-v2.sql` ni en `src/models/Materia.js`. `horario` y `activa` permanecen igual porque son propios de cada estudiante, no del catálogo.
+
 ---
 
 ## 3. `tarea` — Objeto central del sistema de gestión académica `RF02 · RF03 · RF09`
@@ -59,7 +61,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **nombre** | VARCHAR(120) | No | Título descriptivo de la tarea. |
 | **fecha_entrega** | DATE | No | Fecha límite para completar la tarea. |
 | **prioridad** | VARCHAR(10) | No | CHECK IN ('Alta','Media','Baja'). Chip visual en UI. |
-| **estado** | VARCHAR(15) | No | CHECK IN ('Pendiente','En progreso','Completada'). DEFAULT 'Pendiente'. |
+| **estado** | VARCHAR(15) | No | CHECK IN ('Pendiente','Completada'). DEFAULT 'Pendiente'. |
 | **fecha_completada** | DATE | Sí | NULL mientras esté pendiente. Se asigna al marcar completada. |
 
 > **Reglas:** prioridad restringida a {Alta, Media, Baja} · al completar suma puntos (RF03) · filtrable por materia/prioridad/fecha (RF09) · genera recordatorio automático (RF04).
@@ -239,3 +241,23 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | 11 | preferencia_visual | Débil (1:1) | RF13, RNF04 |
 | 12 | nivel_cuenta | Fuerte (catálogo) | RF07 |
 | 13 | notificacion | Débil | RF04, RNF15 |
+
+---
+
+## Anexo A — Entidades PLANEADAS (no implementadas en código)
+
+> Las tablas de este anexo **no forman parte** de las 13 tablas aprobadas ni de `E11-script-DDL-v2.sql`. Se documentan como diseño en espera de autorización. Los nombres de campo se escriben sin negrita a propósito para distinguirlas de las tablas vigentes.
+
+### A.1 `catalogo_materia` — Catálogo institucional de asignaturas disponibles `RF01 · RN26`
+
+| Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
+|---|---|---|---|
+| `id_catalogo_materia` (PK) | VARCHAR(36) | No | Identificador único de la asignatura del catálogo. |
+| `nombre` | VARCHAR(80) | No | Nombre oficial de la asignatura (único). |
+| `activo` | BOOLEAN/INT | No | TRUE = disponible para seleccionar en el registro. DEFAULT TRUE. Permite retirar una asignatura sin romper las `materia` ya creadas. |
+
+> **Reglas (propuestas):** catálogo global administrado por el rol Administrador (mismo patrón que `insignia` y `nivel_cuenta`) · toda `materia.id_catalogo_materia` debe referenciar un registro existente · no se elimina un registro con materias asociadas, solo se desactiva (`activo = false`).
+>
+> **Cambio asociado en `materia`:** se añadiría `id_catalogo_materia (FK→catalogo_materia)` NOT NULL, y `nombre` dejaría de escribirse libremente.
+>
+> **Estado:** reflejada en `E12-diagrama-clases.drawio` (clase `CatalogoMateria`, borde punteado), `E9`, `HU29` y `RN26`. Sin modelo Sequelize, migración DDL ni rutas hasta recibir aprobación explícita.

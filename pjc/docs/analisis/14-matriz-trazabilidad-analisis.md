@@ -10,7 +10,7 @@
 
 | OE | RF | HU de origen | CU | RN aplicables | Entidades y atributos principales | Pantallas / acciones |
 |---|---|---|---|---|---|---|
-| OE01 | RF01 | HU01, HU16, HU20, HU27 | CU01, CU11, CU13 | RN01–RN03 | `cuenta(nombre, correo, contrasena_hash, activa)`; `materia(nombre, horario, activa)` | Registro: Crear cuenta; Agenda: Crear, Ver, Editar, Eliminar materia; Perfil: Ver, Guardar; Admin: Desactivar cuenta |
+| OE01 | RF01 | HU01, HU16, HU20, HU27, HU29 *(planeada)* | CU00, CU01, CU11, CU13 | RN01–RN03, RN26 *(planeada)* | `cuenta(nombre, correo, contrasena_hash, activa, rol, fecha_registro)`; `materia(nombre, horario, activa)`; `catalogo_materia(nombre, activo)` *(planeada)* | Registro: Crear cuenta; Agenda: Crear, Ver, Editar, Eliminar materia; Perfil: Ver, Guardar; Admin: Desactivar cuenta |
 | OE01 | RF02 | HU02, HU19 | CU02 | RN04–RN06 | `tarea(nombre, fecha_entrega, prioridad, estado, id_materia)` | Tareas: Nueva, Ver, Editar, Eliminar |
 | OE01, OE03 | RF03 | HU03 | CU03 | RN07–RN09 | `tarea(estado, fecha_completada)`; `punto(cantidad, origen, id_origen)` | Tareas: Completar |
 | OE01 | RF04 | HU04, HU24, HU25 | CU10, CU15 | RN05, RN06, RN16–RN19 | `recordatorio(fecha_programada, enviado, activo)`; `notificacion(tipo, mensaje, leida)` | Recordatorios: Activar/desactivar, Eliminar; Notificaciones: Ver, Marcar leída, Marcar todas, Eliminar |
@@ -33,7 +33,7 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Pantalla o módulo | Acción / botón | Tipo | RF | HU | CU |
 |---|---|---|---|---|---|
 | Registro | Crear cuenta | Usuario | RF01 | HU01 | CU01 |
-| Registro | Agregar materia inicial | Usuario | RF01 | HU01 | CU01 |
+| Registro | Seleccionar materia inicial del catálogo *(PLANEADO; hoy es texto libre)* | Usuario | RF01 | HU01, HU29 | CU01 |
 | Perfil | Consultar perfil | Usuario | RF01 | HU20 | CU11 |
 | Perfil | Guardar cambios | Usuario | RF01 | HU20 | CU11 |
 | Agenda | Crear materia | Usuario | RF01 | HU01 | CU01 |

@@ -24,16 +24,16 @@ completado?  RN10" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strok
 a otorgar puntos" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="60" y="310" width="200" height="44" as="geometry"/>
     </mxCell>
-    <mxCell id="a56" value="Incrementar progreso
-del reto" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+    <mxCell id="a56" value="Reto.actualizarProgresoReto()
+  Incrementar progreso del reto" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="290" y="310" width="200" height="44" as="geometry"/>
     </mxCell>
     <mxCell id="a57" value="¿progreso alcanzó
 la condición?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="290" y="390" width="200" height="70" as="geometry"/>
     </mxCell>
-    <mxCell id="a58" value="Marcar completado=true
-Otorgar puntos_recompensa" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=10;" vertex="1" parent="1">
+    <mxCell id="a58" value="Reto.completarReto()
+  Punto.otorgarPuntos()" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="290" y="490" width="200" height="44" as="geometry"/>
     </mxCell>
     <mxCell id="a59" value="¿Meta ya
@@ -44,16 +44,16 @@ cumplida?  RN13" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeC
 (preserva historial)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FCEBE6;strokeColor=#993C1D;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="560" y="310" width="210" height="44" as="geometry"/>
     </mxCell>
-    <mxCell id="a511" value="Actualizar valor_actual
-de la meta" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
+    <mxCell id="a511" value="Meta.actualizarProgresoMeta()
+  Actualizar valor_actual de la meta" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="800" y="310" width="210" height="44" as="geometry"/>
     </mxCell>
     <mxCell id="a512" value="¿valor_actual &gt;=
 valor_objetivo?  RN12" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#2C2C2A;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="800" y="390" width="210" height="70" as="geometry"/>
     </mxCell>
-    <mxCell id="a513" value="Marcar cumplida=true
-(una sola vez)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=10;" vertex="1" parent="1">
+    <mxCell id="a513" value="Meta.actualizarProgresoMeta(): cumplida=true
+  (una sola vez)" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#FDF3E3;strokeColor=#854F0B;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="800" y="490" width="210" height="44" as="geometry"/>
     </mxCell>
     <mxCell id="a514" value="Tablero de Avance refleja

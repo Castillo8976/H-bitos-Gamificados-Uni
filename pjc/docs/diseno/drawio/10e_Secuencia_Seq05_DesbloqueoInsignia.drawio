@@ -57,7 +57,7 @@
         <mxPoint x="980" y="560" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="s513" value="1: evaluarCondicion(total) [al completar tarea]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+    <mxCell id="s513" value="1: CuentaInsignia.evaluarInsignias() [al completar tarea]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="100" y="140" as="sourcePoint"/>
         <mxPoint x="320" y="140" as="targetPoint"/>
@@ -69,13 +69,13 @@
     <mxCell id="s515" value="alt  [cumple condición] / [A1: no cumple]" style="shape=umlFrame;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;fontSize=10;align=left;verticalAlign=top;width=60;height=20;" vertex="1" parent="1">
       <mxGeometry x="60" y="165" width="1000" height="260" as="geometry"/>
     </mxCell>
-    <mxCell id="s516" value="2: desbloquear() [RN11]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
+    <mxCell id="s516" value="2: CuentaInsignia.desbloquearInsignia() [RN11]" style="endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="320" y="195" as="sourcePoint"/>
         <mxPoint x="560" y="195" as="targetPoint"/>
       </mxGeometry>
     </mxCell>
-    <mxCell id="s517" value="3: registrar(fecha_obtenida)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;exitX=1;exitY=0;entryX=1;entryY=1;" edge="1" parent="1">
+    <mxCell id="s517" value="3: fecha_obtenida registrada por desbloquearInsignia()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;html=1;fontSize=10;strokeColor=#333333;exitX=1;exitY=0;entryX=1;entryY=1;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry">
         <mxPoint x="560" y="230" as="sourcePoint"/>
         <mxPoint x="630" y="260" as="targetPoint"/>

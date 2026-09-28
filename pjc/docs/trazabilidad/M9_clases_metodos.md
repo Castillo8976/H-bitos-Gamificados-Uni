@@ -7,7 +7,9 @@
 
 El diagrama vigente contiene las **13 clases de entidad** correspondientes a las 13 tablas aprobadas en E7. Los nombres físicos del diccionario se escriben en `snake_case` y sus clases UML equivalentes en `PascalCase`. `ExportadorDatos`, cuando se documenta, es una clase de servicio y no una entidad persistente ni una tabla; por tanto, no incrementa el conteo de entidades del modelo.
 
-**Fuente gráfica vigente:** `docs/diseno/fase3-componentes/E12-diagrama-clases.drawio`.
+> **Nota de corrección (22 de septiembre de 2026 — atributos):** el diagrama incluía todos los métodos exactos, pero varios atributos reales del modelo no aparecían dibujados (por ejemplo, `Reto.descripcion`, `Meta.descripcion`, `Cuenta.rol`, `Cuenta.fecha_registro`, `Insignia.descripcion`/`icono`, `NivelCuenta.descripcion`/`icono`, `Recordatorio.mensaje`/`activo`, `Punto.id_origen`/`fecha`, `Notificacion.fecha`, `SesionEstudio.fecha`, `Tarea.fecha_completada`). Se verificaron los 13 modelos de `src/models/*.js` campo por campo y `E12-diagrama-clases.drawio` ya los incluye todos.
+
+> **Nota de diseño (22 de septiembre de 2026 — CatalogoMateria, PLANEADA):** por observación de la docente, la materia debe **seleccionarse de un catálogo institucional**, no escribirse como texto libre. `E12-diagrama-clases.drawio` ya incluye la clase `CatalogoMateria` (borde punteado gris = planeada) con sus métodos y la relación hacia `Materia`. **Esta clase todavía no existe en el código** (`src/models/`, `src/services/`, `src/routes/`); no se debe interpretar esta tabla ni el diagrama como evidencia de que ya está implementada. La implementación en código queda pendiente de una autorización explícita.
 
 ---
 
@@ -45,7 +47,7 @@ mantienen la lógica fuera de los controladores HTTP.
 
 > **Nota de corrección (septiembre 2026):** `NivelCuenta` y `Notificacion` forman parte de las 13 clases de entidad del modelo vigente. El archivo oficial editable es `docs/diseno/fase3-componentes/E12-diagrama-clases.drawio`; `DiagramaClases.png` y `DiagramaClasesActualizado.svg` se conservan únicamente como exportaciones o referencias históricas y no determinan el conteo actual.
 
-> **Nota de corrección (22 de septiembre de 2026 — cierre del punto 6 de Construcción):** `E12-diagrama-clases.drawio` fue actualizado para que cada clase muestre el **nombre exacto de cada método**, uno por fila, tal como aparece en el código y en esta tabla (antes el gráfico agrupaba varios métodos en una sola línea, p. ej. `actualizar()/eliminar()`). El gráfico incluye las clases de servicio reales (`GamificacionService`, `EstadisticasService` y `ExportadorDatos`) con sus métodos públicos y las dependencias («usa») hacia las entidades que coordinan. Los adaptadores CRUD se documentan como servicios existentes en `src/services`, sin inventar clases que no estén implementadas.
+> **Nota de corrección (22 de septiembre de 2026 — cierre del punto 6 de Construcción):** `E12-diagrama-clases.drawio` fue actualizado para que cada clase muestre el **nombre exacto de cada método**, uno por fila, tal como aparece en el código y en esta tabla (antes el gráfico agrupaba varios métodos en una sola línea, p. ej. `actualizar()/eliminar()`). El gráfico ahora incluye también las **6 clases de servicio** (`TareaService`, `GamificacionService`, `CorreccionAdministrativaService`, `PlanificadorRecordatoriosService`, `EstadisticasService`, `ExportadorDatos`) con sus métodos públicos y de soporte, y las dependencias («usa») hacia las entidades que coordinan. Con esto, un botón de la interfaz que invoque, por ejemplo, `TareaService.completarTarea()` puede verificarse contra un método declarado en el diagrama, cerrando la brecha señalada en el punto 6 del checklist de Construcción.
 
 ---
 

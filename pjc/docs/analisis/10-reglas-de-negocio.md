@@ -40,6 +40,7 @@
 | **RN23** | El mismo evento no puede acreditarse dos veces; tarea, recompensa, progreso, insignias y notificaciones se confirman o revierten dentro de una transacción. | `tarea`, `punto`, `reto`, `meta`, `cuenta_insignia`, `notificacion` | RF03, RF05–RF07, RF15 / CU03, CU06 | índice `uq_punto_evento` y transacción `IMMEDIATE` |
 | **RN24** | Una condición automática de reto usa `metrica:objetivo`: `tareas`, `sesiones`, `pomodoros` o `minutos`. Una sesión Pomodoro suma simultáneamente una sesión, un Pomodoro y sus minutos; una sesión libre suma una sesión y sus minutos. | `reto`, `meta`, `sesion_estudio` | RF06, RF10, RF15 / CU04, CU06 | `GamificacionService.actualizarRetos()` · `actualizarMetas()` · CRF-003 |
 | **RN25** | Los indicadores institucionales son agregados globales de estudiantes activos y no exponen identificadores, nombres, correos ni filas individuales. | `cuenta`, `tarea`, `sesion_estudio`, `punto` | RF11 / CU16 | `EstadisticasService.obtenerIndicadoresInstitucionales()` |
+| **RN26** *(PLANEADA)* | La materia de un estudiante debe seleccionarse del catálogo institucional vigente (`catalogo_materia` con `activo` = verdadero); no se admite texto libre. Una asignatura del catálogo con materias asociadas no se elimina, solo se desactiva. | `catalogo_materia`, `materia` | RF01 / CU01, CU13 / HU01, HU16, HU29 | Validación de existencia y estado `activo` del catálogo antes de crear o cambiar una `materia`; restricción de borrado (RESTRICT) en la FK |
 
 ---
 
@@ -56,4 +57,6 @@ Varias reglas de negocio existen específicamente para cumplir un RNF, no solo u
 
 ## Estado de validación
 
-El catálogo RN01–RN25 documenta las restricciones identificadas en los requisitos, casos de uso, modelos y operaciones vigentes. RN22–RN25 describen el flujo transaccional, la idempotencia, las condiciones automáticas y la privacidad institucional implementadas bajo CRF-003, pendiente de aprobación formal para Línea Base 1. Su presencia en este catálogo no acredita cumplimiento de todas las rutas: los pendientes se detallan en M17. Toda modificación futura de código o alcance deberá revisar este catálogo y actualizar la matriz de trazabilidad antes de aprobarse.
+El catálogo RN01–RN26 documenta las restricciones identificadas en los requisitos, casos de uso, modelos y operaciones vigentes. RN22–RN25 describen el flujo transaccional, la idempotencia, las condiciones automáticas y la privacidad institucional implementadas bajo CRF-003, pendiente de aprobación formal para Línea Base 1. Su presencia en este catálogo no acredita cumplimiento de todas las rutas: los pendientes se detallan en M17. Toda modificación futura de código o alcance deberá revisar este catálogo y actualizar la matriz de trazabilidad antes de aprobarse.
+
+> **RN26 (22 de septiembre de 2026):** regla PLANEADA derivada de la observación de la docente sobre la materia inicial. Está documentada en E7, E9, E12 y HU29, pero no está implementada en el código; no debe contarse como cumplida hasta que exista el modelo, la migración y la validación.
