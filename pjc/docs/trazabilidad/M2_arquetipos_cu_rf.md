@@ -23,5 +23,5 @@
 | Cuenta–Insignia | Gamificación | CU06, CU14 | RF05 |
 | Nivel de cuenta | Gamificación | CU06, CU13 | RF07 |
 | Notificación | Seguimiento | CU15 | RF04, RNF15 |
-| Administrador | Actores | CU13, CU14 | RF01, RF05, RF07, RNF12 |
+| Administrador | Actores | CU06, CU13, CU14 | RF01, RF05, RF06, RF07, RNF12 |
 | Revisor institucional | Actores | CU16 | RF11 |

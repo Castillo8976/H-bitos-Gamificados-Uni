@@ -15,6 +15,8 @@ El MER Conceptual identifica las **13 entidades** del dominio, clasifica cada un
 
 > **Nota de corrección (agosto 2026):** se eliminó la entidad `reporte` por decisión del equipo. Sus tres campos eran calculables en tiempo real (`COUNT`/`SUM` sobre `tarea`, `sesion_estudio` y `punto`), por lo que mantenerla como tabla propia era una redundancia sin justificación suficiente. El "Tablero de Avance Personal" ahora consulta estos totales directamente.
 
+> **Actualización documental (19 de octubre de 2026):** `reto.activo` se agrega como atributo de la entidad `reto`, sin crear una entidad ni relación nueva. El atributo y su migración siguen pendientes en el código.
+
 ---
 
 ## 2.1 Clasificación de Entidades
@@ -29,7 +31,7 @@ El MER Conceptual identifica las **13 entidades** del dominio, clasifica cada un
 | **sesion_estudio** | Débil | id_sesion + FK id_cuenta | No existe sin cuenta. ON DELETE CASCADE. |
 | **preferencia_visual** | Débil · 1:1 | id_preferencia + FK id_cuenta (UNIQUE) | Relación exclusiva con cuenta. Se crea al registrarse. |
 | **punto** | Débil | id_punto + FK id_cuenta | No existe sin cuenta. ON DELETE CASCADE. |
-| **reto** | Débil | id_reto + FK id_cuenta | No existe sin cuenta. 1 por semana. ON DELETE CASCADE. |
+| **reto** | Débil | id_reto + FK id_cuenta | No existe sin cuenta. 1 por semana; `activo` controla el progreso automático. ON DELETE CASCADE. |
 | **meta** | Débil | id_meta + FK id_cuenta | No existe sin cuenta. 1 por semana. ON DELETE CASCADE. |
 | **recordatorio** | Débil | id_recordatorio + FK id_tarea | No existe sin tarea. ON DELETE CASCADE de tarea. |
 | **notificacion** | Débil | id_notificacion + FK id_cuenta | No existe sin cuenta destinataria. ON DELETE CASCADE. |
@@ -59,7 +61,7 @@ Las entidades débiles no tienen existencia propia sin su entidad fuerte relacio
 | **cuenta** | acumula | punto | **1 : N** | Un estudiante tiene muchos registros de puntos. El total es la suma. RF03, RF07. |
 | **cuenta** | alcanza | nivel_cuenta | **N : 1 (derivada)** | Muchas cuentas pueden alcanzar el mismo nivel. No requiere FK: se determina comparando el total de puntos con puntos_minimos. RF07. |
 | **cuenta** | desbloquea | insignia | **N : M** | Un estudiante desbloquea muchas insignias; una insignia puede obtenerse por muchos estudiantes. Resuelta con cuenta_insignia. RF05. |
-| **cuenta** | participa en | reto | **1 : N** | Un reto semanal por estudiante, acumulando muchos a lo largo del tiempo. RF06. |
+| **cuenta** | participa en | reto | **1 : N** | Un reto creado manualmente por estudiante y semana; puede activarse, desactivarse y reactivarse por su propietario o por el Administrador. RF06, RN28. |
 | **cuenta** | recibe | meta | **1 : N** | Una meta semanal por cuenta, acumulando semana a semana. RF15. |
 | **tarea** | genera | recordatorio | **1 : N** | Al crear una tarea con fecha se genera un recordatorio automático. RF04. |
 | **cuenta** | recibe | notificacion | **1 : N** | Una cuenta puede recibir muchas notificaciones in-app; cada notificación pertenece a una sola cuenta. RF04, RNF15. |
@@ -108,7 +110,7 @@ ENTIDADES DÉBILES (dependen de una entidad fuerte):
   [sesion_estudio]     depende de → cuenta (+ opcional tarea)
   [preferencia_visual] depende de → cuenta (relación 1:1)
   [punto]              depende de → cuenta
-  [reto]               depende de → cuenta
+  [reto]               depende de → cuenta; `activo` controla el progreso automático; activo controla el progreso automático
   [meta]               depende de → cuenta
   [recordatorio]       depende de → tarea
   [notificacion]       depende de → cuenta

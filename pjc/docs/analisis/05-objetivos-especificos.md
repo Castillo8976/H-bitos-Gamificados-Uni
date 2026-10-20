@@ -18,6 +18,8 @@
 
 5. **OE05.** Implementar un módulo de configuración y personalización visual que permita al estudiante adaptar la interfaz a sus preferencias, garantizar la accesibilidad, exportar su información y conservar los datos en la base de datos SQLite mediante el servidor de la aplicación.
 
+6. **OE06.** Diseñar y construir el módulo de cuentas y administración para que los estudiantes gestionen su cuenta y el Administrador mantenga las cuentas, los catálogos globales autorizados y el estado de los retos.
+
 ## Lineamiento Metodológico
 
 Aplicar los principios de ingeniería de software —análisis de requisitos, diseño arquitectónico, modelado de datos, diagramas UML y prototipado— para documentar, construir y sustentar el desarrollo de la plataforma. Este enunciado se controla como lineamiento del proceso académico y no como objetivo funcional del producto; su cumplimiento se evidencia mediante los artefactos de Análisis, Diseño y Construcción.
@@ -31,5 +33,6 @@ Aplicar los principios de ingeniería de software —análisis de requisitos, di
 | **OE03** | Gamificación mediante puntos, insignias y retos | RF03, RF05, RF06, RF07 | Funcionalidad del producto |
 | **OE04** | Tablero de progreso personal calculado en tiempo real | RF08, RF11 | Funcionalidad del producto |
 | **OE05** | Configuración, personalización visual, accesibilidad y persistencia | RF13, RF14; RNF04, RNF06, RNF07 | Funcionalidad y atributos de calidad |
+| **OE06** | Gestión de cuentas, catálogos y estado de retos | RF01, RF05, RF06, RF07 | Funcionalidad del producto |
 
-> **Criterio de trazabilidad:** todos los objetivos específicos OE01–OE05 se materializan mediante requisitos del producto. El antiguo objetivo 6 se trasladó a Lineamiento Metodológico porque describe cómo se desarrolla el proyecto y no una capacidad que utilice un actor.
+> **Criterio de trazabilidad:** todos los objetivos específicos OE01–OE06 se materializan mediante requisitos del producto. El objetivo general conserva expresamente el rendimiento académico como finalidad del proyecto. El lineamiento metodológico se conserva aparte porque describe cómo se desarrolla el proyecto, no una capacidad que utilice un actor.

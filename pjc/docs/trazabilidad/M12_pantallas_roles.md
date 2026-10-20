@@ -21,11 +21,11 @@
 | P10 | Reto semanal activo | Estudiante | CU06 | HU06, HU18 | RF06 | — |
 | P11 | Tablero de Avance Personal | Estudiante | CU05 | HU08, HU11, HU15, HU17 | RF08, RF11, RF15 | — |
 | P12 | Filtros y búsqueda de tareas | Estudiante | CU07 | HU09 | RF09 | — |
-| P13 | Configuración / Perfil | Estudiante | CU08, CU11 | HU13, HU20 | RF01, RF13, RNF04, RNF12 | W06 |
+| P13 | Configuración / Perfil | Estudiante | CU08, CU11 | HU13, HU20, HU30 | RF01, RF13, RNF04, RNF12 | W06 |
 | P14 | Exportar datos | Estudiante | CU09 | HU14 | RF14, RNF04 | — |
-| P15 | Panel de administración | Administrador | CU13, CU14 | HU22, HU23, HU26, HU27 | RF01, RF05, RF07, RNF12 | — |
+| P15 | Panel de administración | Administrador | CU13, CU14 | HU22, HU23, HU26, HU27, HU31 | RF01, RF05, RF06, RF07, RNF12 | — |
 | P16 | Gestión de usuarios | Administrador | CU13 | HU27 | RF01, RNF12 | — |
-| P17 | Gestión de insignias, niveles y retos | Administrador | CU13, CU14 | HU22, HU23, HU26 | RF05, RF07 | — |
+| P17 | Gestión de insignias, niveles y estado de retos | Administrador | CU06, CU13, CU14 | HU06, HU18, HU22, HU23, HU26, HU31 | RF05, RF06, RF07 | — |
 | P18 | Tablero institucional (solo lectura) | Revisor institucional | CU16 | HU28 | RF11 | — |
 | P19 | Notificaciones | Estudiante | CU15 | HU24 | RF04, RNF15 | — |
 | P20 | Recordatorios | Estudiante | CU10 | HU04, HU25 | RF04, RNF15 | — |

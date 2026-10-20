@@ -30,7 +30,7 @@ Implementar el historial de puntos como un **ledger inmutable (append-only)** en
 La alternativa simple sería guardar un campo `puntos_totales` en la tabla `cuenta` y actualizarlo con cada acción. Sin embargo, esto pierde el historial: no se podría saber cuántos puntos ganó el usuario en una semana específica, ni de qué acciones provinieron (tareas, retos, sesiones). El patrón ledger resuelve ambos problemas: cada evento de ganancia genera una fila nueva en la tabla `punto` con su `origen` e `id_origen`. El total se calcula con `SUM(cantidad)` y el desglose semanal con un filtro adicional por fecha. Esta decisión es clave para que el cálculo en tiempo real del Tablero de Avance Personal (antes `generarReporteSemanal()`, eliminado en agosto 2026) pueda obtener `puntos_obtenidos` por semana de forma precisa mediante una simple consulta `SUM` filtrada por fecha.
 
 **¿Qué artefacto de diseño respalda esta decisión?**  
-**Entregable 7 — Diccionario de Datos**, sección entidad `punto`: define explícitamente que "el total de puntos de una cuenta es la suma de todos sus registros", no un campo precalculado. También está respaldado por **Entregable 9 — Modelo Relacional**, que incluye la vista `vista_puntos_totales` con `SELECT SUM(cantidad) ... GROUP BY id_cuenta`, confirmando que el diseño siempre consideró el cálculo agregado como mecanismo oficial de consulta del puntaje.
+**Entregable 7 — Diccionario de Datos**, sección entidad `punto`: define explícitamente que "el total de puntos de una cuenta es la suma de todos sus registros", no un campo precalculado. El Modelo Relacional describe el cálculo agregado como mecanismo de consulta del puntaje; no se presupone una vista SQL `vista_puntos_totales`.
 
 ---
 
@@ -79,3 +79,29 @@ agregados permiten cumplir HU28/CU16 sin nombres, correos ni identificadores.
 
 **¿Qué artefacto respalda esta decisión?**
 RN21, RN25, CRF-002 y CRF-003.
+
+---
+
+## Decisión #06
+
+**¿Qué decidí?**
+Conservar «rendimiento académico» en el objetivo general, agregar un objetivo
+específico de cuentas y administración, documentar la creación manual de retos
+y permitir al Estudiante propietario y al Administrador cambiar su estado.
+El Estudiante puede editar y completar manualmente sus retos, y puede
+desactivar su propia cuenta; el Administrador puede reactivar cuentas.
+
+**¿Por qué?**
+Estas decisiones responden a la revisión documental y distinguen los permisos
+del Estudiante de las facultades administrativas. Los retos no se generan
+automáticamente. Sus recompensas se conservan como movimientos únicos aunque
+el reto se desactive y reactive.
+
+**Estado**
+Línea base documental aprobada el 19 de octubre de 2026. Las modificaciones de
+modelo, interfaz, validaciones y migraciones que todavía no existen en el
+código se mantienen identificadas como pendientes de implementación. Los
+límites aprobados para los campos se registran en E7. Quedan sin resolver la
+decisión sobre materia inicial (pregunta 5), los aspectos adicionales de
+contraseña (pregunta 8) y el bloqueo al desactivar la última cuenta
+Administradora activa (pregunta 7).

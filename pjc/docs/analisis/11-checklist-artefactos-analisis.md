@@ -23,13 +23,13 @@ Este documento registra la revisión de los ocho puntos del checklist de Anális
 
 | N.° | Artefacto o actividad | Estado | Hallazgo principal |
 |---:|---|---|---|
-| 1 | Objetivos específicos | **Completo** | OE01–OE05 están identificados y relacionados con RF. El antiguo OE06 se trasladó correctamente a Lineamiento Metodológico. |
-| 2 | HU del CRUD por entidad y RF por acción de ventana | **Completo** | HU01–HU28 tienen criterios de aceptación; las 13 entidades cuentan con cobertura CRUD o excepción justificada y existe inventario acción → RF → HU → CU. |
+| 1 | Objetivos específicos | **Completo** | OE01–OE06 están identificados y relacionados con RF; OE06 cubre cuentas y administración. El lineamiento metodológico se mantiene separado de los objetivos funcionales. |
+| 2 | HU del CRUD por entidad y RF por acción de ventana | **Completo** | HU01–HU31 tienen criterios de aceptación; las 13 entidades cuentan con cobertura CRUD o excepción justificada y existe inventario acción → RF → HU → CU. |
 | 3 | Casos de uso general y específicos | **Completo** | CUG01 delimita el sistema; CU01–CU16 están documentados y el modelo de actores fue normalizado. |
 | 4 | Requisitos de interfaz externa | **Completo** | M1 fue corregida y la ERS define RIE01–RIE05 con entradas, salidas, requisitos y criterios de aceptación. |
 | 5 | Metodología de trabajo | **Completo** | Está definida y justificada como desarrollo incremental por fases y ya referencia las matrices M1–M14. |
 | 6 | Tipo de investigación | **Completo** | Se define y justifica un enfoque mixto y una investigación aplicada, con relación a las técnicas de elicitación. |
-| 7 | HU, RF, RNF y RN actualizados | **Completo** | La ERS consolida RF01–RF15 y RNF01–RNF15; los RNF incluyen ISO 25010, métrica y prueba; RN01–RN21 están validadas. |
+| 7 | HU, RF, RNF y RN actualizados | **Completo** | La ERS consolida RF01–RF15 y RNF01–RNF16; los RNF incluyen ISO 25010, métrica y prueba; RN01–RN28 están trazadas. |
 | 8 | Matriz RF ↔ HU ↔ CU | **Completo** | Existe una matriz única y bidireccional OE ↔ RF ↔ HU ↔ CU ↔ RN ↔ datos ↔ pantalla/acción. |
 
 **Conclusión:** los 8 puntos del checklist cuentan con evidencia documental y trazabilidad. La fase de Análisis queda completa a nivel de artefactos del repositorio.
@@ -40,7 +40,7 @@ Este documento registra la revisión de los ocho puntos del checklist de Anális
 
 ### Evidencia existente
 
-El archivo `05-objetivos-especificos.md` contiene cinco objetivos específicos del producto relacionados con tareas, Pomodoro, gamificación, tablero y personalización. La aplicación de principios de ingeniería de software quedó clasificada como lineamiento metodológico.
+El archivo `05-objetivos-especificos.md` contiene seis objetivos específicos del producto relacionados con tareas, Pomodoro, gamificación, tablero, personalización y cuentas/administración. La aplicación de principios de ingeniería de software quedó clasificada como lineamiento metodológico.
 
 ### Validación
 
@@ -51,12 +51,13 @@ El archivo `05-objetivos-especificos.md` contiene cinco objetivos específicos d
 | OE03 — Puntos, insignias y retos | RF03, RF05, RF06 y RF07 | Trazado en el artefacto. |
 | OE04 — Tablero de progreso | RF08 y RF11 | Trazado en el artefacto. |
 | OE05 — Configuración y personalización | RF13 y RF14; RNF04, RNF06 y RNF07 | Trazado en el artefacto y corregido para usar SQLite. |
+| OE06 — Cuentas y administración | RF01, RF05, RF06 y RF07 | Agregado a partir de la revisión documental. |
 | Lineamiento metodológico — Aplicación de ingeniería de software | No requiere RF funcional | Trasladado fuera de los objetivos específicos y verificable mediante los artefactos del proyecto. |
 
 ### Ajustes realizados
 
-1. Se incorporaron los identificadores OE01–OE05 en la redacción principal.
-2. El antiguo OE06 se trasladó a Lineamiento Metodológico porque no representa una capacidad del producto.
+1. Se incorporaron los identificadores OE01–OE06 en la redacción principal.
+2. El lineamiento metodológico permanece separado porque no representa una capacidad del producto.
 3. Todos los objetivos específicos vigentes tienen uno o más RF asociados.
 
 ---
@@ -65,13 +66,13 @@ El archivo `05-objetivos-especificos.md` contiene cinco objetivos específicos d
 
 ### Evidencia existente
 
-`07-casos-de-uso.md` contiene el índice HU01–HU28. `13-historias-usuario-criterios-aceptacion.md` documenta sus criterios y cobertura CRUD. `14-matriz-trazabilidad-analisis.md` relaciona cada acción con RF, HU y CU.
+`07-casos-de-uso.md` contiene el índice HU01–HU31. `13-historias-usuario-criterios-aceptacion.md` documenta sus criterios y cobertura CRUD. `14-matriz-trazabilidad-analisis.md` relaciona cada acción con RF, HU y CU.
 
 ### Cobertura por entidad
 
 | Entidad aprobada | HU relacionada | Cobertura actual |
 |---|---|---|
-| `cuenta` | HU01, HU20, HU27 | Crear, consultar, actualizar y desactivar. |
+| `cuenta` | HU01, HU20, HU27, HU30 | Crear, consultar, actualizar, desactivar y reactivar. |
 | `materia` | HU01, HU16 | Crear, consultar, actualizar y eliminar. |
 | `tarea` | HU02, HU03, HU09, HU19 | Crear, consultar, actualizar, completar, filtrar y eliminar. |
 | `sesion_estudio` | HU10, HU21 | Crear, consultar, actualizar y eliminar. |
@@ -162,10 +163,10 @@ El punto está cubierto documentalmente. Para la entrega en Word deben anexarse 
 
 ### Historias de usuario
 
-- Existen HU01–HU28.
+- Existen HU01–HU31.
 - Todas conservan el formato “Como…, quiero…, para…”.
 - Todas tienen criterios de aceptación estructurados en `13-historias-usuario-criterios-aceptacion.md`.
-- Las 13 entidades y sus acciones CRUD están cubiertas o tienen una excepción de integridad justificada.
+- Las 13 entidades y sus acciones CRUD están cubiertas o tienen una excepción de integridad justificada. Las acciones nuevas de cuenta y estado de reto están aprobadas documentalmente; la interfaz y el modelo necesarios permanecen pendientes de implementación.
 
 ### Requisitos funcionales
 
@@ -174,14 +175,14 @@ El punto está cubierto documentalmente. Para la entrega en Word deben anexarse 
 
 ### Requisitos no funcionales
 
-- RNF01–RNF15 forman un catálogo completo y controlado dentro de la ERS.
+- RNF01–RNF16 forman un catálogo completo y controlado dentro de la ERS.
 - Cada RNF se relaciona con una característica de ISO/IEC 25010.
 - RNF04 define persistencia en SQLite.
 - Todos incluyen métrica, umbral y método de validación.
 
 ### Reglas de negocio
 
-- `10-reglas-de-negocio.md` cataloga RN01–RN21 y relaciona cada regla con entidades y RF/CU.
+- `10-reglas-de-negocio.md` cataloga RN01–RN28 y relaciona cada regla con entidades y RF/CU.
 - Las HU y los RF indican las RN aplicables.
 - El catálogo incluye estado de validación y control para cambios futuros.
 

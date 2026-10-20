@@ -48,7 +48,7 @@ Para completar la cobertura exigida por el checklist sin duplicar diagramas grá
 
 ### Seq-CRUD-01 — `Cuenta`
 
-**Trazabilidad:** CU01, CU11, CU13 · RF01 · HU01, HU20, HU27 · RN01, RN02, RN21.
+**Trazabilidad:** CU01, CU11, CU13 · RF01 · HU01, HU20, HU27, HU30 · RN01, RN02, RN21, RN27.
 
 ```text
 Actor → InterfazCuenta <<boundary>>: selecciona crear / consultar / actualizar / desactivar

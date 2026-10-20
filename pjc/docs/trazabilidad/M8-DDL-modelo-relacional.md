@@ -50,13 +50,12 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 
 ---
 
-## Vistas implementadas en el DDL
+## Consultas derivadas
 
-| Vista DDL | Tablas fuente | Propósito | RF |
-|---|---|---|---|
-| `vista_puntos_totales` | punto | Total de puntos acumulados por cuenta | RF07 |
-| `vista_tareas_proximas` | tarea | Tareas pendientes que vencen en los próximos 7 días con días restantes | RF04 |
-| `vista_gamificacion` | cuenta, punto, cuenta_insignia, reto | Panel gamificado: puntos, insignias y retos completados por cuenta | RF07 · RF08 |
+El DDL vigente no declara vistas SQL. El total de puntos y los indicadores se
+calculan mediante consultas sobre sus tablas de origen, según RN09 y RN14; no
+se debe tratar `vista_puntos_totales`, `vista_tareas_proximas` ni
+`vista_gamificacion` como objetos implementados.
 
 ---
 

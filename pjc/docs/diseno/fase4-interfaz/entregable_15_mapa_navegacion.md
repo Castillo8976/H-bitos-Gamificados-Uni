@@ -9,7 +9,7 @@
 
 ## Descripción general
 
-El mapa muestra las **18 pantallas del sistema** organizadas por módulo, con los flujos de navegación entre ellas. El Dashboard (P03) es el **hub central** desde el que se accede a todos los módulos. Los roles con acceso restringido (Administrador y Revisor institucional) entran por URLs directas sin pasar por el flujo de estudiante.
+El mapa muestra las **20 pantallas del sistema** organizadas por módulo, con los flujos de navegación entre ellas. El Dashboard (P03) es el **hub central** desde el que se accede a todos los módulos. Los roles con acceso restringido (Administrador y Revisor institucional) entran por URLs directas sin pasar por el flujo de estudiante.
 
 Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para llegar a cualquier funcionalidad (RNF07).
 
@@ -35,7 +35,7 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | P14 | Exportar datos | Estudiante | Configuración | — |
 | P15 | Panel de administración | Administrador | Administración | — |
 | P16 | Gestión de usuarios | Administrador | Administración | — |
-| P17 | Gestión de insignias, niveles y retos | Administrador | Administración | — |
+| P17 | Gestión de insignias, niveles y estado de retos | Administrador | Administración | — |
 | P18 | Tablero institucional | Revisor institucional | Tablero | — |
 | P19 | Notificaciones | Estudiante | Notificaciones | — |
 | P20 | Recordatorios | Estudiante | Recordatorios | — |
@@ -88,7 +88,7 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 │               ZONA DE ADMINISTRACIÓN (acceso restringido)           │
 │                                                                     │
 │  [P15 Panel admin] ──► [P16 Gestión usuarios]                       │
-│                    └──► [P17 Gestión insignias y retos]             │
+│                    └──► [P17 Gestión insignias, niveles y estado de retos] │
 │                    └──► [P18 Tablero institucional]  ◄── Revisor │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -158,6 +158,7 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 | P13 Configuración | Botón "Exportar JSON" | P14 Exportar datos | Slide → | CU09 | RF14 |
 | P13 Configuración | Botón "Guardar preferencias" | P03 Dashboard | Slide ← + aplica tema | CU08 | RF13 |
 | P13 Perfil | Botón "Actualizar perfil" | P13 Configuración / Perfil | Permanece en panel + confirma | CU11 | RF01, RNF12 |
+| P13 Perfil | Acción "Desactivar mi cuenta" | P01 Login | Cierra la sesión y bloquea el acceso de la cuenta | CU11 | RF01 |
 | P13 Configuración | Botón "← Atrás" (sin guardar) | P03 Dashboard | Panel cierra desde la derecha | CU08 | — |
 | P14 Exportar datos | Botón "← Atrás" | P13 Configuración | Slide ← | — | — |
 
@@ -172,9 +173,9 @@ Principio de navegación aplicado: máximo **3 clics** desde el Dashboard para l
 
 | Desde | Elemento | Hacia | Transición | Rol | CU | HU | RF |
 |-------|----------|-------|------------|-----|----|----|----|
-| URL `/admin` | Acceso directo | P15 Panel admin | Carga directa | Administrador | CU13, CU14 | HU22, HU23, HU26, HU27 | RF01, RF05, RF07 |
+| URL `/admin` | Acceso directo | P15 Panel admin | Carga directa | Administrador | CU13, CU14 | HU22, HU23, HU26, HU27, HU31 | RF01, RF05, RF06, RF07 |
 | P15 Panel admin | Sección "Usuarios" | P16 Gestión usuarios | Slide → | Administrador | CU13 | HU27 | RF01 |
-| P15 Panel admin | Sección "Gamificación" | P17 Gestión insignias, niveles y retos | Slide → | Administrador | CU13, CU14 | HU22, HU23, HU26 | RF05, RF07 |
+| P15 Panel admin | Sección "Gamificación" | P17 Gestión insignias, niveles y estado de retos | Slide → | Administrador | CU06, CU13, CU14 | HU06, HU18, HU22, HU23, HU26, HU31 | RF05, RF06, RF07 |
 | URL `/revisor` | Acceso directo | P18 Tablero institucional | Carga directa | Revisor institucional | CU16 | HU28 | RF11 |
 
 ### 3.9 Regla global — botón "Atrás"
@@ -245,7 +246,7 @@ P03 Dashboard
 URL /admin
     └──► P15 Panel de administración
               ├──► P16 Gestión de usuarios
-              └──► P17 Gestión de insignias, niveles y retos
+              └──► P17 Gestión de insignias, niveles y estado de retos
 
 URL /revisor
     └──► P18 Tablero institucional
@@ -287,11 +288,11 @@ URL /revisor
 | P10 Reto semanal | Estudiante | CU06 | HU06, HU18 | RF06 | — |
 | P11 Tablero | Estudiante | CU05 | HU08, HU11, HU15, HU17 | RF08, RF11, RF15 | — |
 | P12 Filtros | Estudiante | CU07 | HU09 | RF09 | — |
-| P13 Configuración / Perfil | Estudiante | CU08, CU11 | HU13, HU20 | RF01, RF13, RNF04, RNF12 | W06 |
+| P13 Configuración / Perfil | Estudiante | CU08, CU11 | HU13, HU20, HU30 | RF01, RF13, RNF04, RNF12 | W06 |
 | P14 Exportar datos | Estudiante | CU09 | HU14 | RF14, RNF04 | — |
-| P15 Panel admin | Administrador | CU13, CU14 | HU22, HU23, HU26, HU27 | RF01, RF05, RF07, RNF12 | — |
+| P15 Panel admin | Administrador | CU13, CU14 | HU22, HU23, HU26, HU27, HU31 | RF01, RF05, RF06, RF07, RNF12 | — |
 | P16 Gestión usuarios | Administrador | CU13 | HU27 | RF01, RNF12 | — |
-| P17 Gestión insignias, niveles y retos | Administrador | CU13, CU14 | HU22, HU23, HU26 | RF05, RF07 | — |
+| P17 Gestión insignias, niveles y estado de retos | Administrador | CU06, CU13, CU14 | HU06, HU18, HU22, HU23, HU26, HU31 | RF05, RF06, RF07 | — |
 | P18 Tablero institucional | Revisor institucional | CU16 | HU28 | RF11 | — |
 | P19 Notificaciones | Estudiante | CU15 | HU24 | RF04, RNF15 | — |
 | P20 Recordatorios | Estudiante | CU10 | HU04, HU25 | RF04, RNF15 | — |
@@ -304,7 +305,7 @@ URL /revisor
 | Requisitos no funcionales | RNF04 · RNF07 · RNF12 |
 | Casos de uso cubiertos | CU01 · CU02 · CU03 · CU04 · CU05 · CU06 · CU07 · CU08 · CU09 · CU10 · CU11 · CU12 · CU13 · CU14 · CU15 · CU16 |
 
-> **Validación de trazabilidad (septiembre 2026):** las 20 pantallas tienen rol, CU, HU y RF/RNF justificantes. P15, P16 y P17 se vinculan con la administración y corrección controlada de CU13–CU14 y HU22, HU23, HU26 y HU27. CU11 se atiende desde P13 Configuración / Perfil; CU12 desde P06 Pomodoro / Historial; y CU16 desde P18. No quedan pantallas ni casos de uso huérfanos en el mapa documental.
+> **Validación de trazabilidad (octubre 2026):** las 20 pantallas tienen rol, CU, HU y RF/RNF justificantes. P15, P16 y P17 se vinculan con la administración y corrección controlada de CU13–CU14; P17 incluye el cambio del estado de retos (pendiente de implementación). CU11 se atiende desde P13 Configuración / Perfil, incluida la desactivación propia de cuenta; CU12 desde P06 Pomodoro / Historial; y CU16 desde P18. No quedan pantallas ni casos de uso huérfanos en el mapa documental.
 
 ---
 

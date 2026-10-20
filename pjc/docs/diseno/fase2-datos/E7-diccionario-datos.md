@@ -15,6 +15,8 @@
 
 Define las **13 entidades** del dominio con sus atributos, tipos de datos, restricciones de integridad y reglas de negocio. Cada entidad está vinculada a sus Requisitos Funcionales (RF) y es trazable al MER Conceptual, Modelo Relacional y DDL.
 
+> **Actualización documental (19 de octubre de 2026):** se aprobaron límites para `cuenta.nombre`, `reto.puntos_recompensa`, `meta.valor_objetivo` y `sesion_estudio.duracion_minutos`, además de `reto.activo` y las acciones de desactivar cuenta/cambiar estado de reto. Los límites y el nuevo estado de reto son requisitos documentales; su validación, migración y exposición en la interfaz quedan pendientes de implementación.
+
 > **Nota de corrección (agosto 2026):** este documento pasó por dos correcciones. Primero se agregaron `nivel_cuenta` y `notificacion` (llegando a 14 entidades). Después se **eliminó `reporte`** por decisión del equipo: sus datos son 100% calculables en tiempo real (ver nota al final de la sección `recordatorio`), por lo que mantenerlos como tabla propia era una redundancia innecesaria. El conteo final es 13 entidades.
 
 ---
@@ -24,11 +26,11 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
 |---|---|---|---|
 | **id_cuenta (PK)** | VARCHAR(36) | No | UUID generado automáticamente. Clave primaria del sistema. |
-| **nombre** | VARCHAR(60) | No | Nombre completo del estudiante registrado. |
+| **nombre** | VARCHAR(60) | No | Nombre completo del estudiante registrado. Entre 2 y 60 caracteres; admite letras Unicode, espacios, apóstrofo y guion. |
 | **correo** | VARCHAR(100) | No | Correo electrónico. UNIQUE — no puede repetirse en el sistema. |
 | **contrasena_hash** | VARCHAR(255) | No | Contraseña cifrada. Nunca en texto plano (RNF12). |
 | **fecha_registro** | DATE | No | Fecha de creación de la cuenta. DEFAULT CURRENT_DATE. |
-| **activa** | BOOLEAN/INT | No | TRUE = cuenta activa. FALSE = suspendida. DEFAULT TRUE. |
+| **activa** | BOOLEAN/INT | No | TRUE = cuenta activa. FALSE = suspendida. DEFAULT TRUE. El Estudiante puede desactivar su propia cuenta; solo el Administrador puede reactivarla. Los datos se conservan. |
 | **rol** | VARCHAR(30) | No | Rol autorizado. CHECK IN ('Estudiante','Administrador','Revisor institucional'). DEFAULT 'Estudiante'. CRF-002. |
 
 > **Reglas:** correo único · contraseña siempre cifrada · datos persisten al reiniciar (RNF04) · entidad raíz de la que dependen todas las demás.
@@ -76,7 +78,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **id_cuenta (FK→cuenta)** | VARCHAR(36) | No | Cuenta que realizó la sesión. ON DELETE CASCADE. |
 | **id_tarea (FK→tarea)** | VARCHAR(36) | Sí | Tarea asociada. ON DELETE SET NULL. Nullable. |
 | **fecha** | DATE | No | Fecha de la sesión. DEFAULT CURRENT_DATE. |
-| **duracion_minutos** | INTEGER | No | Duración en minutos. CHECK > 0. |
+| **duracion_minutos** | INTEGER | No | Duración en minutos. CHECK entre 1 y 1.440. |
 | **modo_enfoque** | BOOLEAN/INT | No | TRUE = sesión Pomodoro. FALSE = cronómetro libre. |
 
 > **Reglas:** duración > 0 · se usa para calcular horas en el Tablero de Avance Personal en tiempo real (RF11) · modo_enfoque bloquea notificaciones durante la sesión (RF12).
@@ -124,7 +126,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 
 ---
 
-## 8. `reto` — Desafío semanal automático gamificado `RF06`
+## 8. `reto` — Desafío semanal gamificado `RF06`
 
 | Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
 |---|---|---|---|
@@ -132,12 +134,13 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **id_cuenta (FK→cuenta)** | VARCHAR(36) | No | Cuenta asignada. ON DELETE CASCADE. |
 | **descripcion** | VARCHAR(200) | No | Texto legible del desafío. |
 | **condicion** | VARCHAR(100) | No | Regla de cumplimiento evaluable por el sistema. |
-| **puntos_recompensa** | INTEGER | No | Puntos al completar el reto. CHECK > 0. |
+| **puntos_recompensa** | INTEGER | No | Puntos al completar el reto. CHECK entre 1 y 10.000. |
 | **semana** | VARCHAR(10) | No | Formato YYYY-WNN. UNIQUE combinado con id_cuenta. |
 | **progreso** | INTEGER | No | Avance actual. DEFAULT 0. CHECK >= 0. |
 | **completado** | BOOLEAN/INT | No | TRUE = reto completado. DEFAULT FALSE. |
+| **activo** | BOOLEAN/INT | No | TRUE = admite progreso automático. FALSE = desactivado. DEFAULT TRUE. El propietario y el Administrador pueden cambiar el estado; pendiente de migración e implementación. |
 
-> **Reglas:** 1 reto por semana por estudiante (UNIQUE id_cuenta + semana) · se reinicia semanalmente · al completar genera registro en punto con origen=Reto.
+> **Reglas:** se crea manualmente, no se genera automáticamente cada semana · 1 reto por semana por estudiante (UNIQUE id_cuenta + semana) · el progreso automático solo se acumula mientras `activo = TRUE` · al completar, incluso manualmente por el propietario, genera como máximo un registro en `punto` con `origen = Reto` · desactivar no revoca puntos y reactivar no vuelve a acreditarlos (RN10, RN28).
 
 ---
 
@@ -149,7 +152,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **id_cuenta (FK→cuenta)** | VARCHAR(36) | No | Cuenta destinataria. ON DELETE CASCADE. |
 | **semana** | VARCHAR(10) | No | Formato YYYY-WNN. UNIQUE por cuenta. |
 | **descripcion** | VARCHAR(200) | No | Texto de la meta sugerida. |
-| **valor_objetivo** | INTEGER | No | Valor numérico objetivo. CHECK > 0. |
+| **valor_objetivo** | INTEGER | No | Valor numérico objetivo semanal. CHECK entre 1 y 10.080. |
 | **valor_actual** | INTEGER | No | Progreso actual. DEFAULT 0. CHECK >= 0. |
 | **cumplida** | BOOLEAN/INT | No | TRUE = meta alcanzada. DEFAULT FALSE. |
 

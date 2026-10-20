@@ -15,14 +15,16 @@ El diagrama vigente contiene las **13 clases de entidad** correspondientes a las
 
 | Clase | Métodos | CU que lo origina | RF asociado |
 |---|---|---|---|
-| `Cuenta` | `crearCuenta`, `listarCuentas`, `obtenerCuenta`, `actualizarCuenta`, `eliminarCuenta`, `registrar`, `autenticar`, `cerrarSesion`, `obtenerPerfil` | CU01, CU11, CU13 | RF01, RNF12, RN21 |
+| `Cuenta` | `crearCuenta`, `listarCuentas`, `obtenerCuenta`, `actualizarCuenta`, `desactivarCuenta` *(planeado)*, `reactivarCuenta` *(planeado)*, `eliminarCuenta`, `registrar`, `autenticar`, `cerrarSesion`, `obtenerPerfil` | CU01, CU11, CU13 | RF01, RNF12, RN21 |
 | `Materia` | `crearMateria`, `listarMaterias`, `obtenerMateria`, `actualizarMateria`, `eliminarMateria` | CU01, CU13 | RF01, RF09 |
 | `Tarea` | `crearTarea`, `listarTareas`, `obtenerTarea`, `actualizarTarea`, `completarTarea`, `eliminarTarea` | CU02, CU03, CU07 | RF02, RF03, RF04, RF09 |
 | `SesionEstudio` | `crearSesionEstudio`, `listarSesionesEstudio`, `obtenerSesionEstudio`, `actualizarSesionEstudio`, `eliminarSesionEstudio`, `calcularHorasSemana` | CU04, CU12 | RF10, RF11, RF12 |
 | `Insignia` | `crearInsignia`, `listarInsignias`, `obtenerInsignia`, `actualizarInsignia`, `eliminarInsignia`, `sembrarInsignias` | CU06, CU13 | RF05 |
 | `CuentaInsignia` | `desbloquearInsignia`, `listarInsigniasDesbloqueadas`, `tieneInsignia`, `revocarInsignia`, `evaluarInsignias` | CU03, CU06, CU14 | RF05 |
 | `Punto` | `otorgarPuntos`, `listarPuntos`, `obtenerPunto`, `eliminarPunto`, `calcularTotalPuntos`, `calcularPuntosSemana` | CU03, CU05, CU06, CU14 | RF03, RF07, RF08 |
-| `Reto` | `crearReto`, `listarRetos`, `obtenerReto`, `actualizarProgresoReto`, `completarReto`, `actualizarReto`, `eliminarReto` | CU06, CU13 | RF06 |
+| `Reto` | `crearReto`, `listarRetos`, `obtenerReto`, `actualizarProgresoReto`, `completarReto`, `actualizarReto`, `activarReto` *(planeado)*, `desactivarReto` *(planeado)*, `eliminarReto` | CU06, CU13 | RF06 |
+
+> **Actualización documental (19 de octubre de 2026):** `Reto.activo` y las operaciones de activación/desactivación están aprobadas para la línea base documental, pero aún no existen en el código. Los retos se crean manualmente; no se generan semanalmente de forma automática.
 | `Meta` | `crearMeta`, `listarMetas`, `obtenerMeta`, `actualizarProgresoMeta`, `actualizarMeta`, `eliminarMeta` | CU05 | RF15 |
 | `Recordatorio` | `crearRecordatorio`, `generarRecordatorioAutomatico`, `listarRecordatorios`, `obtenerRecordatorio`, `marcarRecordatorioEnviado`, `toggleRecordatorio`, `eliminarRecordatorio` | CU02, CU10 | RF04, RNF15 |
 | `PreferenciaVisual` | `crearPreferenciaVisual`, `obtenerPreferenciaVisual`, `actualizarPreferenciaVisual`, `obtenerOCrearPreferenciaVisual`, `eliminarPreferenciaVisual` | CU08 | RF13, RNF04 |

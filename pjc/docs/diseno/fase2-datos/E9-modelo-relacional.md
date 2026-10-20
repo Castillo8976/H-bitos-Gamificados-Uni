@@ -21,18 +21,18 @@ El Modelo Relacional transforma las **13 entidades del MER** en tablas con tipos
 
 | Tabla | PK | FK(s) | Restricciones clave | RF |
 |---|---|---|---|---|
-| **cuenta** | id_cuenta VARCHAR(36) | — | UNIQUE(correo) · contrasena_hash NOT NULL | RF01 · RNF12 |
+| **cuenta** | id_cuenta VARCHAR(36) | — | UNIQUE(correo) · nombre de 2–60 caracteres Unicode permitidos · contrasena_hash NOT NULL | RF01 · RNF12 · RNF-16 |
 | **preferencia_visual** | id_preferencia VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta) → 1:1 · CHECK tema IN (6 valores) | RF13 |
 | **materia** | id_materia VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | nombre NOT NULL · activa DEFAULT 1 | RF01 |
 | *catalogo_materia* **(PLANEADA)** | id_catalogo_materia VARCHAR(36) | — | UNIQUE(nombre) · activo DEFAULT 1 | RF01 |
 | **tarea** | id_tarea VARCHAR(36) | id_cuenta → cuenta CASCADE · id_materia → materia SET NULL | CHECK prioridad IN (...) · CHECK estado IN (...) · fecha_completada nullable | RF02 · RF03 |
-| **sesion_estudio** | id_sesion VARCHAR(36) | id_cuenta → cuenta CASCADE · id_tarea → tarea SET NULL | CHECK duracion_minutos > 0 · modo_enfoque IN (0,1) | RF10 |
+| **sesion_estudio** | id_sesion VARCHAR(36) | id_cuenta → cuenta CASCADE · id_tarea → tarea SET NULL | CHECK 1 ≤ duracion_minutos ≤ 1440 · modo_enfoque IN (0,1) | RF10 |
 | **insignia** | id_insignia VARCHAR(36) | — | UNIQUE(nombre) · UNIQUE(condicion) | RF05 |
 | **nivel_cuenta** | id_nivel VARCHAR(36) | — | UNIQUE(nombre) · CHECK puntos_minimos >= 0 · CHECK orden > 0 | RF07 |
 | **cuenta_insignia** | (id_cuenta, id_insignia) | id_cuenta → cuenta CASCADE · id_insignia → insignia CASCADE | PK compuesta · fecha_obtenida NOT NULL | RF05 |
 | **punto** | id_punto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | CHECK cantidad > 0 · CHECK origen IN ('Tarea','Reto','Sesion') · UNIQUE parcial (id_cuenta, origen, id_origen) cuando id_origen no es NULL | RF03 · RF07 |
-| **reto** | id_reto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK puntos_recompensa > 0 · CHECK progreso >= 0 | RF06 |
-| **meta** | id_meta VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK valor_objetivo > 0 · CHECK valor_actual >= 0 | RF15 |
+| **reto** | id_reto VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK 1 ≤ puntos_recompensa ≤ 10000 · CHECK progreso >= 0 · activo DEFAULT 1 *(pendiente de implementación)* | RF06 |
+| **meta** | id_meta VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | UNIQUE(id_cuenta, semana) · CHECK 1 ≤ valor_objetivo ≤ 10080 · CHECK valor_actual >= 0 | RF15 |
 | **recordatorio** | id_recordatorio VARCHAR(36) | id_tarea → tarea CASCADE · id_cuenta → cuenta CASCADE | fecha_programada CHECK >= fecha_entrega - 1 día | RF04 |
 | **notificacion** | id_notificacion VARCHAR(36) | id_cuenta → cuenta ON DELETE CASCADE | CHECK tipo IN ('Insignia','Reto','Meta','Nivel','Sistema') · leida DEFAULT 0 | RF04 · RNF15 |
 
@@ -43,7 +43,7 @@ El Modelo Relacional transforma las **13 entidades del MER** en tablas con tipos
 ```
 cuenta(
   id_cuenta PK,
-  nombre,
+  nombre [2..60 caracteres; letras Unicode, espacios, apóstrofo o guion],
   correo UNIQUE,
   contrasena_hash,
   fecha_registro,
@@ -92,7 +92,7 @@ sesion_estudio(
   id_cuenta FK→cuenta,
   id_tarea FK→tarea [nullable],
   fecha,
-  duracion_minutos,
+  duracion_minutos CHECK 1..1440,
   modo_enfoque
 )
 
@@ -133,10 +133,11 @@ reto(
   id_cuenta FK→cuenta,
   descripcion,
   condicion,
-  puntos_recompensa,
+  puntos_recompensa CHECK 1..10000,
   semana UNIQUE por cuenta,
   progreso,
-  completado
+  completado,
+  activo DEFAULT TRUE [pendiente de implementación]
 )
 
 meta(
@@ -144,7 +145,7 @@ meta(
   id_cuenta FK→cuenta,
   semana UNIQUE por cuenta,
   descripcion,
-  valor_objetivo,
+  valor_objetivo CHECK 1..10080,
   valor_actual,
   cumplida
 )

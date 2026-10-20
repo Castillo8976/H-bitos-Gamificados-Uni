@@ -9,7 +9,7 @@
 
 ## Descripción General
 
-La plataforma web gamificada contempla el desarrollo de cinco módulos funcionales orientados a mejorar la organización académica y la motivación de los estudiantes universitarios de instituciones privadas en Medellín durante el año 2025.
+La plataforma web gamificada contempla seis módulos funcionales orientados a apoyar la organización académica, la motivación y la administración de cuentas y catálogos para estudiantes universitarios de instituciones privadas en Medellín.
 
 ---
 
@@ -29,6 +29,9 @@ Módulo de estadísticas y gráficos en tiempo real sobre horas estudiadas, mate
 
 ### 5. Recordatorios a tu Medida
 Sistema de notificaciones personalizadas sobre entregas, sesiones programadas y objetivos pendientes. Diseñado para motivar sin agobiar.
+
+### 6. Cuentas y administración
+Permite al estudiante consultar y actualizar sus datos permitidos y desactivar su propia cuenta. El Administrador puede administrar cuentas y catálogos globales autorizados, así como activar, desactivar y reactivar retos de las cuentas.
 
 ---
 
@@ -61,7 +64,8 @@ Sistema de notificaciones personalizadas sobre entregas, sesiones programadas y 
 - No requiere registro en servidor externo ni autenticación con terceros (Google, Facebook, etc.).
 - No incluye funciones de colaboración en tiempo real entre estudiantes.
 - No tiene panel de administración con acceso desde internet público.
-- No genera estadísticas para docentes de forma automática ni las persiste (solo consulta de solo lectura por URL directa, calculada en tiempo real).
+- No genera estadísticas para el Revisor institucional de forma automática ni las persiste (solo consulta de solo lectura por URL directa, calculada en tiempo real).
+- No genera retos semanales automáticamente; los retos se crean de forma explícita para una cuenta y semana.
 
 ---
 

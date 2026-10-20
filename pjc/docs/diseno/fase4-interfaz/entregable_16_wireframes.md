@@ -372,8 +372,12 @@ En descanso:      [ ⏸ Pausar ] [ ⏹ ]     → fondo #E1F5EE
 │  Recompensa al completar:  +50 pts  🏆                   │
 │                                                          │
 │  Tiempo restante:  2 días                                │
+│  Estado: Activo       [Desactivar]                       │
+│  [Editar reto]  [Completar manualmente]                  │
 └──────────────────────────────────────────────────────────┘
 ```
+
+El reto se crea de forma explícita, no por generación semanal automática. El propietario puede activar, desactivar y reactivar el reto; el Administrador también puede cambiar su estado desde P17. El propietario puede ajustar los campos permitidos y completar manualmente. Estos controles representan el diseño aprobado y quedan pendientes de implementación.
 
 ### Componentes y acciones
 
@@ -387,6 +391,8 @@ En descanso:      [ ⏸ Pausar ] [ ⏹ ]     → fondo #E1F5EE
 | Insignia bloqueada 🔒 | Ícono gris | Hover | Tooltip: condición para desbloquear |
 | Nueva insignia | Modal automático | Automático | Aparece con animación de brillo al desbloquear |
 | Reto semanal | Barra de progreso | Visual | Actualiza en tiempo real al completar tareas |
+| Reto semanal | Activar / Desactivar / Reactivar | Clic | Cambia el estado del reto propio; el progreso automático solo avanza mientras esté activo |
+| Reto semanal | Editar / Completar manualmente | Clic | Permite al propietario editar los campos permitidos o completar el reto |
 
 ### Modal de celebración (insignia nueva)
 
@@ -455,6 +461,7 @@ En descanso:      [ ⏸ Pausar ] [ ⏹ ]     → fondo #E1F5EE
 │  Datos                                                   │  ← Sección
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  [ 📥 Exportar mis datos (JSON) ]                 │   │  ← Enlace a P14
+│  │  [ Desactivar mi cuenta ]                         │   │  ← Suspende el acceso, conserva datos
 │  │  [ 🗑 Eliminar todos mis datos ]                  │   │  ← Acción destructiva
 │  └──────────────────────────────────────────────────┘   │
 │                                                          │

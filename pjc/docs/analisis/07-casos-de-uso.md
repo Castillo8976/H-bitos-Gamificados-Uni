@@ -18,7 +18,7 @@ Se identificaron **16 casos de uso específicos** derivados de las historias de 
 | **Nombre** | Gestionar hábitos de estudio mediante una plataforma web gamificada |
 | **Actores** | Estudiante (principal), Administrador (secundario autorizado), Revisor institucional (secundario de solo lectura), Notifications API (sistema externo de apoyo) |
 | **Límite del sistema** | El rectángulo "Plataforma Web Gamificada de Hábitos de Estudio" en `02_Diagrama_de_Casos_de_Uso_General.drawio` es la **única** herramienta que representa el límite; ningún otro artefacto vuelve a dibujar ese contorno. |
-| **Alcance** | Comprende CU00 (Iniciar sesión, compartido) y CU01–CU16. El Estudiante se registra, inicia sesión y utiliza los módulos de agenda, tareas, Pomodoro, gamificación, tablero, recordatorios, notificaciones, configuración y exportación. El Administrador mantiene cuentas y catálogos globales autorizados. El Revisor institucional únicamente consulta indicadores agregados. |
+| **Alcance** | Comprende CU00 (Iniciar sesión, compartido) y CU01–CU16. El Estudiante se registra, inicia sesión y utiliza los módulos de agenda, tareas, Pomodoro, gamificación, tablero, recordatorios, notificaciones, configuración y exportación. El Administrador mantiene cuentas y catálogos globales autorizados, y puede cambiar el estado de los retos. El Revisor institucional únicamente consulta indicadores agregados. |
 | **Precondición general** | El sistema está desplegado y accesible por URL; existe al menos una cuenta con rol Administrador para operar los catálogos. |
 | **Postcondición general** | Cada sesión de uso deja persistidos en SQLite únicamente los cambios que el rol del actor autoriza; no existen escrituras fuera del alcance de su rol. |
 | **Relaciones internas** | CU02–CU16 **incluyen** (`<<include>>`) a CU00, porque todos requieren una sesión activa como precondición común. CU06 **extiende** (`<<extend>>`) a CU03 y CU04 (evaluación de insignias/retos, condicional al resultado de completar una tarea o una sesión). CU10 **extiende** a CU02 (el recordatorio automático es un efecto opcional de crear una tarea con fecha de entrega). Ver detalle en la tabla siguiente. |
@@ -49,7 +49,7 @@ Se identificaron **16 casos de uso específicos** derivados de las historias de 
 | Actor | Clasificación | Participación |
 |---|---|---|
 | **Estudiante** | Principal | Ejecuta CU01–CU12 y CU15. “Usuario registrado” se considera un estado del Estudiante, no un actor diferente. |
-| **Administrador** | Secundario autorizado | Ejecuta CU13 y CU14 para mantener cuentas, catálogos y correcciones controladas. |
+| **Administrador** | Secundario autorizado | Ejecuta CU13 y CU14 para mantener cuentas, catálogos y correcciones controladas; también puede activar, desactivar o reactivar retos mediante CU06 y CU13. |
 | **Revisor institucional** | Secundario de solo lectura | Ejecuta CU16 sin modificar información. |
 | **Notifications API** | Sistema externo | Apoya CU10 y CU15; no es un actor humano. |
 
@@ -74,7 +74,7 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 | CU10 | Gestionar recordatorios | RF04, RNF15 |
 | CU11 | Gestionar perfil de cuenta | RF01, RNF12 |
 | CU12 | Gestionar historial de sesiones | RF10, RF11 |
-| CU13 | Administrar cuentas y catálogos | RF01, RF05, RF07 |
+| CU13 | Administrar cuentas, catálogos y estado de retos | RF01, RF05, RF06, RF07 |
 | CU14 | Corregir movimientos y asignaciones | RF05, RF07 |
 | CU15 | Gestionar notificaciones internas | RF04, RNF15 |
 | CU16 | Consultar indicadores institucionales | RF11 |
@@ -88,7 +88,7 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 | **Actor principal** | Estudiante |
 | **Precondición** | El estudiante accede a la URL de la aplicación por primera vez. |
 | **Flujo normal** | 1. El estudiante pulsa "Crear cuenta". 2. Ingresa nombre, correo y contraseña. 3. Agrega al menos una materia con su horario. 4. El sistema valida los datos, cifra la contraseña y guarda la cuenta y la materia en SQLite mediante el servidor. 5. El sistema crea la preferencia visual predeterminada y redirige al Dashboard. |
-| **Flujos alternativos** | A1: Correo ya registrado → el sistema muestra "Este correo ya existe". A2: Contraseña débil → el sistema solicita mínimo 6 caracteres. A3: Sin materia → el sistema bloquea el registro hasta agregar al menos una. |
+| **Flujos alternativos** | A1: Correo ya registrado → el sistema informa que el correo ya está registrado. A2: Contraseña con menos de 8 caracteres o más de 72 bytes UTF-8 → rechaza el registro e informa el límite. A3: Sin materia → el sistema bloquea el registro hasta agregar al menos una. |
 | **Postcondición** | La cuenta queda activa, los datos persisten en SQLite y el estudiante accede al Dashboard. |
 
 > **Nota de diseño (22 de septiembre de 2026 — PLANEADA, pendiente de implementación):** por observación de la docente, el paso 3 debe cambiar de "escribir el nombre de la materia" a **"seleccionar la materia de un catálogo institucional"** (`CatalogoMateria`, ver `E7-diccionario-datos.md` y `E12-diagrama-clases.drawio`). El flujo normal pasado a `<select>` quedaría: *"3. Selecciona su materia de la lista del catálogo institucional vigente (y opcionalmente ingresa el horario)."* Este cambio **todavía no está implementado en el código** (el formulario de registro sigue siendo un campo de texto libre); se documenta aquí como diseño aprobado en espera de desarrollo.
@@ -149,11 +149,12 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 
 | Campo | Descripción |
 |---|---|
-| **Actor principal** | Estudiante |
-| **Precondición** | El estudiante tiene una sesión activa y ha realizado al menos una acción en el sistema. |
-| **Flujo normal** | 1. El sistema evalúa automáticamente las condiciones de insignias tras cada acción. 2. Si se cumple una condición, desbloquea la insignia y la muestra en el panel. 3. Semanalmente, el sistema genera un reto nuevo. 4. El estudiante puede ver el reto activo con su condición, progreso y puntos de recompensa. 5. Al cumplir el reto, otorga los puntos y muestra celebración. |
-| **Flujos alternativos** | A1: Insignia ya obtenida → el sistema no la duplica. A2: Reto no completado en la semana → el sistema lo reinicia la semana siguiente. |
-| **Postcondición** | Las insignias quedan registradas y los puntos del reto se suman. |
+| **Actores** | Estudiante (retos propios), Administrador (estado de cualquier reto), Sistema (evaluación automática). |
+| **Precondición** | El actor tiene una sesión activa; el reto pertenece al estudiante autenticado o la operación de estado la ejecuta un Administrador. |
+| **Flujo normal** | 1. El Estudiante crea explícitamente un reto para una semana; no existe generación semanal automática. 2. El sistema evalúa automáticamente las insignias y el progreso de los retos activos después de las acciones que correspondan. 3. El Estudiante puede editar en su reto `descripcion`, `condicion`, `puntos_recompensa`, `progreso` y `semana`, o completarlo manualmente. 4. El propietario o el Administrador puede activar, desactivar o reactivar el reto. 5. Al completar el reto, el sistema registra la recompensa una sola vez. |
+| **Flujos alternativos** | A1: Insignia ya obtenida → el sistema no la duplica. A2: Reto inactivo → no acumula progreso automático ni recompensa por ese progreso. A3: Un reto desactivado y reactivado conserva sus puntos ya otorgados y no genera otro crédito; la semana sigue reservada por la regla de unicidad. A4: El reto ya completado no vuelve a otorgar recompensa. |
+| **Postcondición** | Las insignias quedan registradas; cada reto conserva su estado y progreso y los puntos se acreditan como máximo una vez. |
+| **Trazabilidad** | HU05, HU06, HU18, HU22 · RF05, RF06 · RN10, RN11, RN28 |
 
 ---
 
@@ -216,7 +217,7 @@ Esta tabla complementa las fichas existentes sin repetir sus flujos.
 | CU03 | Completar tarea y recompensar | Seleccionar Completar | HU03 | RF03, RF05, RF07 | RN07–RN11, RN21 |
 | CU04 | Realizar sesión Pomodoro | Seleccionar Iniciar | HU10, HU12 | RF10, RF12 | RN19–RN21 |
 | CU05 | Consultar tablero y metas | Abrir Tablero o cambiar semana | HU08, HU11, HU15, HU17 | RF08, RF11, RF15 | RN12–RN14, RN21 |
-| CU06 | Gestionar gamificación | Abrir Gamificación o actuar sobre un reto | HU05–HU07, HU18 | RF05–RF08 | RN07–RN11, RN15, RN21 |
+| CU06 | Gestionar gamificación | Abrir Gamificación o actuar sobre un reto | HU05–HU07, HU18, HU31 | RF05–RF08 | RN07–RN11, RN15, RN21, RN28 |
 | CU07 | Filtrar y buscar tareas | Aplicar un filtro o texto | HU09 | RF09 | RN21 |
 | CU08 | Personalizar configuración | Abrir Configuración y guardar/restablecer | HU13 | RF13 | RN21 |
 | CU09 | Exportar datos | Seleccionar “Exportar como JSON” | HU14 | RF14 | RN02, RN21 |
@@ -283,7 +284,7 @@ exigido en el punto 7 del checklist de Construcción (`M18_matriz_unificada_cons
 | HU03 | Como Estudiante, quiero marcar una tarea como completada, para ganar puntos automáticamente y ver mi avance en el panel. | RF03, RF07 |
 | HU04 | Como Estudiante, quiero recibir un recordatorio automático 24 horas antes de la fecha de entrega, para no olvidar entregas importantes. | RF04, RNF15 |
 | HU05 | Como Estudiante, quiero desbloquear insignias al cumplir metas específicas, para sentir reconocimiento por mi esfuerzo. | RF05 |
-| HU06 | Como Estudiante, quiero participar en retos semanales generados automáticamente, para tener un desafío adicional que me motive. | RF06, RF07 |
+| HU06 | Como Estudiante, quiero crear y participar en retos semanales, para tener un desafío adicional que me motive. | RF06, RF07 |
 | HU07 | Como Estudiante, quiero ver mi total de puntos acumulados e historial de recompensas, para conocer mi progreso gamificado. | RF07, RF08 |
 | HU08 | Como Estudiante, quiero ver en mi Tablero de Avance Personal las tareas completadas, horas estudiadas y puntos obtenidos de la semana. | RF08, RF11 |
 | HU09 | Como Estudiante, quiero filtrar mis tareas por materia, prioridad o estado, para encontrar rápidamente lo que necesito gestionar. | RF09 |
@@ -295,7 +296,7 @@ exigido en el punto 7 del checklist de Construcción (`M18_matriz_unificada_cons
 | HU15 | Como Estudiante, quiero recibir una meta semanal sugerida con base en mi historial, para tener un objetivo alcanzable. | RF15 |
 | HU16 | Como Estudiante, quiero editar o eliminar una materia registrada, para corregir datos o dar de baja asignaturas que ya no curso. | RF01 |
 | HU17 | Como Estudiante, quiero editar o eliminar una meta semanal, para ajustar el objetivo si cambian mis prioridades. | RF15 |
-| HU18 | Como Estudiante, quiero editar o eliminar un reto activo, para corregir su descripción o descartarlo si ya no aplica. | RF06 |
+| HU18 | Como Estudiante, quiero editar, completar manualmente, activar, desactivar, reactivar o eliminar mis retos, para ajustar su estado y avance. | RF06 |
 | HU19 | Como Estudiante, quiero eliminar una tarea que ya no es relevante, para mantener mi lista de pendientes organizada. | RF02 |
 | HU20 | Como Estudiante, quiero consultar y actualizar los datos permitidos de mi cuenta, para mantener mi perfil vigente. | RF01, RNF12 |
 | HU21 | Como Estudiante, quiero consultar, corregir o eliminar sesiones registradas, para mantener un historial de estudio confiable. | RF10, RF11 |
@@ -304,13 +305,15 @@ exigido en el punto 7 del checklist de Construcción (`M18_matriz_unificada_cons
 | HU24 | Como Estudiante, quiero consultar, marcar y eliminar notificaciones internas, para controlar mis avisos pendientes. | RF04, RNF15 |
 | HU25 | Como Estudiante, quiero consultar, activar, desactivar o eliminar recordatorios, para controlar cuándo recibir alertas. | RF04, RNF15 |
 | HU26 | Como Administrador, quiero consultar movimientos de puntos y asignaciones de insignias y revocar registros incorrectos, para corregir inconsistencias justificadas. | RF05, RF07 |
-| HU27 | Como Administrador, quiero consultar, actualizar o desactivar cuentas, para atender correcciones y necesidades de seguridad. | RF01, RNF12 |
+| HU27 | Como Administrador, quiero consultar, actualizar, desactivar o reactivar cuentas, para atender correcciones y necesidades de seguridad. | RF01, RNF12 |
 | HU28 | Como Revisor institucional, quiero consultar indicadores agregados de un periodo, para revisar el avance sin modificar datos del estudiante. | RF11 |
 | HU29 *(planeada)* | Como Administrador, quiero gestionar el catálogo de materias, para que los estudiantes seleccionen su materia en lugar de escribirla. | RF01 |
+| HU30 | Como Estudiante, quiero desactivar mi propia cuenta desde Mi perfil, para suspender mi acceso sin perder mis datos. | RF01 |
+| HU31 | Como Administrador, quiero activar, desactivar o reactivar retos de las cuentas, para controlar su disponibilidad sin alterar los puntos ya otorgados. | RF06 |
 
-> **Nota de corrección (agosto 2026):** HU16–HU19 se agregaron porque el CRUD de `materiaCrud.js`, `metaCrud.js`, `retoCrud.js` y `tareaCrud.js` ya implementa `actualizar*` y `eliminar*` para estas entidades, pero no existían historias de usuario explícitas que los sustentaran — solo aparecían como flujos alternativos dentro de otros casos de uso.
+> **Nota de corrección (agosto 2026):** HU16–HU19 se agregaron porque el CRUD de `materiaCrud.js`, `metaCrud.js`, `retoCrud.js` y `tareaCrud.js` ya implementa `actualizar*` y `eliminar*` para estas entidades, pero no existían historias de usuario explícitas que los sustentaran — solo aparecían como flujos alternativos dentro de otros casos de uso. La edición ampliada de retos, sus estados y la desactivación propia de cuenta se incorporan a la línea documental de octubre de 2026.
 
-Los criterios de aceptación completos y la cobertura CRUD de HU01–HU29 se encuentran en `13-historias-usuario-criterios-aceptacion.md`.
+Los criterios de aceptación completos y la cobertura CRUD de HU01–HU31 se encuentran en `13-historias-usuario-criterios-aceptacion.md`.
 
 ---
 
@@ -321,10 +324,10 @@ Los criterios de aceptación completos y la cobertura CRUD de HU01–HU29 se enc
 | **Actor principal** | Estudiante |
 | **Disparador** | El estudiante selecciona “Mi perfil”. |
 | **Precondición** | Cuenta autenticada y activa. |
-| **Flujo normal** | 1. El sistema consulta la cuenta sin exponer `contrasena_hash`. 2. El estudiante modifica nombre o correo. 3. El sistema valida unicidad y propiedad. 4. Guarda los cambios y confirma. |
-| **Flujos alternativos** | A1: correo duplicado → rechaza el cambio. A2: datos inválidos → informa el campo. |
-| **Postcondición** | Los datos permitidos quedan actualizados. |
-| **Trazabilidad** | HU20 · RF01 · RN01, RN02 |
+| **Flujo normal** | 1. El sistema consulta la cuenta sin exponer `contrasena_hash`. 2. El estudiante modifica nombre o correo, o selecciona «Desactivar mi cuenta». 3. El sistema valida los datos o confirma la identidad propietaria de la cuenta. 4. Guarda los cambios; si se desactiva, conserva los datos y bloquea el acceso. |
+| **Flujos alternativos** | A1: correo duplicado → rechaza el cambio. A2: datos inválidos → informa el campo. A3: el Estudiante desactiva su cuenta → `activa = false`; solo el Administrador puede reactivarla. |
+| **Postcondición** | Los datos permitidos quedan actualizados o la cuenta queda desactivada sin borrar sus datos. |
+| **Trazabilidad** | HU20, HU30 · RF01 · RN01, RN02, RN27 |
 
 ## CU12 — Gestionar historial de sesiones
 
@@ -345,10 +348,10 @@ Los criterios de aceptación completos y la cobertura CRUD de HU01–HU29 se enc
 | **Actor principal** | Administrador |
 | **Disparador** | El Administrador abre el panel autorizado. |
 | **Precondición** | Permisos administrativos vigentes. |
-| **Flujo normal** | 1. Selecciona cuentas, insignias, niveles o *(PLANEADO)* el catálogo de materias. 2. Consulta el registro. 3. Crea o modifica catálogos, o actualiza/desactiva una cuenta. 4. El sistema valida unicidad e integridad. 5. Persiste y confirma. |
+| **Flujo normal** | 1. Selecciona cuentas, insignias, niveles o *(PLANEADO)* el catálogo de materias. 2. Consulta el registro. 3. Crea o modifica catálogos, actualiza/desactiva/reactiva una cuenta o activa/desactiva/reactiva un reto. 4. El sistema valida permisos, unicidad e integridad. 5. Persiste y confirma. |
 | **Flujos alternativos** | A1: registro relacionado impide eliminar → informa la restricción. A2: valor duplicado → rechaza. |
 | **Postcondición** | La cuenta o catálogo queda actualizado sin romper referencias. |
-| **Trazabilidad** | HU22, HU23, HU27, HU29 *(planeada)* · RF01, RF05, RF07 · RN01, RN02, RN11, RN15, RN26 *(planeada)* |
+| **Trazabilidad** | HU22, HU23, HU27, HU29 *(planeada)*, HU31 · RF01, RF05, RF06, RF07 · RN01, RN02, RN11, RN15, RN26 *(planeada)*, RN27, RN28 |
 
 ## CU14 — Corregir movimientos y asignaciones
 
