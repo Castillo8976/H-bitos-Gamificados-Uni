@@ -36,7 +36,7 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Registro | Seleccionar materia inicial del catálogo *(PLANEADO; hoy es texto libre)* | Usuario | RF01 | HU01, HU29 | CU01 |
 | Perfil | Consultar perfil | Usuario | RF01 | HU20 | CU11 |
 | Perfil | Guardar cambios | Usuario | RF01 | HU20 | CU11 |
-| Perfil | Desactivar cuenta propia | Usuario | RF01 | HU30 | CU11 |
+| Perfil | Desactivar cuenta propia *(API implementada; botón y confirmación pendientes)* | Usuario | RF01 | HU30 | CU11 |
 | Agenda | Crear materia | Usuario | RF01 | HU01 | CU01 |
 | Agenda | Consultar materias | Usuario | RF01 | HU01, HU16 | CU01 |
 | Agenda | Editar materia | Usuario | RF01 | HU16 | CU01 |
@@ -55,7 +55,7 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Gamificación | Ver puntos y nivel | Usuario | RF07, RF08 | HU07 | CU06 |
 | Gamificación | Ver insignias | Usuario | RF05, RF08 | HU05 | CU06 |
 | Gamificación | Crear reto manualmente / Ver / Editar campos permitidos / Completar manualmente | Usuario | RF06 | HU06, HU18 | CU06 |
-| Gamificación | Activar / Desactivar / Reactivar reto propio | Usuario | RF06 | HU06, HU18 | CU06 |
+| Gamificación | Activar / Desactivar / Reactivar reto propio *(PLANEADO)* | Usuario | RF06 | HU06, HU18 | CU06 |
 | Tablero | Consultar semana actual | Usuario | RF08, RF11 | HU08 | CU05 |
 | Tablero | Cambiar semana | Usuario | RF11 | HU11 | CU05 |
 | Metas | Crear / Ver / Editar / Eliminar | Usuario | RF15 | HU15, HU17 | CU05 |
@@ -72,7 +72,7 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Administración | Gestionar cuentas | Usuario autorizado | RF01 | HU27 | CU13 |
 | Administración | Gestionar insignias | Usuario autorizado | RF05 | HU22 | CU13 |
 | Administración | Gestionar niveles | Usuario autorizado | RF07 | HU23 | CU13 |
-| Administración | Activar / Desactivar / Reactivar reto | Usuario autorizado | RF06 | HU31 | CU13 |
+| Administración | Activar / Desactivar / Reactivar reto *(PLANEADO)* | Usuario autorizado | RF06 | HU31 | CU13 |
 | Administración | Reactivar cuenta | Usuario autorizado | RF01 | HU27 | CU13 |
 | Administración | Revocar insignia | Usuario autorizado | RF05 | HU26 | CU14 |
 | Administración | Corregir movimiento de puntos | Usuario autorizado | RF07 | HU26 | CU14 |
