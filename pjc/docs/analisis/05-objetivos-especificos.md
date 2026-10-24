@@ -8,17 +8,13 @@
 ---
 
 
-1. **OE01.** Diseñar un módulo de gestión de tareas y agenda que permita al estudiante registrar, priorizar y hacer seguimiento a sus compromisos académicos con recordatorios automáticos.
+1. **OE01.** Diseñar y construir el módulo de gestión de tareas y agenda (materias, tareas, prioridades y recordatorios automáticos) para que el estudiante registre, priorice y haga seguimiento a sus compromisos académicos.
 
-2. **OE02.** Implementar un sistema Pomodoro de gestión del tiempo que registre las sesiones de estudio y las vincule a tareas específicas para fomentar la concentración y la autorregulación.
+2. **OE02.** Diseñar y construir el módulo de sesiones de estudio con temporizador Pomodoro, que registre cada sesión y la vincule opcionalmente a una tarea, para favorecer la concentración y la autorregulación.
 
-3. **OE03.** Desarrollar un sistema de gamificación que otorgue puntos, insignias y retos semanales al estudiante por el cumplimiento de sus metas académicas, incrementando la motivación intrínseca.
+3. **OE03.** Diseñar y construir el módulo de gamificación (puntos, niveles, insignias, retos semanales y metas) que recompense al estudiante por el cumplimiento de sus metas académicas.
 
-4. **OE04.** Construir un tablero de progreso personal que consolide en tiempo real las tareas completadas, las horas estudiadas y los puntos acumulados, facilitando la autoevaluación.
-
-5. **OE05.** Implementar un módulo de configuración y personalización visual que permita al estudiante adaptar la interfaz a sus preferencias, garantizar la accesibilidad, exportar su información y conservar los datos en la base de datos SQLite mediante el servidor de la aplicación.
-
-6. **OE06.** Diseñar y construir el módulo de cuentas y administración para que los estudiantes gestionen su cuenta y el Administrador mantenga las cuentas, los catálogos globales autorizados y el estado de los retos.
+4. **OE04.** Diseñar y construir los módulos de seguimiento del progreso y de configuración personal: un tablero que calcule en tiempo real las tareas completadas, las horas estudiadas y los puntos acumulados para facilitar la autoevaluación, y una configuración visual accesible que permita personalizar la interfaz y exportar los datos de la cuenta, con persistencia en SQLite mediante el servidor de la aplicación.
 
 ## Lineamiento Metodológico
 
@@ -28,11 +24,9 @@ Aplicar los principios de ingeniería de software —análisis de requisitos, di
 
 | ID | Objetivo específico | Requisitos que lo soportan | Tipo de evidencia |
 |---|---|---|---|
-| **OE01** | Gestión de tareas, agenda y recordatorios | RF01, RF02, RF03, RF04, RF09 | Funcionalidad del producto |
-| **OE02** | Pomodoro y registro de sesiones de estudio | RF10, RF11, RF12 | Funcionalidad del producto |
-| **OE03** | Gamificación mediante puntos, insignias y retos | RF03, RF05, RF06, RF07 | Funcionalidad del producto |
-| **OE04** | Tablero de progreso personal calculado en tiempo real | RF08, RF11 | Funcionalidad del producto |
-| **OE05** | Configuración, personalización visual, accesibilidad y persistencia | RF13, RF14; RNF04, RNF06, RNF07 | Funcionalidad y atributos de calidad |
-| **OE06** | Gestión de cuentas, catálogos y estado de retos | RF01, RF05, RF06, RF07 | Funcionalidad del producto |
+| **OE01** | Módulo de tareas, agenda y recordatorios | RF01, RF02, RF03, RF04, RF09 | Funcionalidad del producto |
+| **OE02** | Módulo de sesiones de estudio Pomodoro | RF10, RF11, RF12 | Funcionalidad del producto |
+| **OE03** | Módulo de gamificación: puntos, niveles, insignias, retos y metas | RF03, RF05, RF06, RF07, RF08, RF15 | Funcionalidad del producto |
+| **OE04** | Módulos de seguimiento del progreso y configuración personal | RF08, RF11, RF13, RF14, RF15; RNF04, RNF06, RNF07 | Funcionalidad y atributos de calidad |
 
-> **Criterio de trazabilidad:** todos los objetivos específicos OE01–OE06 se materializan mediante requisitos del producto. El objetivo general conserva expresamente el rendimiento académico como finalidad del proyecto. El lineamiento metodológico se conserva aparte porque describe cómo se desarrolla el proyecto, no una capacidad que utilice un actor.
+> **Criterio de trazabilidad:** todos los objetivos específicos OE01–OE04 se materializan mediante requisitos del producto. Por observación docente del 26/09/2026, el antiguo OE05 (configuración y personalización) se integró en OE04. El antiguo objetivo 6 se trasladó a Lineamiento Metodológico porque describe cómo se desarrolla el proyecto y no una capacidad que utilice un actor.

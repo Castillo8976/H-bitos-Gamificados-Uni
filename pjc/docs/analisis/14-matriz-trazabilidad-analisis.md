@@ -10,20 +10,20 @@
 
 | OE | RF | HU de origen | CU | RN aplicables | Entidades y atributos principales | Pantallas / acciones |
 |---|---|---|---|---|---|---|
-| OE01, OE06 | RF01 | HU01, HU16, HU20, HU27, HU29 *(planeada)*, HU30 | CU00, CU01, CU11, CU13 | RN01–RN03, RN26 *(planeada)*, RN27 | `cuenta(nombre, correo, contrasena_hash, activa, rol, fecha_registro)`; `materia(nombre, horario, activa)`; `catalogo_materia(nombre, activo)` *(planeada)* | Registro: Crear cuenta; Agenda: Crear, Ver, Editar, Eliminar materia; Perfil: Ver, Guardar, Desactivar cuenta; Admin: Desactivar/reactivar cuenta |
+| OE01 | RF01 | HU01, HU16, HU20, HU27, HU29 *(planeada)*, HU30 | CU00, CU01, CU11, CU13 | RN01–RN03, RN26 *(planeada)*, RN27 | `cuenta(nombre, correo, contrasena_hash, activa, rol, fecha_registro)`; `materia(nombre, horario, activa)`; `catalogo_materia(nombre, activo)` *(planeada)* | Registro: Crear cuenta; Agenda: Crear, Ver, Editar, Eliminar materia; Perfil: Ver, Guardar, Desactivar cuenta; Admin: Desactivar/reactivar cuenta |
 | OE01 | RF02 | HU02, HU19 | CU02 | RN04–RN06 | `tarea(nombre, fecha_entrega, prioridad, estado, id_materia)` | Tareas: Nueva, Ver, Editar, Eliminar |
 | OE01, OE03 | RF03 | HU03 | CU03 | RN07–RN09 | `tarea(estado, fecha_completada)`; `punto(cantidad, origen, id_origen)` | Tareas: Completar |
 | OE01 | RF04 | HU04, HU24, HU25 | CU10, CU15 | RN05, RN06, RN16–RN19 | `recordatorio(fecha_programada, enviado, activo)`; `notificacion(tipo, mensaje, leida)` | Recordatorios: Activar/desactivar, Eliminar; Notificaciones: Ver, Marcar leída, Marcar todas, Eliminar |
-| OE03, OE06 | RF05 | HU05, HU22, HU26 | CU06, CU13, CU14 | RN11 | `insignia(nombre, descripcion, condicion, icono)`; `cuenta_insignia` | Gamificación: Ver insignias; Admin: Crear, Editar, Eliminar insignia, Revocar asignación |
-| OE03, OE06 | RF06 | HU06, HU18, HU31 | CU06, CU13 | RN10, RN28 | `reto(descripcion, condicion, puntos_recompensa, semana, progreso, completado, activo)` *(activo planeado)* | Gamificación: Crear manualmente, Ver, Editar, Completar, Activar, Desactivar, Reactivar y Eliminar reto; Administración: cambiar estado *(pendiente de implementación)* |
-| OE03, OE06 | RF07 | HU03, HU06, HU07, HU23, HU26 | CU03, CU06, CU13, CU14 | RN07–RN10, RN15 | `punto`; `nivel_cuenta(nombre, puntos_minimos, orden)` | Gamificación: Ver puntos/nivel; Admin: Gestionar niveles, Consultar/corregir movimientos |
+| OE03 | RF05 | HU05, HU22, HU26 | CU06, CU13, CU14 | RN11 | `insignia(nombre, descripcion, condicion, icono)`; `cuenta_insignia` | Gamificación: Ver insignias; Admin: Crear, Editar, Eliminar insignia, Revocar asignación |
+| OE03 | RF06 | HU06, HU18, HU31 | CU06, CU13 | RN10, RN28 | `reto(descripcion, condicion, puntos_recompensa, semana, progreso, completado, activo)` *(activo planeado)* | Gamificación: Crear manualmente, Ver, Editar, Completar, Activar, Desactivar, Reactivar y Eliminar reto; Administración: cambiar estado *(pendiente de implementación)* |
+| OE03 | RF07 | HU03, HU06, HU07, HU23, HU26 | CU03, CU06, CU13, CU14 | RN07–RN10, RN15 | `punto`; `nivel_cuenta(nombre, puntos_minimos, orden)` | Gamificación: Ver puntos/nivel; Admin: Gestionar niveles, Consultar/corregir movimientos |
 | OE03, OE04 | RF08 | HU07, HU08 | CU05, CU06 | RN09, RN11, RN15 | `punto`, `cuenta_insignia`, `reto`, `meta`, `nivel_cuenta` | Dashboard/Gamificación: Consultar resumen |
 | OE01 | RF09 | HU02, HU09 | CU02, CU07 | RN04 | `tarea(id_materia, prioridad, estado, fecha_entrega, nombre)` | Tareas: Filtrar, Buscar, Limpiar filtros |
 | OE02 | RF10 | HU10, HU21 | CU04, CU12 | Integridad de sesión | `sesion_estudio(fecha, duracion_minutos, modo_enfoque, id_tarea)` | Pomodoro: Iniciar, Pausar, Reanudar, Guardar; Historial: Ver, Editar, Eliminar |
 | OE02, OE04 | RF11 | HU08, HU11, HU21, HU28 | CU05, CU12, CU16 | RN14, RN21 | `tarea`, `sesion_estudio`, `punto` | Tablero: Ver, Cambiar semana; Institucional: Consultar periodo |
 | OE02 | RF12 | HU10, HU12 | CU04 | RN19 | `sesion_estudio(modo_enfoque)` | Pomodoro: Activar/desactivar Modo enfoque |
-| OE05 | RF13 | HU13 | CU08 | Relación 1:1 | `preferencia_visual(tema, modo_oscuro, avatar)` | Configuración: Previsualizar, Guardar, Restablecer |
-| OE05 | RF14 | HU14 | CU09 | Privacidad por propietario | Datos de la cuenta excepto `contrasena_hash` | Configuración: Exportar JSON |
+| OE04 | RF13 | HU13 | CU08 | Relación 1:1 | `preferencia_visual(tema, modo_oscuro, avatar)` | Configuración: Previsualizar, Guardar, Restablecer |
+| OE04 | RF14 | HU14 | CU09 | Privacidad por propietario | Datos de la cuenta excepto `contrasena_hash` | Configuración: Exportar JSON |
 | OE03, OE04 | RF15 | HU15, HU17 | CU05 | RN12, RN13 | `meta(semana, descripcion, valor_objetivo, valor_actual, cumplida)` | Tablero/Metas: Ver, Crear, Editar, Eliminar |
 
 ## 2. Inventario de acciones de interfaz
@@ -36,7 +36,6 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Registro | Seleccionar materia inicial del catálogo *(PLANEADO; hoy es texto libre)* | Usuario | RF01 | HU01, HU29 | CU01 |
 | Perfil | Consultar perfil | Usuario | RF01 | HU20 | CU11 |
 | Perfil | Guardar cambios | Usuario | RF01 | HU20 | CU11 |
-| Perfil | Desactivar cuenta propia | Usuario | RF01 | HU30 | CU11 |
 | Perfil | Desactivar cuenta propia | Usuario | RF01 | HU30 | CU11 |
 | Agenda | Crear materia | Usuario | RF01 | HU01 | CU01 |
 | Agenda | Consultar materias | Usuario | RF01 | HU01, HU16 | CU01 |
@@ -75,8 +74,6 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Administración | Gestionar niveles | Usuario autorizado | RF07 | HU23 | CU13 |
 | Administración | Activar / Desactivar / Reactivar reto | Usuario autorizado | RF06 | HU31 | CU13 |
 | Administración | Reactivar cuenta | Usuario autorizado | RF01 | HU27 | CU13 |
-| Administración | Activar / Desactivar / Reactivar reto | Usuario autorizado | RF06 | HU06, HU18 | CU13 |
-| Administración | Reactivar cuenta | Usuario autorizado | RF01 | HU27 | CU13 |
 | Administración | Revocar insignia | Usuario autorizado | RF05 | HU26 | CU14 |
 | Administración | Corregir movimiento de puntos | Usuario autorizado | RF07 | HU26 | CU14 |
 | Consulta institucional | Consultar periodo | Solo lectura | RF11 | HU28 | CU16 |
@@ -91,7 +88,7 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 
 | Control | Resultado | Evidencia |
 |---|---|---|
-| Todo OE tiene uno o más RF | Cumple | OE01–OE06 aparecen en la matriz consolidada. |
+| Todo OE tiene uno o más RF | Cumple | OE01–OE04 aparecen en la matriz consolidada. |
 | Todo RF tiene al menos una HU | Cumple | RF01–RF15 tienen HU en la sección 1. |
 | Toda HU tiene RF y CU | Cumple | HU01–HU31 están catalogadas y relacionadas. |
 | Todo CU específico tiene RF | Cumple | CU01–CU16 tienen RF en `07-casos-de-uso.md`. |

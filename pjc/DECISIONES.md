@@ -105,3 +105,30 @@ límites aprobados para los campos se registran en E7. Quedan sin resolver la
 decisión sobre materia inicial (pregunta 5), los aspectos adicionales de
 contraseña (pregunta 8) y el bloqueo al desactivar la última cuenta
 Administradora activa (pregunta 7).
+
+---
+
+## Decisión #07
+
+**¿Qué decidí?**
+Mantener cuatro objetivos específicos (OE01–OE04): OE04 integra el antiguo
+OE05 de configuración y personalización, y el objetivo general no declara
+mejoras de rendimiento académico ni de bienestar emocional. Esta decisión
+sustituye únicamente la parte de la Decisión #06 referida a los objetivos; el
+resto de la Decisión #06 se mantiene.
+
+**¿Por qué?**
+La docente pidió el 26 de septiembre de 2026 corregir los verbos del objetivo
+general, formular los objetivos específicos como diseño de módulos y unir los
+objetivos 4 y 5. El sistema no mide el rendimiento académico ni el bienestar
+emocional, por lo que no se presentan como resultados. Las funciones de cuentas
+y administración se conservan como requisitos del sistema (RF01, RF05, RF06 y
+RF07) trazados a OE01 y OE03, sin crear un objetivo específico adicional.
+
+**¿Qué artefacto respalda esta decisión?**
+`04-objetivo-general.md`, `05-objetivos-especificos.md`, la ERS y las matrices
+`11` y `14`.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026 para la corrección documental;
+pendiente de revisión docente.

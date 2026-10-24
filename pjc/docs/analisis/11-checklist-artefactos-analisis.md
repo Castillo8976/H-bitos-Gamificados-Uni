@@ -23,7 +23,7 @@ Este documento registra la revisión de los ocho puntos del checklist de Anális
 
 | N.° | Artefacto o actividad | Estado | Hallazgo principal |
 |---:|---|---|---|
-| 1 | Objetivos específicos | **Completo** | OE01–OE06 están identificados y relacionados con RF; OE06 cubre cuentas y administración. El lineamiento metodológico se mantiene separado de los objetivos funcionales. |
+| 1 | Objetivos específicos | **Completo** | OE01–OE04 están identificados y relacionados con RF; el antiguo OE05 se integró en OE04. El lineamiento metodológico se mantiene separado de los objetivos funcionales. |
 | 2 | HU del CRUD por entidad y RF por acción de ventana | **Completo** | HU01–HU31 tienen criterios de aceptación; las 13 entidades cuentan con cobertura CRUD o excepción justificada y existe inventario acción → RF → HU → CU. |
 | 3 | Casos de uso general y específicos | **Completo** | CUG01 delimita el sistema; CU01–CU16 están documentados y el modelo de actores fue normalizado. |
 | 4 | Requisitos de interfaz externa | **Completo** | M1 fue corregida y la ERS define RIE01–RIE05 con entradas, salidas, requisitos y criterios de aceptación. |
@@ -40,7 +40,7 @@ Este documento registra la revisión de los ocho puntos del checklist de Anális
 
 ### Evidencia existente
 
-El archivo `05-objetivos-especificos.md` contiene seis objetivos específicos del producto relacionados con tareas, Pomodoro, gamificación, tablero, personalización y cuentas/administración. La aplicación de principios de ingeniería de software quedó clasificada como lineamiento metodológico.
+El archivo `05-objetivos-especificos.md` contiene cuatro objetivos específicos del producto relacionados con tareas, Pomodoro, gamificación, y seguimiento y personalización. La aplicación de principios de ingeniería de software quedó clasificada como lineamiento metodológico.
 
 ### Validación
 
@@ -48,17 +48,16 @@ El archivo `05-objetivos-especificos.md` contiene seis objetivos específicos de
 |---|---|---|
 | OE01 — Gestión de tareas, agenda y recordatorios | RF01, RF02, RF03, RF04 y RF09 | Trazado en el artefacto. |
 | OE02 — Pomodoro y registro de sesiones | RF10, RF11 y RF12 | Trazado en el artefacto. |
-| OE03 — Puntos, insignias y retos | RF03, RF05, RF06 y RF07 | Trazado en el artefacto. |
-| OE04 — Tablero de progreso | RF08 y RF11 | Trazado en el artefacto. |
-| OE05 — Configuración y personalización | RF13 y RF14; RNF04, RNF06 y RNF07 | Trazado en el artefacto y corregido para usar SQLite. |
-| OE06 — Cuentas y administración | RF01, RF05, RF06 y RF07 | Agregado a partir de la revisión documental. |
+| OE03 — Gamificación: puntos, niveles, insignias, retos y metas | RF03, RF05, RF06, RF07, RF08 y RF15 | Trazado en el artefacto. |
+| OE04 — Seguimiento del progreso y configuración personal | RF08, RF11, RF13, RF14 y RF15; RNF04, RNF06 y RNF07 | Trazado en el artefacto; integra el antiguo OE05 y conserva la persistencia en SQLite. |
 | Lineamiento metodológico — Aplicación de ingeniería de software | No requiere RF funcional | Trasladado fuera de los objetivos específicos y verificable mediante los artefactos del proyecto. |
 
 ### Ajustes realizados
 
-1. Se incorporaron los identificadores OE01–OE06 en la redacción principal.
+1. Se incorporaron los identificadores OE01–OE04 en la redacción principal.
 2. El lineamiento metodológico permanece separado porque no representa una capacidad del producto.
 3. Todos los objetivos específicos vigentes tienen uno o más RF asociados.
+4. Por observación docente del 26/09/2026, el antiguo OE05 (configuración y personalización) se integró en OE04; RF13 y RF14 se trazan ahora a OE04. Las funciones de cuentas y administración se conservan como requisitos del sistema (RF01, RF05, RF06 y RF07) trazados a OE01 y OE03, sin constituir un objetivo específico adicional (Decisión #07).
 
 ---
 
