@@ -76,6 +76,11 @@ async function inicializarEsquema() {
   if (!existentes.has('notificaciones_retos')) {
     await sequelize.query('ALTER TABLE preferencia_visual ADD COLUMN notificaciones_retos INTEGER NOT NULL DEFAULT 1 CHECK (notificaciones_retos IN (0,1))');
   }
+  // RF01/HU30/RN27 (Decisión #08): migración aditiva; las cuentas existentes inician con versión 0.
+  const columnasCuenta = await sequelize.query('PRAGMA table_info(cuenta)', { type: sequelize.QueryTypes.SELECT });
+  if (!columnasCuenta.some(columna => columna.name === 'version_sesion')) {
+    await sequelize.query('ALTER TABLE cuenta ADD COLUMN version_sesion INTEGER NOT NULL DEFAULT 0 CHECK (version_sesion >= 0)');
+  }
 }
 
 module.exports = { ddlPath, dividirSentencias, inicializarEsquema };

@@ -38,7 +38,7 @@ Esta matriz conecta cada tabla del Modelo Relacional (E9) con su entidad de orig
 
 | Tabla | Restricción UNIQUE | Restricciones CHECK | Valores DEFAULT |
 |---|---|---|---|
-| cuenta | correo | — | fecha_registro = DATE('now'), activa = 1 |
+| cuenta | correo | version_sesion >= 0 | fecha_registro = DATE('now'), activa = 1, version_sesion = 0 |
 | preferencia_visual | id_cuenta (garantiza 1:1) | tema IN (6 colores) | tema = 'purple', modo_oscuro = 0, fecha_actualizado = DATE('now') |
 | materia | — | activa IN (0,1) | activa = 1 |
 | tarea | — | prioridad IN ('Alta','Media','Baja'), estado IN ('Pendiente','Completada') | estado = 'Pendiente' |

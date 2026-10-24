@@ -132,3 +132,38 @@ RF07) trazados a OE01 y OE03, sin crear un objetivo específico adicional.
 **Estado**
 Adoptada por el equipo el 24 de octubre de 2026 para la corrección documental;
 pendiente de revisión docente.
+
+---
+
+## Decisión #08
+
+**¿Qué decidí?**
+Invalidar de forma persistente todos los JWT emitidos antes de desactivar una
+cuenta mediante el atributo `cuenta.version_sesion` (INTEGER, DEFAULT 0). La
+versión se incrementa de forma atómica solo cuando la cuenta pasa de activa a
+inactiva, tanto si la desactiva su propietario como un Administrador. Cada JWT
+incluye la versión (`ver`) y se rechaza si no la trae o si no coincide con la
+almacenada. La reactivación no reduce ni reinicia la versión.
+
+**¿Por qué?**
+RN27 exige que una cuenta desactivada no pueda iniciar sesión. Se comprobó que,
+al reactivarla, los tokens anteriores aún vigentes volvían a ser aceptados y que
+la revocación en memoria se perdía al reiniciar el servidor. Esta decisión amplía
+RN27 y HU30: los tokens anteriores a la desactivación permanecen inválidos aunque
+la cuenta se reactive o el servidor se reinicie. Los tokens emitidos antes del
+cambio de esquema, que no contienen `ver`, se rechazan; los usuarios deben
+iniciar sesión una vez.
+
+**¿Qué artefacto respalda esta decisión?**
+E7 (`cuenta.version_sesion`), E11, `src/models/Cuenta.js`, la migración aditiva de
+`src/config/schema.js`, M7, M8, M17 y las pruebas
+`tests/integration/session-version.test.js` y
+`tests/schema/session-version-migration.test.js`.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026; no constituye una aprobación
+docente. Pendientes deliberados: E8, E9 y E12 (diagramas excluidos de esta
+corrección) y M9 no muestran `version_sesion` ni `desactivarCuenta`; RN27, HU27 y
+HU30 se sincronizarán en la Fase 7. El logout individual mantiene la revocación
+en memoria. La protección de la última cuenta Administradora activa sigue sin
+decisión. La migración de la base principal requiere una autorización aparte.

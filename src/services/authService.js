@@ -19,10 +19,11 @@ function jwtSecret() {
   return process.env.JWT_SECRET || 'studyquest-desarrollo-cambiar-en-produccion';
 }
 
-/** RF01/HU20: excluye el hash de contraseña de la representación HTTP. */
+/** RF01/HU20/HU30: excluye el hash de contraseña y la versión de sesión de la representación HTTP. */
 function safeAccount(account) {
   const value = account.toJSON ? account.toJSON() : { ...account };
   delete value.contrasena_hash;
+  delete value.version_sesion;
   return value;
 }
 
@@ -64,7 +65,8 @@ async function authenticate({ correo, contrasena }) {
   if (!account.activa) throw new HttpError(403, 'La cuenta está inactiva');
 
   const jti = crypto.randomUUID();
-  const token = jwt.sign({ sub: account.id_cuenta, rol: account.rol, jti }, jwtSecret(), {
+  // RN27/Decisión #08: `ver` liga el token a la versión de sesión vigente de la cuenta.
+  const token = jwt.sign({ sub: account.id_cuenta, rol: account.rol, jti, ver: account.version_sesion }, jwtSecret(), {
     expiresIn: process.env.JWT_EXPIRES_IN || '2h'
   });
   return { token, cuenta: safeAccount(account) };

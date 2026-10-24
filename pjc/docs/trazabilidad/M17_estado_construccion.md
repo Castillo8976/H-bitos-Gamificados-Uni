@@ -17,7 +17,7 @@ sus controles desarrollados en la interfaz.
 
 | Área | Qué tenemos funcionando | Qué nos falta o qué límite tenemos |
 |---|---|---|
-| Acceso | Registro con primera materia, login, logout, consulta y **edición del perfil** (nombre/correo) desde P13, y permisos por rol | Falta endurecer la protección de autenticación (revocación de sesiones, casos negativos) |
+| Acceso | Registro con primera materia, login, logout, consulta y **edición del perfil** (nombre/correo) desde P13, y permisos por rol | Falta endurecer la protección de autenticación (casos negativos). La desactivación invalida de forma persistente los JWT anteriores mediante `version_sesion` (Decisión #08); el logout individual sigue revocando solo en memoria |
 | Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por estado/prioridad | Faltan filtros por materia/fecha y completar validaciones de negocio |
 | Sesiones | Cronómetro Pomodoro y guardado con recompensa; **historial visual de sesiones con edición y eliminación** desde P06 | Falta el flujo visual de sesión libre explícita y descansos |
 | Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, metas, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 | Falta cerrar validación de condiciones y ajustes históricos |
@@ -184,8 +184,13 @@ Tenemos JWT, contraseñas almacenadas como hash, cierre de sesión, control de
 propiedad y tres roles. Ya existen vistas de Estudiante, Administrador y
 Revisor institucional, con permisos comprobados también en el backend.
 
-**Falta:** Reforzar la protección ante intentos de acceso, la revocación de
-sesiones y las validaciones; completar perfil, edición administrativa y pruebas
+**Avance (24 de octubre de 2026):** al desactivar una cuenta se incrementa
+`cuenta.version_sesion` y se rechazan todos los JWT anteriores, también tras
+reactivarla o reiniciar el servidor (Decisión #08). El logout individual revoca
+el token solo en memoria y esa revocación se pierde al reiniciar.
+
+**Falta:** Reforzar la protección ante intentos de acceso, la persistencia de la
+revocación del logout individual y las validaciones; completar perfil, edición administrativa y pruebas
 negativas. No nos falta crear los roles ni sus vistas desde cero.
 
 ### ❌ 13. Declarar Línea Base 1 como ECS — Pendiente

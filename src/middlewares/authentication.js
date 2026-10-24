@@ -13,6 +13,8 @@ async function authenticateRequest(req, _res, next) {
     const payload = authService.verifyToken(token);
     const account = await Cuenta.findByPk(payload.sub);
     if (!account || !account.activa) throw new HttpError(401, 'La cuenta no está disponible');
+    // RN27/Decisión #08: tokens sin `ver` o anteriores a una desactivación no se aceptan, ni tras reactivar o reiniciar.
+    if (payload.ver !== account.version_sesion) throw new HttpError(401, 'La sesión ya no es válida; inicia sesión de nuevo');
     req.authToken = token;
     req.user = { id: account.id_cuenta, rol: account.rol, jti: payload.jti };
     next();

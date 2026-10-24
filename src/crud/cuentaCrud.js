@@ -138,15 +138,45 @@ async function obtenerCuenta(id) {
  * @example
  * await actualizarCuenta('550e8400-...', { nombre: 'Pedro López' });
  */
-/** @implements RF01 @implements HU20 @implements HU27 */
+/** @implements RF01 @implements HU20 @implements HU27 @implements HU30 */
 async function actualizarCuenta(id, datos) {
-  // Desestructura el primer elemento del arreglo que indica filas afectadas
-  const [filas] = await Cuenta.update(datos, {
-    where: { id_cuenta: id }
+  // version_sesion nunca se edita directamente; activa = false solo se aplica mediante desactivarCuenta.
+  const { version_sesion: _ignorada, activa, ...resto } = datos;
+  if (activa !== false) {
+    if (activa !== undefined) resto.activa = activa;
+    if (!Object.keys(resto).length) return;
+    // Desestructura el primer elemento del arreglo que indica filas afectadas
+    const [filas] = await Cuenta.update(resto, { where: { id_cuenta: id } });
+    // Si filas === 0, ninguna fila coincidió con el WHERE (cuenta inexistente)
+    console.log(filas > 0 ? '✅ Cuenta actualizada' : '⚠️ No se encontró la cuenta');
+    return;
+  }
+  await Cuenta.sequelize.transaction(async transaction => {
+    if (Object.keys(resto).length) await Cuenta.update(resto, { where: { id_cuenta: id }, transaction });
+    await desactivarCuenta(id, transaction);
   });
+}
 
-  // Si filas === 0, ninguna fila coincidió con el WHERE (cuenta inexistente)
-  console.log(filas > 0 ? '✅ Cuenta actualizada' : '⚠️ No se encontró la cuenta');
+/**
+ * Única transición de activa a inactiva (RF01/HU27/HU30/RN27, Decisión #08).
+ *
+ * Una sola sentencia UPDATE condicionada a `activa = 1` desactiva la cuenta e incrementa
+ * `version_sesion`, invalidando todos los JWT emitidos antes. Si la cuenta ya estaba
+ * inactiva no hay incremento, por lo que desactivaciones repetidas o simultáneas
+ * incrementan la versión una sola vez.
+ *
+ * @async
+ * @function desactivarCuenta
+ * @param {string} id - UUID v4 de la cuenta.
+ * @param {import('sequelize').Transaction} [transaction] - Transacción en curso, si existe.
+ * @returns {Promise<boolean>} `true` si esta llamada realizó la transición.
+ */
+async function desactivarCuenta(id, transaction) {
+  const [filas] = await Cuenta.update(
+    { activa: false, version_sesion: Cuenta.sequelize.literal('version_sesion + 1') },
+    { where: { id_cuenta: id, activa: true }, transaction }
+  );
+  return filas > 0;
 }
 
 
@@ -192,5 +222,6 @@ module.exports = {
   listarCuentas,
   obtenerCuenta,
   actualizarCuenta,
+  desactivarCuenta,
   eliminarCuenta
 };

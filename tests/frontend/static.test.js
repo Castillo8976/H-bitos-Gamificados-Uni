@@ -24,6 +24,12 @@ async function run() {
   assert.match(pagina.text, /name="notificaciones_recordatorios"/);
   assert.match(pagina.text, /name="notificaciones_retos"/);
   assert.match(pagina.text, /id="form-registro"/);
+  // RF01/HU30: la desactivación propia exige confirmación explícita con Cancelar y Confirmar.
+  assert.match(pagina.text, /id="desactivar-cuenta"/);
+  assert.match(pagina.text, /<dialog id="modal-desactivar-cuenta"[^>]*aria-labelledby="titulo-desactivar-cuenta"/);
+  assert.match(pagina.text, /¿Estás seguro de que deseas desactivar tu cuenta\?/);
+  assert.match(pagina.text, /id="cancelar-desactivar-cuenta"[^>]*>Cancelar</);
+  assert.match(pagina.text, /id="confirmar-desactivar-cuenta"[^>]*>Confirmar</);
   assert.match(pagina.text, /data-seccion="dashboard"/);
   assert.match(pagina.text, /data-seccion="tareas"/);
   assert.match(pagina.text, /data-seccion="pomodoro"/);

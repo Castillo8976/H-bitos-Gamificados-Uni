@@ -79,10 +79,11 @@ const accounts = {
     if (!Object.keys(data).length) throw new HttpError(400, 'No hay campos permitidos para actualizar');
     res.json({ dato: authService.safeAccount(await updated(cuenta.obtenerCuenta, req.params.id, cuenta.actualizarCuenta, data)) });
   },
-  /** RF01/HU20/HU27: Desactiva la cuenta sin borrarla físicamente (cuentas). */
+  /** RF01/HU27/HU30: Desactiva la cuenta sin borrarla físicamente (cuentas). */
   deactivate: async (req, res) => {
     if (!isAdmin(req.user) && req.params.id !== req.user.id) throw new HttpError(403, 'No puede desactivar otra cuenta');
-    await cuenta.actualizarCuenta(req.params.id, { activa: false });
+    // RN27/Decisión #08: la transición incrementa version_sesion e invalida todos los JWT anteriores.
+    await cuenta.desactivarCuenta(req.params.id);
     res.status(204).send();
   },
   /** RF01/HU20: elimina únicamente los datos de la cuenta autenticada. */

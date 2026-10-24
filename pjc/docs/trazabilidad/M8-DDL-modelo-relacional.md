@@ -18,7 +18,7 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 
 | Tabla DDL | Tabla E9 | PK implementada | FK(s) implementadas | Restricciones CHECK | UNIQUE | DEFAULT | Trazabilidad E7 |
 |---|---|---|---|---|---|---|---|
-| `CREATE TABLE cuenta` | cuenta | pk_cuenta (id_cuenta) | — | activa IN (0,1) | uq_correo (correo) | activa=1, fecha_registro=DATE('now') | §1 |
+| `CREATE TABLE cuenta` | cuenta | pk_cuenta (id_cuenta) | — | activa IN (0,1), version_sesion >= 0 | uq_correo (correo) | activa=1, fecha_registro=DATE('now'), version_sesion=0 | §1 |
 | `CREATE TABLE nivel_cuenta` | nivel_cuenta | pk_nivel (id_nivel) | — (relación con cuenta es derivada: SUM(punto.cantidad) vs puntos_minimos, sin FK) | ck_nivel_puntos (puntos_minimos >= 0), ck_nivel_orden (orden > 0) | uq_nivel_nombre (nombre) | puntos_minimos=0, orden=1 | §13 |
 | `CREATE TABLE preferencia_visual` | preferencia_visual | pk_preferencia (id_preferencia) | fk_pref_cuenta → cuenta CASCADE | tema IN (6 valores), modo_oscuro IN (0,1) | uq_pref_cuenta (id_cuenta) → garantiza 1:1 | tema='purple', modo_oscuro=0 | §12 |
 | `CREATE TABLE materia` | materia | pk_materia (id_materia) | fk_mat_cuenta → cuenta CASCADE | activa IN (0,1) | — | activa=1 | §2 |

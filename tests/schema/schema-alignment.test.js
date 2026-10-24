@@ -28,7 +28,7 @@ const models = {
 };
 
 const expected = {
-  cuenta: ['id_cuenta','nombre','correo','contrasena_hash','fecha_registro','activa','rol'],
+  cuenta: ['id_cuenta','nombre','correo','contrasena_hash','fecha_registro','activa','rol','version_sesion'],
   materia: ['id_materia','id_cuenta','nombre','horario','activa'],
   tarea: ['id_tarea','id_cuenta','id_materia','nombre','fecha_entrega','prioridad','estado','fecha_completada'],
   sesion_estudio: ['id_sesion','id_cuenta','id_tarea','fecha','duracion_minutos','modo_enfoque'],

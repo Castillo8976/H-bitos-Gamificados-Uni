@@ -112,6 +112,16 @@ const Cuenta = sequelize.define('cuenta', {
     validate: {
       isIn: [['Estudiante', 'Administrador', 'Revisor institucional']]
     }
+  },
+
+  /**
+   * Versión de sesión (RF01/HU30/RN27, Decisión #08). Se incrementa solo al pasar de activa a inactiva;
+   * los JWT con otra versión se rechazan. Es interna: nunca se expone ni se edita desde la API.
+   */
+  version_sesion: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
   }
 
 }, {

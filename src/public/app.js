@@ -128,10 +128,11 @@ function seleccionarAcceso(nombre) {
 }
 
 /** Cierra la sesión local incluso si el token ya venció en el servidor. */
-/** RF01/HU01: solicita revocación, limpia el token y vuelve al acceso. */
-async function cerrarSesion() {
+/** RF01/HU01: solicita revocación, limpia el token y vuelve al acceso.
+ * Con `revocar = false` solo limpia el estado local (la cuenta ya fue desactivada). */
+async function cerrarSesion(revocar = true) {
   detenerRecepcionAvisos();
-  try { if (estado.token) await api('/auth/logout', { method: 'POST' }); }
+  try { if (revocar && estado.token) await api('/auth/logout', { method: 'POST' }); }
   catch (_) { /* El estado local siempre debe limpiarse. */ }
   sessionStorage.removeItem(CLAVE_TOKEN);
   estado.token = null;
@@ -891,7 +892,8 @@ function registrarEventos() {
     if (boton.dataset.vista === 'estadisticas' && !estado.estadisticas) cargarEstadisticas().catch(error => avisar(error.message, 'error'));
     if (boton.dataset.vista === 'institucional' && !estado.institucionales) cargarInstitucionales().catch(error => avisar(error.message, 'error'));
   }));
-  $('#boton-salir').addEventListener('click', cerrarSesion);
+  // Se envuelve para no pasar el Event como argumento `revocar`.
+  $('#boton-salir').addEventListener('click', () => cerrarSesion());
   document.addEventListener('click', manejarAccion);
 
   $('#form-login').addEventListener('submit', evento => {
@@ -998,6 +1000,25 @@ function registrarEventos() {
     if (!confirm('Esta acción eliminará permanentemente todos tus datos. Exporta primero si deseas conservar una copia. ¿Continuar?')) return;
     try { await api(`/cuentas/${estado.cuenta.id_cuenta}/datos`, { method: 'DELETE' }); await cerrarSesion(); }
     catch (error) { avisar(error.message, 'error'); }
+  });
+
+  /** RF01/HU30/RN27: Cancelar no envía ninguna petición; Confirmar desactiva una sola vez y cierra la sesión. */
+  $('#desactivar-cuenta').addEventListener('click', () => $('#modal-desactivar-cuenta').showModal());
+  $('#cancelar-desactivar-cuenta').addEventListener('click', () => $('#modal-desactivar-cuenta').close());
+  $('#confirmar-desactivar-cuenta').addEventListener('click', async () => {
+    const modal = $('#modal-desactivar-cuenta');
+    const botones = [...modal.querySelectorAll('button')];
+    botones.forEach(boton => { boton.disabled = true; });
+    try {
+      await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'DELETE' });
+      modal.close();
+      await cerrarSesion(false);
+      avisar('Tu cuenta fue desactivada. Tus datos se conservan; solo un Administrador puede reactivarla.', 'exito');
+    } catch (error) {
+      avisar(`No se pudo desactivar la cuenta: ${error.message}`, 'error');
+    } finally {
+      botones.forEach(boton => { boton.disabled = false; });
+    }
   });
 
   $('#cerrar-recompensa').addEventListener('click', () => $('#modal-recompensa').close());

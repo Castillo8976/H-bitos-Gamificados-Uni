@@ -199,6 +199,24 @@ async function run() {
     await esperarCondicion(cdp, "document.querySelector('#estado-exportacion').textContent.includes('exitosamente')");
     assert.equal(await cdp.evaluar("document.querySelector('[data-vista=administracion]').hidden"), true);
 
+    // RF01/HU30/RN27: Cancelar no envía la desactivación; Confirmar la envía una sola vez, limpia la sesión y muestra el acceso.
+    const estudianteActiva = async () => (await Cuenta.findOne({ where: { correo: 'estudiante-browser@test.local' } })).activa;
+    await cdp.evaluar("document.querySelector('[data-vista=configuracion]').click()");
+    await cdp.evaluar("window.desactivaciones=0;const f=window.fetch;window.fetch=(u,o)=>{if(o?.method==='DELETE'&&/\\/cuentas\\/[^/]+$/.test(String(u)))window.desactivaciones++;return f(u,o)}");
+    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click()");
+    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').open"), true);
+    assert.equal(await cdp.evaluar("document.activeElement.id"), 'cancelar-desactivar-cuenta');
+    await cdp.evaluar("document.querySelector('#cancelar-desactivar-cuenta').click()");
+    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').open"), false);
+    assert.equal(await cdp.evaluar('window.desactivaciones'), 0);
+    assert.equal(await estudianteActiva(), true);
+    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click();const c=document.querySelector('#confirmar-desactivar-cuenta');c.click();c.click()");
+    await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
+    assert.equal(await cdp.evaluar('window.desactivaciones'), 1);
+    assert.equal(await cdp.evaluar("sessionStorage.getItem('studyquest_token')"), null);
+    assert.equal(await cdp.evaluar("document.querySelector('#avisos').textContent.includes('desactivada')"), true);
+    assert.equal(await estudianteActiva(), false);
+
     await cdp.evaluar("sessionStorage.clear();location.reload()"); await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
     await autenticar(cdp, 'admin-browser@test.local');
     assert.equal(await cdp.evaluar("document.querySelector('#usuario-rol').textContent"), 'Administrador');

@@ -10,6 +10,7 @@ const os = require('node:os');
 const path = require('node:path');
 const request = require('supertest');
 const crypto = require('node:crypto');
+const jwt = require('jsonwebtoken');
 
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'studyquest-api-'));
 process.env.DATABASE_STORAGE = path.join(directory, 'database.sqlite');
@@ -282,6 +283,96 @@ async function run() {
   await request(app).delete(`/api/sesiones/${sessionId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/tareas/${taskId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/materias/${subjectId}`).set(auth(studentToken)).expect(204);
+
+  // RF01/HU20/HU27/HU30/RN27: desactivación propia, sesiones previas, datos conservados y reactivación administrativa.
+  const propia = await register({ nombre: 'Cuenta Propia', correo: 'propia@test.local', contrasena: 'ClaveSegura123!' }).expect(201);
+  const propiaId = propia.body.cuenta.id_cuenta;
+  const propiaToken = (await login('propia@test.local')).body.token;
+  const otraSesionPropia = (await login('propia@test.local')).body.token;
+  await request(app).post('/api/tareas').set(auth(propiaToken))
+    .send({ nombre: 'Tarea conservada', fecha_entrega: '2027-12-31', prioridad: 'Media' }).expect(201);
+  const datosDe = async id => sequelize.query(
+    'SELECT (SELECT COUNT(*) FROM materia WHERE id_cuenta = :id) AS materias, (SELECT COUNT(*) FROM tarea WHERE id_cuenta = :id) AS tareas, (SELECT COUNT(*) FROM preferencia_visual WHERE id_cuenta = :id) AS preferencias',
+    { replacements: { id }, plain: true });
+  const datosAntes = await datosDe(propiaId);
+  assert.deepEqual(datosAntes, { materias: 1, tareas: 1, preferencias: 1 });
+
+  await request(app).delete(`/api/cuentas/${secondRegistration.body.cuenta.id_cuenta}`).set(auth(propiaToken)).expect(403);
+  assert.equal((await Cuenta.findByPk(secondRegistration.body.cuenta.id_cuenta)).activa, true);
+  for (const cambio of [{ activa: false }, { activa: true }, { rol: 'Administrador' }, { nombre: 'Cuenta Propia', rol: 'Revisor institucional' }]) {
+    await request(app).put(`/api/cuentas/${propiaId}`).set(auth(propiaToken)).send(cambio).expect(403);
+  }
+  assert.deepEqual((await Cuenta.findByPk(propiaId)).toJSON().rol, 'Estudiante');
+
+  await request(app).delete(`/api/cuentas/${propiaId}`).set(auth(propiaToken)).expect(204);
+  assert.equal((await Cuenta.findByPk(propiaId)).activa, false);
+  for (const token of [propiaToken, otraSesionPropia]) {
+    await request(app).get('/api/auth/perfil').set(auth(token)).expect(401);
+    await request(app).get('/api/tareas').set(auth(token)).expect(401);
+  }
+  assert.equal((await login('propia@test.local')).status, 403);
+  assert.deepEqual(await datosDe(propiaId), datosAntes);
+
+  // Solo el Administrador reactiva; ni otro Estudiante ni el Revisor pueden hacerlo.
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(secondToken)).send({ activa: true }).expect(403);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(reviewerToken)).send({ activa: true }).expect(403);
+  assert.equal((await Cuenta.findByPk(propiaId)).activa, false);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: true }).expect(200)
+    .expect(({ body }) => assert.equal('contrasena_hash' in body.dato, false));
+  // Decisión #08: ninguna sesión anterior vuelve a servir tras reactivar; un nuevo inicio de sesión sí.
+  for (const token of [propiaToken, otraSesionPropia]) await request(app).get('/api/auth/perfil').set(auth(token)).expect(401);
+  const tokenReactivado = (await login('propia@test.local')).body.token;
+  await request(app).get('/api/tareas').set(auth(tokenReactivado)).expect(200)
+    .expect(({ body }) => assert.equal(body.datos.length, 1));
+  assert.deepEqual(await datosDe(propiaId), datosAntes);
+  const version = async () => (await Cuenta.findByPk(propiaId)).version_sesion;
+  assert.equal(await version(), 1);
+
+  // Desactivación administrativa por PUT y por DELETE: también invalida las sesiones previas.
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: false }).expect(200);
+  await request(app).get('/api/auth/perfil').set(auth(tokenReactivado)).expect(401);
+  assert.equal(await version(), 2);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: false }).expect(200);
+  await request(app).delete(`/api/cuentas/${propiaId}`).set(auth(adminToken)).expect(204);
+  assert.equal(await version(), 2, 'desactivar una cuenta ya inactiva no incrementa la versión');
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: true }).expect(200);
+  await request(app).get('/api/auth/perfil').set(auth(tokenReactivado)).expect(401);
+  assert.equal(await version(), 2, 'reactivar no reduce ni reinicia la versión');
+  const tokenTrasPut = (await login('propia@test.local')).body.token;
+  await request(app).delete(`/api/cuentas/${propiaId}`).set(auth(adminToken)).expect(204);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: true }).expect(200);
+  await request(app).get('/api/auth/perfil').set(auth(tokenTrasPut)).expect(401);
+  assert.equal(await version(), 3);
+
+  // Tokens sin `ver` (anteriores al cambio de esquema) o con otra versión se rechazan.
+  const firmar = claims => jwt.sign({ sub: propiaId, rol: 'Estudiante', jti: crypto.randomUUID(), ...claims }, process.env.JWT_SECRET, { expiresIn: '2h' });
+  for (const token of [firmar({}), firmar({ ver: 2 }), firmar({ ver: '3' })]) {
+    await request(app).get('/api/auth/perfil').set(auth(token)).expect(401);
+  }
+  await request(app).get('/api/auth/perfil').set(auth(firmar({ ver: 3 }))).expect(200);
+
+  // version_sesion no se expone ni se modifica desde la API.
+  const sesionFinal = (await login('propia@test.local'));
+  const segundaSesion = (await login('propia@test.local')).body.token;
+  const respuestas = [
+    propia.body, sesionFinal.body,
+    (await request(app).get('/api/auth/perfil').set(auth(sesionFinal.body.token)).expect(200)).body,
+    (await request(app).get(`/api/cuentas/${propiaId}`).set(auth(sesionFinal.body.token)).expect(200)).body,
+    (await request(app).put(`/api/cuentas/${propiaId}`).set(auth(sesionFinal.body.token)).send({ nombre: 'Cuenta Propia' }).expect(200)).body,
+    (await request(app).get('/api/cuentas').set(auth(adminToken)).expect(200)).body,
+    (await request(app).get('/api/exportacion/datos').set(auth(sesionFinal.body.token)).expect(200)).body
+  ];
+  for (const cuerpo of respuestas) assert.equal(JSON.stringify(cuerpo).includes('version_sesion'), false);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ version_sesion: 0 }).expect(400);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(sesionFinal.body.token)).send({ version_sesion: 0 }).expect(400);
+  await register({ nombre: 'Version Forzada', correo: 'forzada@test.local', contrasena: 'ClaveSegura123!', version_sesion: 5 }).expect(400);
+  assert.equal(await version(), 3);
+
+  // Logout individual: revoca solo esa sesión; la otra sigue activa.
+  await request(app).post('/api/auth/logout').set(auth(sesionFinal.body.token)).expect(204);
+  await request(app).get('/api/auth/perfil').set(auth(sesionFinal.body.token)).expect(401);
+  await request(app).get('/api/auth/perfil').set(auth(segundaSesion)).expect(200);
+  assert.equal(await version(), 3, 'el logout no cambia la versión de sesión');
 
   await request(app).post('/api/auth/logout').set(auth(studentToken)).expect(204);
   await request(app).get('/api/auth/perfil').set(auth(studentToken)).expect(401);

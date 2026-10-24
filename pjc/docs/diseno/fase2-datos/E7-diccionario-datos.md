@@ -32,6 +32,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **fecha_registro** | DATE | No | Fecha de creación de la cuenta. DEFAULT CURRENT_DATE. |
 | **activa** | BOOLEAN/INT | No | TRUE = cuenta activa. FALSE = suspendida. DEFAULT TRUE. El Estudiante puede desactivar su propia cuenta; solo el Administrador puede reactivarla. Los datos se conservan. |
 | **rol** | VARCHAR(30) | No | Rol autorizado. CHECK IN ('Estudiante','Administrador','Revisor institucional'). DEFAULT 'Estudiante'. CRF-002. |
+| **version_sesion** | INTEGER | No | Versión de sesión. DEFAULT 0, CHECK ≥ 0. Se incrementa una vez cuando la cuenta pasa de activa a inactiva; los JWT emitidos con otra versión dejan de ser válidos aunque la cuenta se reactive. Uso interno: no se expone ni se edita desde la API (RN27, HU30, Decisión #08). |
 
 > **Reglas:** correo único · contraseña siempre cifrada · datos persisten al reiniciar (RNF04) · entidad raíz de la que dependen todas las demás.
 
