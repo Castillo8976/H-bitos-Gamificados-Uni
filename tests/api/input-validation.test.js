@@ -5,7 +5,7 @@
  */
 const assert = require('node:assert/strict');
 const { EntityValidator } = require('../../src/validators/entityValidator');
-const { validateRegistration, validateLogin } = require('../../src/validators/requestValidator');
+const { validateRegistration, validateLogin, integerRange, challengeCondition } = require('../../src/validators/requestValidator');
 const validator = new EntityValidator();
 
 /** RF02/HU02: cada entrada inválida debe convertirse en un 400 controlado. */
@@ -79,4 +79,23 @@ for (const faltante of ['nombre', 'correo', 'contrasena', 'materia']) {
   assert.equal(ejecutar(validateRegistration, incompleto).status, 400);
 }
 for (const body of [null, [], 'texto']) assert.equal(ejecutar(validateRegistration, body).status, 400);
+
+/** RNF-16 (E7): límites exactos de recompensa, objetivo semanal y duración de sesión. */
+for (const [campo, maximo] of [['puntos_recompensa', 10000], ['valor_objetivo', 10080], ['duracion_minutos', 1440]]) {
+  const middleware = integerRange(campo, 1, maximo);
+  for (const valor of [1, maximo]) assert.equal(ejecutar(middleware, { [campo]: valor }), undefined);
+  for (const valor of [0, maximo + 1, -1, 1.5, '10', null]) assert.equal(ejecutar(middleware, { [campo]: valor }).status, 400);
+  assert.equal(ejecutar(middleware, {}), undefined, 'un campo ausente no se valida');
+}
+assert.match(ejecutar(integerRange('puntos_recompensa', 1, 10000), { puntos_recompensa: 10001 }).message, /entre 1 y 10\.000/);
+
+/** RF06/RN24: condición `metrica:objetivo` al crear o cambiarla. */
+for (const condicion of ['tareas:1', 'sesiones:3', 'pomodoros:4', 'minutos:120', ' tareas:5 ', `tareas:${Number.MAX_SAFE_INTEGER}`]) {
+  assert.equal(ejecutar(challengeCondition, { condicion }), undefined);
+}
+for (const condicion of ['api >= 1', 'tareas:0', 'tareas:', 'horas:2', 'TAREAS:2', 'tareas:2;x', 'tareas:99999999999999999999', 5, null]) {
+  assert.equal(ejecutar(challengeCondition, { condicion }).status, 400);
+}
+assert.equal(ejecutar(challengeCondition, { descripcion: 'sin condición' }), undefined);
 console.log('✅ RF01/RF02/RF15: tipos, fechas, tamaños, semanas, nombre (E7) y credenciales validados');
+console.log('✅ RNF-16 y RN24: límites y formato de condición validados');

@@ -86,6 +86,27 @@ function positiveInteger(field) {
   };
 }
 
+/** RNF-16 (E7): exige un entero dentro de los límites aprobados cuando el campo está presente. */
+function integerRange(field, min, max) {
+  return (req, _res, next) => {
+    const valor = req.body[field];
+    if (valor !== undefined && (!Number.isSafeInteger(valor) || valor < min || valor > max)) {
+      return next(new HttpError(400, `${field} debe ser un entero entre ${min.toLocaleString('es-CO')} y ${max.toLocaleString('es-CO')}`));
+    }
+    next();
+  };
+}
+
+/** RF06/RN24: una condición nueva o modificada usa `metrica:objetivo`; no revalida registros antiguos. */
+function challengeCondition(req, _res, next) {
+  const condicion = req.body.condicion;
+  const formato = typeof condicion === 'string' && /^(tareas|sesiones|pomodoros|minutos):([1-9]\d*)$/.exec(condicion.trim());
+  if (condicion !== undefined && (!formato || !Number.isSafeInteger(Number(formato[2])))) {
+    return next(new HttpError(400, 'condicion debe usar metrica:objetivo con tareas, sesiones, pomodoros o minutos (por ejemplo, tareas:5)'));
+  }
+  next();
+}
+
 /** RF15/HU15: permite progreso cero, pero no valores negativos. */
 function nonNegativeInteger(field) {
   return (req, _res, next) => {
@@ -118,4 +139,4 @@ function nonBlankText(field, maxLength = 200) {
   };
 }
 
-module.exports = { requireFields, validateRegistration, validateLogin, allowFields, enumField, positiveInteger, nonNegativeInteger, booleanField, nonBlankText };
+module.exports = { requireFields, validateRegistration, validateLogin, allowFields, enumField, positiveInteger, integerRange, challengeCondition, nonNegativeInteger, booleanField, nonBlankText };

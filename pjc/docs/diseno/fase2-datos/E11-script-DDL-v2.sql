@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS reto (
   semana VARCHAR(10) NOT NULL,
   progreso INTEGER NOT NULL DEFAULT 0 CHECK (progreso >= 0),
   completado INTEGER NOT NULL DEFAULT 0 CHECK (completado IN (0,1)),
+  activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
   CONSTRAINT pk_reto PRIMARY KEY (id_reto),
   CONSTRAINT uq_reto_cuenta_semana UNIQUE (id_cuenta,semana),
   CONSTRAINT fk_reto_cuenta FOREIGN KEY (id_cuenta)

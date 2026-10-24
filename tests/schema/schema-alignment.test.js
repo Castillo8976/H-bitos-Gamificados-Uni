@@ -35,7 +35,7 @@ const expected = {
   insignia: ['id_insignia','nombre','descripcion','condicion','icono'],
   cuenta_insignia: ['id_cuenta','id_insignia','fecha_obtenida'],
   punto: ['id_punto','id_cuenta','cantidad','origen','id_origen','fecha'],
-  reto: ['id_reto','id_cuenta','descripcion','condicion','puntos_recompensa','semana','progreso','completado'],
+  reto: ['id_reto','id_cuenta','descripcion','condicion','puntos_recompensa','semana','progreso','completado','activo'],
   meta: ['id_meta','id_cuenta','semana','descripcion','valor_objetivo','valor_actual','cumplida'],
   recordatorio: ['id_recordatorio','id_tarea','id_cuenta','fecha_programada','mensaje','enviado','activo'],
   preferencia_visual: ['id_preferencia','id_cuenta','tema','modo_oscuro','avatar','notificaciones_recordatorios','notificaciones_retos','fecha_actualizado'],

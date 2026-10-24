@@ -83,7 +83,8 @@ async function actualizarMetas(idCuenta, semana, evento, cantidad, transaction, 
 
 /** RF06/HU06: acumula la métrica y acredita la recompensa al alcanzar el umbral. */
 async function actualizarRetos(idCuenta, semana, evento, cantidad, transaction, ahora) {
-  const retos = await Reto.findAll({ where: { id_cuenta: idCuenta, semana, completado: false }, transaction });
+  // RN28 (Decisión #09): solo los retos activos reciben progreso automático y recompensa.
+  const retos = await Reto.findAll({ where: { id_cuenta: idCuenta, semana, completado: false, activo: true }, transaction });
   const completados = [];
   let puntosOtorgados = 0;
   for (const reto of retos) {

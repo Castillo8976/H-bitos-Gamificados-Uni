@@ -181,6 +181,17 @@ const Reto = sequelize.define('reto', {
     type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: false      // Todo reto nuevo comienza como no completado
+  },
+
+  /**
+   * Estado del reto (RF06/HU31/RN28, Decisión #09). Solo un reto activo recibe progreso
+   * automático o una nueva recompensa. Desactivar o reactivar no altera progreso ni puntos.
+   * Se cambia únicamente mediante `PATCH /api/retos/:id/estado`.
+   */
+  activo: {
+    type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
+    allowNull: false,
+    defaultValue: true
   }
 
 }, {

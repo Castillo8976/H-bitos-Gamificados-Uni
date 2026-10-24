@@ -20,6 +20,7 @@ const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 const app = require('../../src/app');
 const Cuenta = require('../../src/models/Cuenta');
+const Reto = require('../../src/models/Reto');
 
 const auth = token => ({ Authorization: `Bearer ${token}` });
 
@@ -256,11 +257,85 @@ async function run() {
   await request(app).get(`/api/niveles/${levelId}`).set(auth(studentToken)).expect(200);
 
   const challenge = await request(app).post('/api/retos').set(auth(studentToken)).send({
-    descripcion: 'Completar API', condicion: 'api >= 1', puntos_recompensa: 20, semana: '2026-W39'
+    descripcion: 'Completar API', condicion: 'tareas:1', puntos_recompensa: 20, semana: '2026-W39'
   }).expect(201);
   const challengeId = challenge.body.dato.id_reto;
+  assert.equal(challenge.body.dato.activo, true);
   await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ progreso: 1 }).expect(200);
+
+  // RF06/HU18/HU31/RN10/RN24/RN28/RNF-16 · Decisión #09: reglas de retos y recompensas.
+  const puntosReto = async id => (await sequelize.query("SELECT COUNT(*) AS n, COALESCE(SUM(cantidad),0) AS total FROM punto WHERE origen = 'Reto' AND id_origen = :id", { replacements: { id }, plain: true }));
+  for (const datos of [{ puntos_recompensa: 0 }, { puntos_recompensa: 10001 }, { puntos_recompensa: 9000000 }, { condicion: 'api >= 1' }, { condicion: 'tareas:0' }, { condicion: 'lo que sea' }, { condicion: 'tareas:99999999999999999999' }]) {
+    await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Límite', condicion: 'tareas:1', puntos_recompensa: 10, semana: '2026-W30', ...datos }).expect(400);
+  }
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: 10001 }).expect(400);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ activo: false }).expect(400);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ condicion: 'minutos:abc' }).expect(400);
+  // Un reto antiguo con condición libre admite editar otros campos sin revalidar la condición.
+  await sequelize.query("UPDATE reto SET condicion = 'api >= 1' WHERE id_reto = :id", { replacements: { id: challengeId } });
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ descripcion: 'Completar API (antiguo)' }).expect(200);
+  await sequelize.query("UPDATE reto SET condicion = 'tareas:1' WHERE id_reto = :id", { replacements: { id: challengeId } });
+  for (const valor of [1, 10000]) await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: valor }).expect(200);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: 20 }).expect(200);
+
+  // Estado: solo propietario o Administrador; reto ajeno 403, inexistente 404; desactivar no altera progreso.
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(secondToken)).send({ activo: false }).expect(403);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(reviewerToken)).send({ activo: false }).expect(403);
+  await request(app).patch(`/api/retos/${crypto.randomUUID()}/estado`).set(auth(studentToken)).send({ activo: false }).expect(404);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: 'false' }).expect(400);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({}).expect(400);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: false }).expect(200)
+    .expect(({ body }) => { assert.equal(body.dato.activo, false); assert.equal(body.dato.progreso, 1); });
+  // Inactivo: no se completa ni acredita; reactivar conserva el progreso.
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(409);
+  assert.equal((await puntosReto(challengeId)).n, 0);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(adminToken)).send({ activo: true }).expect(200)
+    .expect(({ body }) => { assert.equal(body.dato.activo, true); assert.equal(body.dato.progreso, 1); assert.equal(body.dato.completado, false); });
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(secondToken)).expect(403);
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200)
+    .expect(({ body }) => assert.equal(body.dato.completado, true));
   await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200);
+  assert.deepEqual(await puntosReto(challengeId), { n: 1, total: 20 });
+  // Completado: sin edición de recompensa o progreso; descripción permitida; desactivar y reactivar no acreditan de nuevo.
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: 50 }).expect(409);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(adminToken)).send({ progreso: 5 }).expect(409);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ descripcion: 'Completar API (cerrado)' }).expect(200);
+  // La semana de un reto completado sigue reservada: moverla permitiría recrear el reto y cobrar otra vez.
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ semana: '2026-W50' }).expect(409);
+  // Cambiar la condición de un reto completado no genera recompensas nuevas.
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ condicion: 'tareas:3' }).expect(200);
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: false }).expect(200);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: true }).expect(200);
+  assert.deepEqual(await puntosReto(challengeId), { n: 1, total: 20 });
+  // Un reto completado no se elimina; la semana sigue reservada (no se puede recrear para cobrar otra vez).
+  await request(app).delete(`/api/retos/${challengeId}`).set(auth(studentToken)).expect(409);
+  await request(app).delete(`/api/retos/${challengeId}`).set(auth(adminToken)).expect(409);
+  await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Recrear', condicion: 'tareas:1', puntos_recompensa: 20, semana: '2026-W39' }).expect(409);
+  // Un reto no completado sí se elimina; otro estudiante no puede eliminarlo.
+  const pendiente = (await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Pendiente', condicion: 'sesiones:2', puntos_recompensa: 10000, semana: '2026-W40' }).expect(201)).body.dato.id_reto;
+  await request(app).delete(`/api/retos/${pendiente}`).set(auth(secondToken)).expect(403);
+  await request(app).delete(`/api/retos/${pendiente}`).set(auth(studentToken)).expect(204);
+  // Concurrencia: estado||completar y eliminar||completar dejan resultados coherentes y como máximo un crédito.
+  for (const [semanaPrueba, competidor] of [['2026-W45', id => request(app).patch(`/api/retos/${id}/estado`).set(auth(studentToken)).send({ activo: false })],
+                                            ['2026-W46', id => request(app).delete(`/api/retos/${id}`).set(auth(studentToken))]]) {
+    const idCompetido = (await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Competido', condicion: 'tareas:1', puntos_recompensa: 7, semana: semanaPrueba }).expect(201)).body.dato.id_reto;
+    const [otra, completar] = await Promise.all([competidor(idCompetido), request(app).patch(`/api/retos/${idCompetido}/completar`).set(auth(studentToken))]);
+    const final = await Reto.findByPk(idCompetido);
+    const { n } = await puntosReto(idCompetido);
+    if (completar.status === 200) {
+      assert.equal(completar.body.dato.completado, true);
+      assert.equal(n, 1);
+      assert.ok(final, 'un reto completado no se elimina');
+      if (otra.req.method === 'DELETE') assert.equal(otra.status, 409);
+    } else {
+      assert.ok([404, 409].includes(completar.status), `estado inesperado ${completar.status}`);
+      assert.equal(n, 0);
+    }
+  }
+  // RNF-16 en metas y sesiones.
+  for (const valor of [0, 10081]) await request(app).post('/api/metas').set(auth(studentToken)).send({ semana: '2026-W41', descripcion: 'Meta límite', valor_objetivo: valor }).expect(400);
+  for (const valor of [0, 1441]) await request(app).post('/api/sesiones').set(auth(studentToken)).send({ duracion_minutos: valor }).expect(400);
 
   const goal = await request(app).post('/api/metas').set(auth(studentToken)).send({
     semana: '2026-W39', descripcion: 'Completar una prueba', valor_objetivo: 1
@@ -271,7 +346,6 @@ async function run() {
     .expect(({ body }) => assert.equal(body.dato.cumplida, true));
 
   await request(app).delete(`/api/metas/${goalId}`).set(auth(studentToken)).expect(204);
-  await request(app).delete(`/api/retos/${challengeId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/niveles/${levelId}`).set(auth(adminToken)).expect(204);
   await request(app).delete(`/api/cuenta-insignias/${studentRegistration.body.cuenta.id_cuenta}/${badgeId}`).set(auth(adminToken)).expect(400);
   await request(app).delete(`/api/cuenta-insignias/${studentRegistration.body.cuenta.id_cuenta}/${badgeId}`).set(auth(adminToken)).send({ motivo: 'Asignación de prueba' }).expect(204);

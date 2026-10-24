@@ -27,7 +27,7 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | `CREATE TABLE insignia` | insignia | pk_insignia (id_insignia) | — | — | uq_ins_nombre (nombre) · uq_ins_cond (condicion) | — | §5 |
 | `CREATE TABLE cuenta_insignia` | cuenta_insignia | pk_ci (id_cuenta, id_insignia) PK compuesta | fk_ci_cta → cuenta CASCADE · fk_ci_ins → insignia CASCADE | — | — (PK compuesta cumple unicidad) | fecha_obtenida=DATE('now') | §6 |
 | `CREATE TABLE punto` | punto | pk_punto (id_punto) | fk_pto_cuenta → cuenta CASCADE | cantidad > 0, origen IN ('Tarea','Reto','Sesion') | — | fecha=DATE('now') | §7 |
-| `CREATE TABLE reto` | reto | pk_reto (id_reto) | fk_reto_cta → cuenta CASCADE | puntos_recompensa > 0, progreso >= 0, completado IN (0,1) | uq_reto_sem (id_cuenta, semana) | progreso=0, completado=0 | §8 |
+| `CREATE TABLE reto` | reto | pk_reto (id_reto) | fk_reto_cta → cuenta CASCADE | puntos_recompensa > 0, progreso >= 0, completado IN (0,1), activo IN (0,1) | uq_reto_sem (id_cuenta, semana) | progreso=0, completado=0, activo=1 | §8 |
 | `CREATE TABLE meta` | meta | pk_meta (id_meta) | fk_meta_cta → cuenta CASCADE | valor_objetivo > 0, valor_actual >= 0, cumplida IN (0,1) | uq_meta_sem (id_cuenta, semana) | valor_actual=0, cumplida=0 | §9 |
 | `CREATE TABLE recordatorio` | recordatorio | pk_recordatorio (id_recordatorio) | fk_rec_tarea → tarea CASCADE · fk_rec_cuenta → cuenta CASCADE | enviado IN (0,1), activo IN (0,1) | — | enviado=0, activo=1 | §10 |
 | `CREATE TABLE notificacion` | notificacion | pk_notificacion (id_notificacion) | fk_not_cuenta → cuenta CASCADE | ck_not_tipo (tipo IN 5 valores) | — | leida=0 | §14 |

@@ -49,6 +49,11 @@ async function run() {
   assert.match(cliente.text, /\/estadisticas\/semanales/);
   assert.match(cliente.text, /\/estadisticas\/institucionales/);
   assert.match(cliente.text, /\/exportacion\/datos/);
+  // RF06/HU18/HU31/RN28: estado del reto visible y cambiado solo mediante PATCH /retos/:id/estado.
+  assert.match(cliente.text, /data-accion="estado-reto"/);
+  assert.match(cliente.text, /\/retos\/\$\{id\}\/estado`, \{ method: 'PATCH'/);
+  assert.match(cliente.text, /reto\.completado \? '' : `<button[^`]*data-accion="eliminar-reto"/);
+  assert.match(pagina.text, /name="puntos_recompensa" type="number" min="1" max="10000"/);
   assert.match(cliente.text, /mostrarRecompensa/);
   assert.doesNotMatch(cliente.text, /localStorage/);
 

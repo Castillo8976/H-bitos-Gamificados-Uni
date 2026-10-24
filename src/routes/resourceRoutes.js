@@ -10,7 +10,7 @@ const controllers = require('../controllers/resourceControllers');
 const asyncHandler = require('../middlewares/asyncHandler');
 const { authenticateRequest, authorize } = require('../middlewares/authentication');
 const { validateEntityRequest } = require('../validators/entityValidator');
-const { requireFields, allowFields, enumField, positiveInteger, nonNegativeInteger, booleanField, nonBlankText } = require('../validators/requestValidator');
+const { requireFields, allowFields, enumField, positiveInteger, integerRange, challengeCondition, nonNegativeInteger, booleanField, nonBlankText } = require('../validators/requestValidator');
 
 const router = express.Router();
 const studentOrAdmin = authorize('Estudiante', 'Administrador');
@@ -44,8 +44,8 @@ router.put('/preferencias', studentOrAdmin, allowFields('tema', 'modo_oscuro', '
 
 router.get('/sesiones', studentOrAdmin, wrap(controllers.sessions.list));
 router.get('/sesiones/:id', studentOrAdmin, wrap(controllers.sessions.get));
-router.post('/sesiones', authorize('Estudiante'), allowFields('id_tarea','duracion_minutos','modo_enfoque'), requireFields('duracion_minutos'), positiveInteger('duracion_minutos'), booleanField('modo_enfoque'), wrap(controllers.sessions.create));
-router.put('/sesiones/:id', studentOrAdmin, allowFields('id_tarea','duracion_minutos','modo_enfoque'), positiveInteger('duracion_minutos'), booleanField('modo_enfoque'), wrap(controllers.sessions.update));
+router.post('/sesiones', authorize('Estudiante'), allowFields('id_tarea','duracion_minutos','modo_enfoque'), requireFields('duracion_minutos'), integerRange('duracion_minutos', 1, 1440), booleanField('modo_enfoque'), wrap(controllers.sessions.create));
+router.put('/sesiones/:id', studentOrAdmin, allowFields('id_tarea','duracion_minutos','modo_enfoque'), integerRange('duracion_minutos', 1, 1440), booleanField('modo_enfoque'), wrap(controllers.sessions.update));
 router.delete('/sesiones/:id', studentOrAdmin, wrap(controllers.sessions.remove));
 
 router.get('/recordatorios', studentOrAdmin, wrap(controllers.reminders.list));
@@ -83,15 +83,17 @@ router.delete('/niveles/:id', admin, wrap(controllers.levels.remove));
 
 router.get('/retos', studentOrAdmin, wrap(controllers.challenges.list));
 router.get('/retos/:id', studentOrAdmin, wrap(controllers.challenges.get));
-router.post('/retos', studentOrAdmin, allowFields('id_cuenta','descripcion','condicion','puntos_recompensa','semana'), requireFields('descripcion','condicion','puntos_recompensa','semana'), positiveInteger('puntos_recompensa'), wrap(controllers.challenges.create));
-router.put('/retos/:id', studentOrAdmin, allowFields('descripcion','condicion','puntos_recompensa','semana','progreso'), positiveInteger('puntos_recompensa'), nonNegativeInteger('progreso'), wrap(controllers.challenges.update));
+router.post('/retos', studentOrAdmin, allowFields('id_cuenta','descripcion','condicion','puntos_recompensa','semana'), requireFields('descripcion','condicion','puntos_recompensa','semana'), integerRange('puntos_recompensa', 1, 10000), challengeCondition, wrap(controllers.challenges.create));
+router.put('/retos/:id', studentOrAdmin, allowFields('descripcion','condicion','puntos_recompensa','semana','progreso'), integerRange('puntos_recompensa', 1, 10000), nonNegativeInteger('progreso'), challengeCondition, wrap(controllers.challenges.update));
 router.patch('/retos/:id/completar', studentOrAdmin, wrap(controllers.challenges.complete));
+// RF06/HU18/HU31/RN28: único punto para activar o desactivar un reto; el PUT general no acepta `activo`.
+router.patch('/retos/:id/estado', studentOrAdmin, allowFields('activo'), requireFields('activo'), booleanField('activo'), wrap(controllers.challenges.setState));
 router.delete('/retos/:id', studentOrAdmin, wrap(controllers.challenges.remove));
 
 router.get('/metas', studentOrAdmin, wrap(controllers.goals.list));
 router.get('/metas/:id', studentOrAdmin, wrap(controllers.goals.get));
-router.post('/metas', studentOrAdmin, allowFields('id_cuenta','semana','descripcion','valor_objetivo'), requireFields('semana','descripcion','valor_objetivo'), positiveInteger('valor_objetivo'), wrap(controllers.goals.create));
-router.put('/metas/:id', studentOrAdmin, allowFields('semana','descripcion','valor_objetivo'), positiveInteger('valor_objetivo'), wrap(controllers.goals.update));
+router.post('/metas', studentOrAdmin, allowFields('id_cuenta','semana','descripcion','valor_objetivo'), requireFields('semana','descripcion','valor_objetivo'), integerRange('valor_objetivo', 1, 10080), wrap(controllers.goals.create));
+router.put('/metas/:id', studentOrAdmin, allowFields('semana','descripcion','valor_objetivo'), integerRange('valor_objetivo', 1, 10080), wrap(controllers.goals.update));
 router.patch('/metas/:id/progreso', studentOrAdmin, allowFields('incremento'), requireFields('incremento'), positiveInteger('incremento'), wrap(controllers.goals.progress));
 router.delete('/metas/:id', studentOrAdmin, wrap(controllers.goals.remove));
 

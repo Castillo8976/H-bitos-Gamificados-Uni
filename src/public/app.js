@@ -352,7 +352,7 @@ function renderizarGamificacion() {
     return `<div class="item insignia ${asignacion ? 'obtenida' : 'bloqueada'}" title="${escapar(insignia.descripcion)} · Condición: ${escapar(insignia.condicion)}"><strong>${asignacion ? '🏅' : '🔒'} ${escapar(insignia.nombre)}</strong><small>${asignacion ? `Obtenida ${escapar(fechaLegible(asignacion.fecha_obtenida))}` : `Condición: ${escapar(insignia.condicion)}`}</small></div>`;
   }).join('') : estadoVacio('El catálogo de insignias está vacío.');
   const avances = [
-    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button></div></div></div>`),
+    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`),
     ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
   ];
   $('#lista-retos-metas').innerHTML = avances.length ? avances.join('') : estadoVacio('No tienes retos o metas registrados.');
@@ -431,7 +431,7 @@ function renderizarAdministracion() {
   $('#admin-correccion-cuenta').innerHTML = opcionesCuenta;
   $('#admin-insignia-correccion').innerHTML = estado.insignias
     .map(item => `<option value="${escapar(item.id_insignia)}">${escapar(item.nombre)}</option>`).join('');
-  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button></div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
+  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
   const puntos = estado.puntosAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${item.cantidad} puntos</strong><br><small>${escapar(item.origen)} · ${escapar(fechaLegible(item.fecha))}</small></div><button class="boton peligro pequeno" data-accion="eliminar-punto-admin" data-id="${escapar(item.id_punto)}">Eliminar movimiento</button></div></div>`);
   const asignaciones = estado.insigniasCuentaAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${escapar(item.insignia?.nombre || 'Insignia')}</strong><br><small>Asignada ${escapar(fechaLegible(item.fecha_obtenida))}</small></div><button class="boton peligro pequeno" data-accion="revocar-insignia-admin" data-id="${escapar(item.id_insignia)}" data-cuenta="${escapar(item.id_cuenta)}">Revocar</button></div></div>`);
   $('#lista-correcciones-admin').innerHTML = [...puntos, ...asignaciones].join('') || estadoVacio('No hay movimientos o insignias para corregir.');
@@ -707,6 +707,11 @@ async function guardarSesion() {
 
 /** Delega acciones de listas dinámicas para no registrar eventos repetidos. */
 /** RF02/HU02 y RF07/HU26: despacha acciones identificadas por data-accion; contratos en M16. */
+/** RF06/HU18/HU31/RN28: botón para desactivar o reactivar un reto sin alterar progreso ni puntos. */
+function botonEstadoReto(reto) {
+  return `<button class="boton secundario pequeno" data-accion="estado-reto" data-id="${escapar(reto.id_reto)}" data-activo="${reto.activo ? 'false' : 'true'}">${reto.activo ? 'Desactivar' : 'Reactivar'}</button>`;
+}
+
 async function manejarAccion(evento) {
   const boton = evento.target.closest('[data-accion]');
   if (!boton) return;
@@ -761,6 +766,14 @@ async function manejarAccion(evento) {
       const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion: descripcion.trim() }) });
       estado.retos = estado.retos.map(item => item.id_reto === id ? respuesta.dato : item);
       renderizarGamificacion(); avisar('Reto actualizado.', 'exito');
+    }
+    if (accion === 'estado-reto') {
+      const activo = boton.dataset.activo === 'true';
+      const respuesta = await api(`/retos/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ activo }) });
+      const reemplazar = lista => lista.map(item => item.id_reto === id ? respuesta.dato : item);
+      estado.retos = reemplazar(estado.retos); estado.retosAdmin = reemplazar(estado.retosAdmin);
+      if (estado.cuenta?.rol === 'Administrador') renderizarAdministracion(); else renderizarGamificacion();
+      avisar(activo ? 'Reto reactivado. Conserva su progreso y sus puntos.' : 'Reto desactivado. No recibirá progreso ni nuevas recompensas.', 'exito');
     }
     if (accion === 'eliminar-reto' && confirm('¿Deseas eliminar este reto?')) {
       await api(`/retos/${id}`, { method: 'DELETE' });

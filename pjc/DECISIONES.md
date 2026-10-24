@@ -167,3 +167,63 @@ corrección) y M9 no muestran `version_sesion` ni `desactivarCuenta`; RN27, HU27
 HU30 se sincronizarán en la Fase 7. El logout individual mantiene la revocación
 en memoria. La protección de la última cuenta Administradora activa sigue sin
 decisión. La migración de la base principal requiere una autorización aparte.
+
+---
+
+## Decisión #09
+
+**¿Qué decidí?**
+Completar el estado de los retos y proteger la consistencia de sus recompensas,
+conservando los permisos de la Decisión #06:
+
+- `reto.activo` (DEFAULT TRUE) se cambia solo mediante `PATCH /api/retos/:id/estado`,
+  por el Estudiante propietario o el Administrador; el `PUT` general no acepta
+  `activo`. Desactivar o reactivar no borra progreso, puntos ni historial.
+- Un reto inactivo no recibe progreso automático ni nuevas recompensas; su
+  completado manual se rechaza con 409.
+- El completado manual se conserva para el propietario y el Administrador; se
+  ejecuta en una transacción con un UPDATE condicionado y acredita una sola vez
+  (índice `uq_punto_evento`).
+- `puntos_recompensa` (1–10.000) y `progreso` siguen siendo editables mientras el
+  reto no esté completado; después se rechazan con 409. Por la misma razón, la
+  `semana` de un reto completado tampoco cambia, porque liberarla permitiría crear
+  otro reto en ella y acreditar de nuevo. `descripcion` y `condicion` siguen
+  editables, ya que no generan recompensas nuevas.
+- Solo se eliminan retos no completados; uno completado conserva la trazabilidad
+  de su recompensa y mantiene reservada su semana.
+- Se aplican en la API los límites de RNF-16 (`puntos_recompensa` 1–10.000,
+  `valor_objetivo` 1–10.080, `duracion_minutos` 1–1.440) y el formato RN24
+  `metrica:objetivo` cuando se crea o cambia una condición; los registros
+  antiguos no se invalidan.
+
+**¿Por qué?**
+El diagnóstico mostró que, mediante la API, un reto podía recibir recompensas sin
+límite y acreditarse repetidamente al eliminarlo y crearlo de nuevo en la misma
+semana, y que el estado `activo` documentado en E7, E9, E12 y RN28 no existía en
+el código. Se cierran las acreditaciones repetidas sin retirar recompensas
+históricas ni reiniciar progreso.
+
+**Limitación explícita**
+Estas reglas protegen la consistencia de la acreditación, pero no garantizan que
+un reto completado manualmente o con progreso editado represente actividad
+académica real. El completado manual y la edición del progreso se conservan por
+la Decisión #06; la autenticidad de esos logros queda como pendiente de seguridad
+funcional y no se declara resuelta. En particular, el límite es de una recompensa
+por reto y por semana: un Estudiante puede crear retos en otras semanas válidas y
+completarlos manualmente, de modo que el total acumulable no está acotado por estas
+reglas.
+
+**¿Qué artefacto respalda esta decisión?**
+E7, E11 (`reto.activo`), `src/models/Reto.js`, la migración aditiva de
+`src/config/schema.js`, M7, M8, M17 y las pruebas
+`tests/integration/reto-estado.test.js`, `tests/schema/reto-activo-migration.test.js`
+y `tests/api/api.test.js`.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026; no constituye una aprobación
+docente y no modifica retrospectivamente la Decisión #06. Pendientes: los límites
+de RNF-16 se validan en la API y no como CHECK de SQLite (E9 dibuja el CHECK de
+`puntos_recompensa`); E8, E9 y E12 conservan la marca «pendiente» de `activo` y de
+`activarReto`/`desactivarReto`; RN28, HU06, HU18, HU31, CU06 y la matriz `14` se
+sincronizarán en la Fase 7. La migración de la base principal (`version_sesion` y
+`reto.activo`) requiere una autorización aparte.

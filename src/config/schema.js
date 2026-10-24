@@ -81,6 +81,11 @@ async function inicializarEsquema() {
   if (!columnasCuenta.some(columna => columna.name === 'version_sesion')) {
     await sequelize.query('ALTER TABLE cuenta ADD COLUMN version_sesion INTEGER NOT NULL DEFAULT 0 CHECK (version_sesion >= 0)');
   }
+  // RF06/HU31/RN28 (Decisión #09): migración aditiva; los retos existentes quedan activos.
+  const columnasReto = await sequelize.query('PRAGMA table_info(reto)', { type: sequelize.QueryTypes.SELECT });
+  if (!columnasReto.some(columna => columna.name === 'activo')) {
+    await sequelize.query('ALTER TABLE reto ADD COLUMN activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1))');
+  }
 }
 
 module.exports = { ddlPath, dividirSentencias, inicializarEsquema };

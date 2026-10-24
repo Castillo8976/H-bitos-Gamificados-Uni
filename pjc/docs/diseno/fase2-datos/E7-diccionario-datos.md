@@ -139,7 +139,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **semana** | VARCHAR(10) | No | Formato YYYY-WNN. UNIQUE combinado con id_cuenta. |
 | **progreso** | INTEGER | No | Avance actual. DEFAULT 0. CHECK >= 0. |
 | **completado** | BOOLEAN/INT | No | TRUE = reto completado. DEFAULT FALSE. |
-| **activo** | BOOLEAN/INT | No | TRUE = admite progreso automático. FALSE = desactivado. DEFAULT TRUE. El propietario y el Administrador pueden cambiar el estado; pendiente de migración e implementación. |
+| **activo** | BOOLEAN/INT | No | TRUE = admite progreso automático. FALSE = desactivado. DEFAULT TRUE. El propietario y el Administrador pueden cambiar el estado mediante `PATCH /api/retos/:id/estado`; desactivar o reactivar no altera progreso ni puntos. Las bases anteriores lo reciben con DEFAULT TRUE (Decisión #09). |
 
 > **Reglas:** se crea manualmente, no se genera automáticamente cada semana · 1 reto por semana por estudiante (UNIQUE id_cuenta + semana) · el progreso automático solo se acumula mientras `activo = TRUE` · al completar, incluso manualmente por el propietario, genera como máximo un registro en `punto` con `origen = Reto` · desactivar no revoca puntos y reactivar no vuelve a acreditarlos (RN10, RN28).
 

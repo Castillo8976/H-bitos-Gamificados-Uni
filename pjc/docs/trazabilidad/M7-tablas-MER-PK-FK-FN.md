@@ -47,7 +47,7 @@ Esta matriz conecta cada tabla del Modelo Relacional (E9) con su entidad de orig
 | nivel_cuenta | nombre | puntos_minimos >= 0, orden > 0 | puntos_minimos = 0, orden = 1 |
 | cuenta_insignia | — (PK compuesta) | — | fecha_obtenida = DATE('now') |
 | punto | — | cantidad > 0, origen IN ('Tarea','Reto','Sesion') | fecha = DATE('now') |
-| reto | (id_cuenta, semana) | puntos_recompensa > 0, progreso >= 0, completado IN (0,1) | progreso = 0, completado = 0 |
+| reto | (id_cuenta, semana) | puntos_recompensa > 0, progreso >= 0, completado IN (0,1), activo IN (0,1) | progreso = 0, completado = 0, activo = 1 |
 | meta | (id_cuenta, semana) | valor_objetivo > 0, valor_actual >= 0, cumplida IN (0,1) | valor_actual = 0, cumplida = 0 |
 | recordatorio | — | enviado IN (0,1), activo IN (0,1) | enviado = 0, activo = 1 |
 | notificacion | — | tipo IN ('Insignia','Reto','Meta','Nivel','Sistema'), leida IN (0,1) | leida = 0, fecha = DATE('now') |
