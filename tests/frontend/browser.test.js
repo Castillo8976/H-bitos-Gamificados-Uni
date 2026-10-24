@@ -73,16 +73,21 @@ class Cdp {
 }
 
 async function esperarCondicion(cdp, expresion, intentos = 80) {
+  let ultimoError;
   for (let intento = 0; intento < intentos; intento += 1) {
-    if (await cdp.evaluar(`Boolean(${expresion})`)) return;
+    try {
+      if (await cdp.evaluar(`Boolean(${expresion})`)) return;
+    } catch (error) {
+      ultimoError = error;
+    }
     await esperar(100);
   }
-  throw new Error(`No se cumplió la condición: ${expresion}`);
+  throw new Error(`No se cumplió la condición: ${expresion}. Último error: ${ultimoError?.message ?? ultimoError ?? 'ninguno'}`);
 }
 
 async function autenticar(cdp, correo) {
   await cdp.evaluar(`(async()=>{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:${JSON.stringify(correo)},contrasena:'ClaveSegura123!'})});const d=await r.json();sessionStorage.setItem('studyquest_token',d.token);location.reload();return r.status})()`);
-  await esperarCondicion(cdp, "!document.querySelector('#aplicacion').hidden");
+  await esperarCondicion(cdp, "document.readyState==='complete' && document.querySelector('#aplicacion')?.hidden === false");
 }
 
 async function run() {

@@ -21,7 +21,8 @@ Esta matriz verifica que cada `CREATE TABLE` del Script DDL (E11) implementa cor
 | `CREATE TABLE cuenta` | cuenta | pk_cuenta (id_cuenta) | — | activa IN (0,1), version_sesion >= 0 | uq_correo (correo) | activa=1, fecha_registro=DATE('now'), version_sesion=0 | §1 |
 | `CREATE TABLE nivel_cuenta` | nivel_cuenta | pk_nivel (id_nivel) | — (relación con cuenta es derivada: SUM(punto.cantidad) vs puntos_minimos, sin FK) | ck_nivel_puntos (puntos_minimos >= 0), ck_nivel_orden (orden > 0) | uq_nivel_nombre (nombre) | puntos_minimos=0, orden=1 | §13 |
 | `CREATE TABLE preferencia_visual` | preferencia_visual | pk_preferencia (id_preferencia) | fk_pref_cuenta → cuenta CASCADE | tema IN (6 valores), modo_oscuro IN (0,1) | uq_pref_cuenta (id_cuenta) → garantiza 1:1 | tema='purple', modo_oscuro=0 | §12 |
-| `CREATE TABLE materia` | materia | pk_materia (id_materia) | fk_mat_cuenta → cuenta CASCADE | activa IN (0,1) | — | activa=1 | §2 |
+| `CREATE TABLE materia` | materia | pk_materia (id_materia) | fk_mat_cuenta → cuenta CASCADE · id_catalogo_materia → catalogo_materia RESTRICT (opcional; migración aditiva M1) | activa IN (0,1) | — | activa=1 | §2 |
+| `CREATE TABLE catalogo_materia` | catalogo_materia *(Decisión #10; E9 la muestra como planeada)* | id_catalogo_materia | — | activo IN (0,1) | nombre COLLATE NOCASE | activo=1 | §14 |
 | `CREATE TABLE tarea` | tarea | pk_tarea (id_tarea) | fk_tar_cuenta → cuenta CASCADE · fk_tar_materia → materia SET NULL | prioridad IN ('Alta','Media','Baja'), estado IN ('Pendiente','Completada') | — | estado='Pendiente' | §3 |
 | `CREATE TABLE sesion_estudio` | sesion_estudio | pk_sesion (id_sesion) | fk_ses_cuenta → cuenta CASCADE · fk_ses_tarea → tarea SET NULL | duracion_minutos > 0, modo_enfoque IN (0,1) | — | fecha=DATE('now'), modo_enfoque=0 | §4 |
 | `CREATE TABLE insignia` | insignia | pk_insignia (id_insignia) | — | — | uq_ins_nombre (nombre) · uq_ins_cond (condicion) | — | §5 |
@@ -78,7 +79,7 @@ se debe tratar `vista_puntos_totales`, `vista_tareas_proximas` ni
 
 | Elemento | Definido en E9 | Implementado en E11 | Verificado |
 |---|---|---|---|
-| 13 tablas | ✅ | ✅ | ✅ |
+| 14 tablas (13 aprobadas + `catalogo_materia`, Decisión #10) | ⚠️ E9 la muestra como planeada | ✅ | ✅ |
 | PKs en todas las tablas | ✅ | ✅ | ✅ |
 | FKs con acciones referenciales | ✅ | ✅ | ✅ |
 | UNIQUE donde corresponde | ✅ | ✅ | ✅ |

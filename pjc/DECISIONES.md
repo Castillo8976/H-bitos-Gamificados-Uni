@@ -227,3 +227,44 @@ de RNF-16 se validan en la API y no como CHECK de SQLite (E9 dibuja el CHECK de
 `activarReto`/`desactivarReto`; RN28, HU06, HU18, HU31, CU06 y la matriz `14` se
 sincronizarán en la Fase 7. La migración de la base principal (`version_sesion` y
 `reto.activo`) requiere una autorización aparte.
+
+---
+
+## Decisión #10
+
+**¿Qué decidí?**
+Incorporar `catalogo_materia` como tabla independiente y global, administrada por
+el rol Administrador, con lo que el esquema pasa de 13 a 14 tablas. La materia se
+asocia al catálogo mediante `materia.id_catalogo_materia`, inicialmente opcional.
+La consulta pública devuelve solo el identificador y el nombre de las entradas
+activas. Una entrada con materias asociadas no se elimina, solo se desactiva, y
+desactivarla conserva las relaciones históricas. `materia.nombre` se conserva
+como copia histórica; en las materias nuevas el backend lo obtiene del catálogo.
+No se siembran asignaturas: la carga inicial la realiza un Administrador. Si no
+hay entradas activas, no se crean registros nuevos de cuenta.
+
+**¿Por qué?**
+La observación docente pidió una tabla para la materia inicial. Una entidad propia
+cumple 3FN, permite integridad referencial (RESTRICT) y la gestión administrativa
+de HU29, cosa que no ofrecen las alternativas que conservaban 13 tablas.
+
+**Alcance y etapas**
+- D-1: estructura, migración aditiva M1, administración del catálogo en P17 y
+  consulta pública. No cambia el registro ni la creación de materias.
+- D-2 (sin autorizar): selección del catálogo en el registro y en «Nueva materia».
+- M2 (sin autorizar): correspondencias revisadas por personas entre las materias
+  existentes y el catálogo; las seis materias actuales no se renombran ni se
+  asocian automáticamente.
+- M3 (sin autorizar): reconstrucción de `materia` para exigir NOT NULL.
+- Sin `UNIQUE(id_cuenta, id_catalogo_materia)` hasta decidir el manejo de
+  asignaturas repetidas en distintos períodos.
+
+**¿Qué artefacto respalda esta decisión?**
+E7 (sección 14 y FK de `materia`), E10 (14 tablas y Excepción 3), E11, M7, M8,
+M17, RN26 y HU29.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026; pendiente de revisión docente.
+RN26, HU29, CU01 y CU13 siguen como planeadas hasta su sincronización en la
+Fase 7. E8, E9 y E12 no se modifican y conservan `catalogo_materia` como
+planeada. La migración de la base principal requiere una autorización aparte.

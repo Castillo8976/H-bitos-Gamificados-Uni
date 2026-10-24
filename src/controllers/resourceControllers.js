@@ -3,6 +3,7 @@
 const HttpError = require('../middlewares/httpError');
 const authService = require('../services/authService');
 const cuenta = require('../services/cuentaService');
+const catalogo = require('../services/catalogoMateriaService');
 const materia = require('../services/materiaService');
 const tarea = require('../services/tareaService');
 const preferencia = require('../services/preferenciaVisualService');
@@ -361,4 +362,14 @@ const goals = {
   }
 };
 
-module.exports = { accounts, subjects, tasks, preferences, sessions, reminders, notifications, points, badges, accountBadges, levels, challenges, goals };
+/** RF01/RN26/HU29: administración del catálogo; lectura pública con proyección mínima. */
+const subjectCatalog = {
+  list: async (req, res) => res.json({ datos: await catalogo.listar(req.query.todas === 'true') }),
+  get: async (req, res) => res.json({ dato: await catalogo.obtener(req.params.id) }),
+  create: async (req, res) => res.status(201).json({ dato: await catalogo.guardar(null, req.body.nombre) }),
+  update: async (req, res) => res.json({ dato: await catalogo.guardar(req.params.id, req.body.nombre) }),
+  setState: async (req, res) => res.json({ dato: await catalogo.cambiarEstado(req.params.id, req.body.activo) }),
+  remove: async (req, res) => { await catalogo.eliminar(req.params.id); res.status(204).send(); }
+};
+
+module.exports = { subjectCatalog, accounts, subjects, tasks, preferences, sessions, reminders, notifications, points, badges, accountBadges, levels, challenges, goals };

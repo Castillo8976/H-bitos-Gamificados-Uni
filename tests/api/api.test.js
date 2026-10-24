@@ -102,6 +102,80 @@ async function run() {
   const adminToken = (await login('admin@test.local')).body.token;
   const reviewerToken = (await login('revisor@test.local')).body.token;
 
+  // RF01/RN26/HU29, Decisión #10: catálogo global; registro y materias conservan su contrato.
+  const catalogoUrl = '/api/catalogo-materias';
+  // La excepción pública del catálogo no debe abrir otros catálogos protegidos.
+  await request(app).get('/api/insignias').expect(401);
+  await request(app).get('/api/niveles').expect(401);
+  await request(app).get(catalogoUrl).expect(200).expect(({ body }) => assert.deepEqual(body.datos, []));
+  const cat = (await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre: '  álgebra  ' }).expect(201)).body.dato;
+  assert.equal(cat.nombre, 'álgebra');
+  assert.equal(cat.activo, true);
+  const catId = cat.id_catalogo_materia;
+  const catPath = `${catalogoUrl}/${catId}`;
+  const operaciones = [
+    ['get', `${catalogoUrl}?todas=true`, undefined], ['get', catPath, undefined],
+    ['post', catalogoUrl, { nombre: 'No permitida' }], ['put', catPath, { nombre: 'No permitida' }],
+    ['patch', `${catPath}/estado`, { activo: false }], ['delete', catPath, undefined]
+  ];
+  for (const [metodo, url, datos] of operaciones) {
+    await request(app)[metodo](url).send(datos).expect(401);
+    for (const token of [studentToken, reviewerToken]) await request(app)[metodo](url).set(auth(token)).send(datos).expect(403);
+  }
+  for (const nombre of ['ÁLGEBRA', '  álgebra ', 'álgebra']) {
+    await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre }).expect(409)
+      .expect(({ body }) => assert.match(body.error, /existe.*nombre/i));
+  }
+  const otra = (await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre: '  Ingeniería   de   Software ' }).expect(201)).body.dato;
+  assert.equal(otra.nombre, 'Ingeniería de Software');
+  await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre: 'ingeniería de  software' }).expect(409);
+  await request(app).put(`${catalogoUrl}/${otra.id_catalogo_materia}`).set(auth(adminToken)).send({ nombre: 'ÁLGEBRA' }).expect(409);
+  for (const nombre of ['', '   ', 'a'.repeat(81), 3, null, {}, []]) {
+    await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre }).expect(400);
+    await request(app).put(catPath).set(auth(adminToken)).send({ nombre }).expect(400);
+  }
+  for (const [metodo, url, datos] of [
+    ['post', catalogoUrl, { nombre: 'Nueva', activo: false }],
+    ['put', catPath, { nombre: 'Nueva', id_cuenta: 'ajena' }],
+    ['patch', `${catPath}/estado`, { activo: true, nombre: 'Nueva' }],
+    ['delete', catPath, { activo: false }], ['put', catPath, {}],
+    ['patch', `${catPath}/estado`, {}], ['patch', `${catPath}/estado`, { activo: 0 }],
+    ['patch', `${catPath}/estado`, { activo: 'false' }]
+  ]) await request(app)[metodo](url).set(auth(adminToken)).send(datos).expect(400);
+  for (const [metodo, url, datos] of [
+    ['get', `${catalogoUrl}/inexistente`, undefined], ['put', `${catalogoUrl}/inexistente`, { nombre: 'Ausente' }],
+    ['patch', `${catalogoUrl}/inexistente/estado`, { activo: false }], ['delete', `${catalogoUrl}/inexistente`, undefined]
+  ]) await request(app)[metodo](url).set(auth(adminToken)).send(datos).expect(404);
+  await request(app).get(catPath).set(auth(adminToken)).expect(200).expect(({ body }) => assert.equal(body.dato.activo, true));
+  for (const activo of [false, true]) {
+    await request(app).patch(`${catPath}/estado`).set(auth(adminToken)).send({ activo }).expect(200);
+    for (const token of [null, studentToken, reviewerToken]) {
+      const consulta = request(app).get(catalogoUrl);
+      if (token) consulta.set(auth(token));
+      const { body } = await consulta.expect(200);
+      assert.equal(body.datos.some(item => item.id_catalogo_materia === catId), activo);
+      for (const item of body.datos) assert.deepEqual(Object.keys(item).sort(), ['id_catalogo_materia', 'nombre']);
+      assert.deepEqual(body.datos.map(item => item.nombre), [...body.datos.map(item => item.nombre)].sort());
+    }
+    const todas = (await request(app).get(`${catalogoUrl}?todas=true`).set(auth(adminToken)).expect(200)).body.datos;
+    assert.equal(todas.find(item => item.id_catalogo_materia === catId).activo, activo);
+  }
+  const historica = (await sequelize.query('SELECT id_materia,nombre FROM materia WHERE id_cuenta=:cuenta LIMIT 1', {
+    replacements: { cuenta: studentRegistration.body.cuenta.id_cuenta }, type: sequelize.QueryTypes.SELECT
+  }))[0];
+  // Asociación directa solo en esta BD temporal: el flujo de materias corresponde a D-2.
+  await sequelize.query('UPDATE materia SET id_catalogo_materia=:catalogo WHERE id_materia=:materia', {
+    replacements: { catalogo: catId, materia: historica.id_materia }
+  });
+  await request(app).put(catPath).set(auth(adminToken)).send({ nombre: 'Álgebra avanzada' }).expect(200);
+  assert.equal((await sequelize.query('SELECT nombre FROM materia WHERE id_materia=:id', {
+    replacements: { id: historica.id_materia }, plain: true
+  })).nombre, historica.nombre);
+  await request(app).delete(catPath).set(auth(adminToken)).expect(409)
+    .expect(({ body }) => assert.match(body.error, /materias asociadas/));
+  await request(app).delete(`${catalogoUrl}/${otra.id_catalogo_materia}`).set(auth(adminToken)).expect(204);
+  await request(app).get(`${catalogoUrl}/${otra.id_catalogo_materia}`).set(auth(adminToken)).expect(404);
+
   await request(app).post('/api/auth/login').send({ correo: 'uno@test.local', contrasena: 'Incorrecta!' }).expect(401);
   await request(app).delete(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken)).expect(204);
   assert.equal((await login('inactiva@test.local')).status, 403);

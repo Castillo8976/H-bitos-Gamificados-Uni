@@ -11,7 +11,7 @@
 
 ## Descripción general
 
-Todas las **13 tablas** del sistema cumplen **1FN, 2FN y 3FN**. Se documentan dos excepciones marcadas como **desnormalizaciones deliberadas**, justificadas por requisitos no funcionales de rendimiento y consistencia histórica.
+Las **14 tablas** del sistema cumplen **1FN, 2FN y 3FN** (13 hasta la Decisión #10 del 24 de octubre de 2026, que añadió `catalogo_materia` como decisión del equipo pendiente de revisión docente). Se documentan tres excepciones marcadas como **desnormalizaciones deliberadas**, justificadas por requisitos no funcionales de rendimiento y consistencia histórica.
 
 > **Nota de corrección (agosto 2026):** este documento pasó por dos revisiones. Primero se agregó el análisis de `nivel_cuenta` y `notificacion` (14 tablas). Después se **eliminó la tabla `reporte`** por decisión del equipo — sus campos eran 100% calculables en tiempo real, así que la Excepción 3 (antes documentada aquí) desapareció junto con la tabla. Total final: 13 tablas, 2 excepciones.
 
@@ -52,7 +52,7 @@ No existe dependencia parcial. Las demás tablas tienen PK simple (UUID), por lo
 | Tabla | 1FN ✓ | 2FN ✓ | 3FN / Excepción |
 |---|---|---|---|
 | **cuenta** | Valores atómicos. Sin grupos repetitivos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
-| **materia** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
+| **materia** | Valores atómicos. | PK simple → 2FN trivial. | ⚠️ **EXCEPCIÓN:** cuando existe `id_catalogo_materia`, `nombre` repite el nombre del catálogo. Se conserva como copia histórica (Excepción 3). |
 | **tarea** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN. nombre de materia no está; se obtiene por JOIN. |
 | **sesion_estudio** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
 | **insignia** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
@@ -63,6 +63,7 @@ No existe dependencia parcial. Las demás tablas tienen PK simple (UUID), por lo
 | **recordatorio** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
 | **preferencia_visual** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. |
 | **nivel_cuenta** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. Es un catálogo global: ningún atributo depende de otro atributo no clave (`puntos_minimos` y `orden` son independientes entre sí). |
+| **catalogo_materia** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. Catálogo global: `nombre` y `activo` dependen solo de `id_catalogo_materia`. |
 | **notificacion** | Valores atómicos. | PK simple → 2FN trivial. | ✅ Cumple 3FN sin excepciones. `tipo` y `mensaje` dependen directamente de `id_notificacion`; no hay dependencia transitiva entre ellos. |
 
 ---
@@ -143,6 +144,16 @@ id_notificacion → fecha       ✓ dependencia directa de PK
 | **Tipo de desnormalización** | Controlada — justificada por consistencia histórica |
 | **RF** | RF15 |
 
+### EXCEPCIÓN 3 — Tabla `materia` (campo `nombre`) — Decisión #10
+
+| Aspecto | Detalle |
+|---|---|
+| **Atributo** | `nombre VARCHAR(80)` |
+| **Posible derivación** | Cuando la materia tiene `id_catalogo_materia`, `nombre` podría obtenerse por JOIN con `catalogo_materia` |
+| **Justificación** | Se conserva por **consistencia histórica y compatibilidad**: las materias anteriores no tienen asociación y su nombre es el único dato; en materias nuevas, el backend copia el nombre del catálogo al crearlas y un cambio posterior del catálogo no reescribe el historial. La API, la exportación y las tareas siguen usando `materia.nombre` |
+| **Tipo de desnormalización** | Controlada — copia histórica, no un error de diseño |
+| **RF** | RF01 (RN26, HU29) |
+
 > **Nota (agosto 2026):** este documento tenía una tercera excepción para la tabla `reporte` (campos `tareas_completadas`, `horas_estudiadas`, `puntos_obtenidos` mantenidos como snapshot). Esa tabla fue **eliminada** — ver `E7-diccionario-datos.md` — por lo que la excepción ya no aplica. El sistema ahora calcula esos valores en tiempo real con `COUNT`/`SUM`, que es precisamente la alternativa que esta misma sección había descartado antes por RNF02; el equipo decidió aceptar el costo de la consulta agregada a cambio de eliminar la redundancia de datos.
 
 ---
@@ -151,8 +162,8 @@ id_notificacion → fecha       ✓ dependencia directa de PK
 
 | Forma Normal | Tablas conformes | Excepciones documentadas |
 |---|---|---|
-| **1FN** | 13/13 | 0 |
-| **2FN** | 13/13 | 0 |
-| **3FN** | 11/13 | 2 (deliberadas y documentadas) |
+| **1FN** | 14/14 | 0 |
+| **2FN** | 14/14 | 0 |
+| **3FN** | 11/14 | 3 (deliberadas y documentadas) |
 
-> **Conclusión:** El modelo cumple 3FN. Las dos excepciones restantes (`reto.completado` y `meta.cumplida`) son **desnormalizaciones deliberadas**, documentadas con su justificación técnica y de negocio. No representan errores de diseño sino decisiones arquitectónicas conscientes.
+> **Conclusión:** El modelo cumple 3FN. Las tres excepciones (`reto.completado`, `meta.cumplida` y `materia.nombre`) son **desnormalizaciones deliberadas**, documentadas con su justificación técnica y de negocio. No representan errores de diseño sino decisiones arquitectónicas conscientes.

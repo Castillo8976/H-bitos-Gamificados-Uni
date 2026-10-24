@@ -177,6 +177,7 @@ async function cargarAplicacion() {
     if (estado.cuenta.rol === 'Administrador') {
       const [cuentas, niveles, insignias] = await Promise.all([api('/cuentas'), api('/niveles'), api('/insignias')]);
       estado.cuentasAdmin = cuentas.datos; estado.niveles = niveles.datos; estado.insignias = insignias.datos;
+      await cargarCatalogoMateriasAdmin();
       renderizarUsuario(); renderizarAdministracion(); await cargarDetalleAdministrativo(); mostrarAplicacion(); prepararPeriodos();
       navegar('administracion'); return;
     }
@@ -417,6 +418,17 @@ async function cargarInstitucionales() {
   const consulta = new URLSearchParams({ fecha_inicio: formulario.elements.fecha_inicio.value, fecha_fin: formulario.elements.fecha_fin.value });
   estado.institucionales = (await api(`/estadisticas/institucionales?${consulta}`)).dato;
   renderizarInstitucionales();
+}
+
+/** RF01/RN26/HU29, Decisión #10: bloque P17 del catálogo global. */
+async function cargarCatalogoMateriasAdmin() {
+  const { datos } = await api('/catalogo-materias?todas=true');
+  $('#lista-catalogo-materias').innerHTML = datos.map(item => `
+    <div class="item"><div class="item-fila"><div><strong>${escapar(item.nombre)}</strong><br><small>${item.activo ? 'Activa' : 'Inactiva'}</small></div><div class="acciones">
+    <button class="boton secundario pequeno" data-accion="editar-catalogo" data-id="${escapar(item.id_catalogo_materia)}" data-nombre="${escapar(item.nombre)}">Editar nombre</button>
+    <button class="boton secundario pequeno" data-accion="estado-catalogo" data-id="${escapar(item.id_catalogo_materia)}" data-activo="${!item.activo}">${item.activo ? 'Desactivar' : 'Reactivar'}</button>
+    <button class="boton peligro pequeno" data-accion="eliminar-catalogo" data-id="${escapar(item.id_catalogo_materia)}">Eliminar</button>
+    </div></div></div>`).join('') || estadoVacio('No hay asignaturas en el catálogo.');
 }
 
 /** RF01/HU27 y RF07/HU26: presenta cuentas, catálogos y correcciones. */
@@ -717,6 +729,20 @@ async function manejarAccion(evento) {
   if (!boton) return;
   const { accion, id } = boton.dataset;
   try {
+    if (['editar-catalogo', 'estado-catalogo', 'eliminar-catalogo'].includes(accion)) {
+      const ruta = `/catalogo-materias/${id}`;
+      if (accion === 'editar-catalogo') {
+        const nombre = prompt('Nombre de la asignatura:', boton.dataset.nombre);
+        if (nombre === null) return;
+        await api(ruta, { method: 'PUT', body: JSON.stringify({ nombre }) });
+      } else if (accion === 'estado-catalogo') {
+        await api(`${ruta}/estado`, { method: 'PATCH', body: JSON.stringify({ activo: boton.dataset.activo === 'true' }) });
+      } else {
+        if (!confirm('¿Eliminar esta asignatura del catálogo?')) return;
+        await api(ruta, { method: 'DELETE' });
+      }
+      await cargarCatalogoMateriasAdmin(); avisar('Catálogo actualizado.', 'exito');
+    }
     if (accion === 'nueva-tarea') return abrirTarea();
     if (accion === 'editar-materia') {
       const materia = estado.materias.find(item => item.id_materia === id);
@@ -1069,8 +1095,18 @@ function registrarEventos() {
     try {
       const [cuentas, niveles, insignias] = await Promise.all([api('/cuentas'), api('/niveles'), api('/insignias')]);
       estado.cuentasAdmin = cuentas.datos; estado.niveles = niveles.datos; estado.insignias = insignias.datos;
+      await cargarCatalogoMateriasAdmin();
       renderizarAdministracion(); await cargarDetalleAdministrativo(); avisar('Datos administrativos actualizados.', 'exito');
     } catch (error) { avisar(error.message, 'error'); }
+  });
+  $('#form-admin-catalogo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        await api('/catalogo-materias', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value }) });
+        f.reset(); await cargarCatalogoMateriasAdmin(); avisar('Asignatura creada.', 'exito');
+      } catch (error) { avisar(error.message, 'error'); }
+    });
   });
   $('#form-admin-insignia').addEventListener('submit', evento => {
     evento.preventDefault(); const f = evento.currentTarget;

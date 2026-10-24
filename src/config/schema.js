@@ -81,6 +81,11 @@ async function inicializarEsquema() {
   if (!columnasCuenta.some(columna => columna.name === 'version_sesion')) {
     await sequelize.query('ALTER TABLE cuenta ADD COLUMN version_sesion INTEGER NOT NULL DEFAULT 0 CHECK (version_sesion >= 0)');
   }
+  // RF01/RN26/HU29 (Decisión #10, M1): conserva materias históricas sin asociación automática.
+  const columnasMateria = await sequelize.query('PRAGMA table_info(materia)', { type: sequelize.QueryTypes.SELECT });
+  if (!columnasMateria.some(columna => columna.name === 'id_catalogo_materia')) {
+    await sequelize.query('ALTER TABLE materia ADD COLUMN id_catalogo_materia VARCHAR(36) REFERENCES catalogo_materia(id_catalogo_materia) ON DELETE RESTRICT ON UPDATE CASCADE');
+  }
   // RF06/HU31/RN28 (Decisión #09): migración aditiva; los retos existentes quedan activos.
   const columnasReto = await sequelize.query('PRAGMA table_info(reto)', { type: sequelize.QueryTypes.SELECT });
   if (!columnasReto.some(columna => columna.name === 'activo')) {

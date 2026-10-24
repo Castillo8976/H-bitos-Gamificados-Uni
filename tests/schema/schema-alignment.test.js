@@ -12,6 +12,7 @@ const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 
 const models = {
+  catalogo_materia: require('../../src/models/CatalogoMateria'),
   cuenta: require('../../src/models/Cuenta'),
   materia: require('../../src/models/Materia'),
   tarea: require('../../src/models/Tarea'),
@@ -28,8 +29,9 @@ const models = {
 };
 
 const expected = {
+  catalogo_materia: ['id_catalogo_materia','nombre','activo'],
   cuenta: ['id_cuenta','nombre','correo','contrasena_hash','fecha_registro','activa','rol','version_sesion'],
-  materia: ['id_materia','id_cuenta','nombre','horario','activa'],
+  materia: ['id_materia','id_cuenta','id_catalogo_materia','nombre','horario','activa'],
   tarea: ['id_tarea','id_cuenta','id_materia','nombre','fecha_entrega','prioridad','estado','fecha_completada'],
   sesion_estudio: ['id_sesion','id_cuenta','id_tarea','fecha','duracion_minutos','modo_enfoque'],
   insignia: ['id_insignia','nombre','descripcion','condicion','icono'],
@@ -107,6 +109,7 @@ async function run() {
   }
 
   const primaryKeys = {
+    catalogo_materia: ['id_catalogo_materia'],
     cuenta: ['id_cuenta'], materia: ['id_materia'], tarea: ['id_tarea'],
     sesion_estudio: ['id_sesion'], insignia: ['id_insignia'],
     cuenta_insignia: ['id_cuenta', 'id_insignia'], punto: ['id_punto'],
@@ -121,6 +124,7 @@ async function run() {
   }
 
   const defaults = {
+    catalogo_materia: { activo: '1' },
     cuenta: { fecha_registro: 'CURRENT_DATE', activa: '1', rol: "'Estudiante'" },
     nivel_cuenta: { puntos_minimos: '0', orden: '1' },
     preferencia_visual: { tema: "'purple'", modo_oscuro: '0', fecha_actualizado: 'CURRENT_DATE' },
@@ -140,6 +144,7 @@ async function run() {
   }
 
   const requiredChecks = {
+    catalogo_materia: ['activo IN (0,1)'],
     cuenta: ['activa IN (0,1)', "rol IN ('Estudiante','Administrador','Revisor institucional')"],
     nivel_cuenta: ['puntos_minimos >= 0', 'orden > 0'],
     preferencia_visual: ["tema IN ('purple','teal','amber','coral','blue','green')", 'modo_oscuro IN (0,1)'],
@@ -160,6 +165,7 @@ async function run() {
   }
 
   const requiredUniqueKeys = {
+    catalogo_materia: [['nombre']],
     cuenta: [['correo']],
     nivel_cuenta: [['nombre']],
     preferencia_visual: [['id_cuenta']],
@@ -194,6 +200,7 @@ async function run() {
   await sequelize.query("INSERT INTO punto (id_punto, id_cuenta, cantidad, origen, id_origen, fecha) VALUES ('p-3', 'acct-idempotencia', 10, 'Tarea', NULL, '2026-09-21')");
 
   const expectedForeignKeys = [
+    ['materia','id_catalogo_materia','catalogo_materia','id_catalogo_materia','RESTRICT'],
     ['preferencia_visual','id_cuenta','cuenta','id_cuenta','CASCADE'],
     ['materia','id_cuenta','cuenta','id_cuenta','CASCADE'],
     ['tarea','id_cuenta','cuenta','id_cuenta','CASCADE'],
@@ -229,7 +236,7 @@ async function run() {
     sequelize.query("INSERT INTO tarea (id_tarea,id_cuenta,nombre,fecha_entrega,prioridad) VALUES ('x','inexistente','X','2026-01-01','Urgente')")
   );
 
-  console.log('✅ E7 → E11 → 13 modelos → SQLite: alineación verificada');
+  console.log('✅ E7 → E11 → 14 modelos → SQLite: alineación verificada');
   console.log('✅ Sin reporte; integridad ok; 0 violaciones de claves foráneas');
 }
 

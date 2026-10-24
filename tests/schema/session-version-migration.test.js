@@ -16,7 +16,8 @@ const columna = '  version_sesion INTEGER NOT NULL DEFAULT 0 CHECK (version_sesi
 const contar = async tabla => (await db.query(`SELECT COUNT(*) AS n FROM ${tabla}`, { plain: true })).n;
 
 async function run() {
-  const ddl = fs.readFileSync(ddlPath, 'utf8');
+  // Decisión #10: el escenario histórico sigue partiendo de 13 tablas.
+  const ddl = require('../helpers/catalogo').sinCatalogo(fs.readFileSync(ddlPath, 'utf8'));
   assert.ok(ddl.includes(columna), 'E11 debe declarar version_sesion');
   for (const sentencia of dividirSentencias(ddl.replace(columna, ''))) await db.query(sentencia);
   const columnasAntes = await db.query('PRAGMA table_info(cuenta)', { type: db.QueryTypes.SELECT });
@@ -44,7 +45,7 @@ async function run() {
   assert.deepEqual(await db.query('SELECT version_sesion FROM cuenta ORDER BY id_cuenta', { type: db.QueryTypes.SELECT }), [{ version_sesion: 0 }, { version_sesion: 0 }]);
   assert.deepEqual(await Promise.all(tablas.map(contar)), conteosAntes);
   assert.deepEqual(await db.query('SELECT id_cuenta, nombre, correo, contrasena_hash, activa, rol FROM cuenta ORDER BY id_cuenta', { type: db.QueryTypes.SELECT }), cuentasAntes);
-  assert.equal((await db.query("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", { plain: true })).n, 13);
+  assert.equal((await db.query("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", { plain: true })).n, 14); // Decisión #10: M1 agrega catalogo_materia.
   // Sequelize agrupa SQLITE_CONSTRAINT en UniqueConstraintError; el motivo real está en el error original.
   await assert.rejects(db.query("UPDATE cuenta SET version_sesion = -1 WHERE id_cuenta = 'c1'"),
     error => /CHECK constraint failed/.test(error.original?.message || error.message));
@@ -58,6 +59,6 @@ async function run() {
 
   assert.equal((await db.query('PRAGMA integrity_check', { plain: true })).integrity_check, 'ok');
   assert.deepEqual(await db.query('PRAGMA foreign_key_check', { type: db.QueryTypes.SELECT }), []);
-  console.log('✅ Migración version_sesion: columna aditiva, 13 tablas, datos e integridad conservados');
+  console.log('✅ Migración version_sesion: columna aditiva, 14 tablas, datos e integridad conservados');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => db.close());

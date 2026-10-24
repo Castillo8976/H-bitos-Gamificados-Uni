@@ -22,6 +22,7 @@
 
 const { DataTypes } = require('sequelize'); // Tipos de datos de Sequelize para definir columnas
 const sequelize = require('../database');    // Instancia de conexión a la base de datos
+const CatalogoMateria = require('./CatalogoMateria');
 const Cuenta = require('./Cuenta');          // Modelo padre de la relación 1:N
 
 
@@ -65,6 +66,11 @@ const Materia = sequelize.define('materia', {
    * Debe corresponder a un `id_cuenta` existente en la tabla `cuenta`.
    * Garantiza que cada materia esté siempre vinculada a un usuario válido.
    */
+  /** RF01/RN26/HU29, Decisión #10: vínculo opcional; nombre conserva su valor histórico. */
+  id_catalogo_materia: {
+    type: DataTypes.STRING(36),
+    allowNull: true
+  },
   id_cuenta: {
     type: DataTypes.STRING(36), // UUID v4: misma longitud que la PK de Cuenta
     allowNull: false            // Campo obligatorio: toda materia debe tener un propietario
@@ -167,5 +173,9 @@ Materia.belongsTo(Cuenta, {
   foreignKey: 'id_cuenta'  // FK en materia que referencia a Cuenta
 });
 
+
+/** RF01/RN26/HU29: el catálogo asociado se conserva mientras tenga materias. */
+CatalogoMateria.hasMany(Materia, { foreignKey: 'id_catalogo_materia', onDelete: 'RESTRICT', onUpdate: 'CASCADE' });
+Materia.belongsTo(CatalogoMateria, { foreignKey: 'id_catalogo_materia', onDelete: 'RESTRICT', onUpdate: 'CASCADE' });
 
 module.exports = Materia;

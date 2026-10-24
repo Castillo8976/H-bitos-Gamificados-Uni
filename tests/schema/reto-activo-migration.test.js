@@ -13,7 +13,8 @@ const columna = '  activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),\n'
 const contar = async tabla => (await db.query(`SELECT COUNT(*) AS n FROM ${tabla}`, { plain: true })).n;
 
 async function run() {
-  const ddl = fs.readFileSync(ddlPath, 'utf8');
+  // Decisión #10: el escenario histórico sigue partiendo de 13 tablas.
+  const ddl = require('../helpers/catalogo').sinCatalogo(fs.readFileSync(ddlPath, 'utf8'));
   const posicionReto = ddl.indexOf('CREATE TABLE IF NOT EXISTS reto');
   assert.ok(ddl.indexOf(columna, posicionReto) > posicionReto, 'E11 debe declarar reto.activo');
   const anterior = ddl.slice(0, posicionReto) + ddl.slice(posicionReto).replace(columna, '');
@@ -39,12 +40,12 @@ async function run() {
   assert.deepEqual(await db.query('SELECT activo FROM reto ORDER BY id_reto', { type: db.QueryTypes.SELECT }), [{ activo: 1 }, { activo: 1 }]);
   assert.deepEqual(await Promise.all(tablas.map(contar)), conteos);
   assert.deepEqual(await db.query('SELECT id_reto, descripcion, condicion, puntos_recompensa, semana, progreso, completado FROM reto ORDER BY id_reto', { type: db.QueryTypes.SELECT }), retosAntes);
-  assert.equal((await db.query("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", { plain: true })).n, 13);
+  assert.equal((await db.query("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", { plain: true })).n, 14); // Decisión #10: M1 agrega catalogo_materia.
   // Sequelize agrupa SQLITE_CONSTRAINT en UniqueConstraintError; el motivo real está en el error original.
   await assert.rejects(db.query("UPDATE reto SET activo = 2 WHERE id_reto = 'r1'"),
     error => /CHECK constraint failed/.test(error.original?.message || error.message));
   assert.equal((await db.query('PRAGMA integrity_check', { plain: true })).integrity_check, 'ok');
   assert.deepEqual(await db.query('PRAGMA foreign_key_check', { type: db.QueryTypes.SELECT }), []);
-  console.log('✅ Migración reto.activo: columna aditiva, 13 tablas, retos y puntos conservados');
+  console.log('✅ Migración reto.activo: columna aditiva, 14 tablas, retos y puntos conservados');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => db.close());

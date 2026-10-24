@@ -20,7 +20,7 @@ Esta matriz conecta cada tabla del Modelo Relacional (E9) con su entidad de orig
 |---|---|---|---|---|---|---|---|---|
 | **cuenta** | Fuerte (raíz) | id_cuenta VARCHAR(36) | — | — | ✅ | ✅ | ✅ | — |
 | **preferencia_visual** | Débil 1:1 | id_preferencia VARCHAR(36) | id_cuenta → cuenta | CASCADE | ✅ | ✅ | ✅ | — |
-| **materia** | Fuerte | id_materia VARCHAR(36) | id_cuenta → cuenta | CASCADE | ✅ | ✅ | ✅ | — |
+| **materia** | Fuerte | id_materia VARCHAR(36) | id_cuenta → cuenta CASCADE · id_catalogo_materia → catalogo_materia RESTRICT (opcional, Decisión #10) | CASCADE / RESTRICT | ✅ | ✅ | ⚠️ | nombre se conserva como copia histórica del catálogo (E10, Excepción 3). |
 | **tarea** | Fuerte | id_tarea VARCHAR(36) | id_cuenta → cuenta CASCADE · id_materia → materia SET NULL | CASCADE / SET NULL | ✅ | ✅ | ✅ | — |
 | **sesion_estudio** | Débil | id_sesion VARCHAR(36) | id_cuenta → cuenta CASCADE · id_tarea → tarea SET NULL | CASCADE / SET NULL | ✅ | ✅ | ✅ | — |
 | **insignia** | Fuerte (catálogo) | id_insignia VARCHAR(36) | — | — | ✅ | ✅ | ✅ | — |
@@ -31,6 +31,7 @@ Esta matriz conecta cada tabla del Modelo Relacional (E9) con su entidad de orig
 | **meta** | Débil | id_meta VARCHAR(36) | id_cuenta → cuenta | CASCADE | ✅ | ✅ | ⚠️ | cumplida podría derivarse de valor_actual >= valor_objetivo. Se mantiene por consistencia histórica. |
 | **recordatorio** | Débil | id_recordatorio VARCHAR(36) | id_tarea → tarea CASCADE · id_cuenta → cuenta CASCADE | CASCADE · CASCADE | ✅ | ✅ | ✅ | — |
 | **notificacion** | Débil | id_notificacion VARCHAR(36) | id_cuenta → cuenta | CASCADE | ✅ | ✅ | ✅ | — |
+| **catalogo_materia** | Fuerte (catálogo) — tabla 14, Decisión #10 | id_catalogo_materia VARCHAR(36) | — | — | ✅ | ✅ | ✅ | — |
 
 ---
 
@@ -40,7 +41,8 @@ Esta matriz conecta cada tabla del Modelo Relacional (E9) con su entidad de orig
 |---|---|---|---|
 | cuenta | correo | version_sesion >= 0 | fecha_registro = DATE('now'), activa = 1, version_sesion = 0 |
 | preferencia_visual | id_cuenta (garantiza 1:1) | tema IN (6 colores) | tema = 'purple', modo_oscuro = 0, fecha_actualizado = DATE('now') |
-| materia | — | activa IN (0,1) | activa = 1 |
+| materia | — | activa IN (0,1) | activa = 1, id_catalogo_materia = NULL |
+| catalogo_materia | nombre (COLLATE NOCASE) | activo IN (0,1) | activo = 1 |
 | tarea | — | prioridad IN ('Alta','Media','Baja'), estado IN ('Pendiente','Completada') | estado = 'Pendiente' |
 | sesion_estudio | — | duracion_minutos > 0, modo_enfoque IN (0,1) | fecha = DATE('now'), modo_enfoque = 0 |
 | insignia | nombre, condicion | — | — |

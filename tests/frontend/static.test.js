@@ -39,6 +39,10 @@ async function run() {
   assert.match(pagina.text, /data-seccion="institucional"/);
   assert.match(pagina.text, /id="modal-recompensa"/);
 
+  // RF01/RN26/HU29: bloque administrativo P17 publicado.
+  assert.match(pagina.text, /id="panel-catalogo-materias"/);
+  assert.match(pagina.text, /id="form-admin-catalogo"/);
+  assert.match(pagina.text, /id="lista-catalogo-materias"/);
   const estilos = await request(app).get('/styles.css').expect(200).expect('Content-Type', /css/);
   assert.match(estilos.text, /--primario:#534ab7/);
   assert.match(estilos.text, /@media\(max-width:720px\)/);
@@ -55,6 +59,8 @@ async function run() {
   assert.match(cliente.text, /reto\.completado \? '' : `<button[^`]*data-accion="eliminar-reto"/);
   assert.match(pagina.text, /name="puntos_recompensa" type="number" min="1" max="10000"/);
   assert.match(cliente.text, /mostrarRecompensa/);
+  assert.match(cliente.text, /catalogo-materias\?todas=true/);
+  for (const accion of ['editar-catalogo', 'estado-catalogo', 'eliminar-catalogo']) assert.ok(cliente.text.includes(accion));
   assert.doesNotMatch(cliente.text, /localStorage/);
 
   console.log('✅ Frontend: acceso, pantallas, estilos responsive y cliente API publicados');

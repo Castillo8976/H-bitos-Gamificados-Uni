@@ -18,6 +18,13 @@ const admin = authorize('Administrador');
 const wrap = handler => asyncHandler(handler);
 
 router.use(authenticateRequest);
+// RF01/RN26/HU29: las rutas administrativas del catálogo exigen Administrador.
+router.get('/catalogo-materias', admin, wrap(controllers.subjectCatalog.list));
+router.get('/catalogo-materias/:id', admin, wrap(controllers.subjectCatalog.get));
+router.post('/catalogo-materias', admin, allowFields('nombre'), requireFields('nombre'), nonBlankText('nombre', 80), wrap(controllers.subjectCatalog.create));
+router.put('/catalogo-materias/:id', admin, allowFields('nombre'), requireFields('nombre'), nonBlankText('nombre', 80), wrap(controllers.subjectCatalog.update));
+router.patch('/catalogo-materias/:id/estado', admin, allowFields('activo'), requireFields('activo'), booleanField('activo'), wrap(controllers.subjectCatalog.setState));
+router.delete('/catalogo-materias/:id', admin, allowFields(), wrap(controllers.subjectCatalog.remove));
 router.use(validateEntityRequest);
 
 router.get('/cuentas', admin, wrap(controllers.accounts.list));
