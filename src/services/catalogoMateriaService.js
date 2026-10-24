@@ -13,6 +13,17 @@ async function obtener(id, transaction) {
   return registro;
 }
 
+/** RN26/Decisión #10 D-2: valida selección activa dentro de la transacción del llamador. */
+async function obtenerActiva(id, transaction, exigirDisponibles = false) {
+  if (exigirDisponibles && !(await crud.listar(false, transaction)).length) {
+    throw new HttpError(409, 'No hay asignaturas disponibles en el catálogo; contacta al Administrador');
+  }
+  const registro = await crud.obtener(id, transaction);
+  if (!registro) throw new HttpError(400, 'Asignatura del catálogo no encontrada');
+  if (!registro.activo) throw new HttpError(409, 'La asignatura del catálogo está inactiva');
+  return registro;
+}
+
 async function guardar(id, nombre) {
   try {
     return await crud.transaccion(async transaction => {
@@ -30,7 +41,15 @@ async function guardar(id, nombre) {
 }
 
 async function cambiarEstado(id, activo) {
-  return crud.actualizar(await obtener(id), { activo });
+  try {
+    return await crud.transaccion(async transaction =>
+      crud.actualizar(await obtener(id, transaction), { activo }, transaction));
+  } catch (error) {
+    if ([error.code, error.original?.code, error.parent?.code].includes('SQLITE_BUSY')) {
+      throw new HttpError(409, 'La operación entró en conflicto con otra modificación del catálogo; inténtalo de nuevo');
+    }
+    throw error;
+  }
 }
 
 async function eliminar(id) {
@@ -41,4 +60,4 @@ async function eliminar(id) {
   }
 }
 
-module.exports = { listar: crud.listar, obtener, guardar, cambiarEstado, eliminar };
+module.exports = { listar: crud.listar, obtener, obtenerActiva, guardar, cambiarEstado, eliminar };

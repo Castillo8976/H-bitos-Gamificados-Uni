@@ -117,6 +117,7 @@ function navegar(nombre) {
 /** RF01/HU01: alterna registro/login manteniendo el estado accesible de las pestañas. */
 function seleccionarAcceso(nombre) {
   const login = nombre === 'login';
+  if (!login) cargarCatalogoMaterias();
   $('#panel-login').hidden = !login;
   $('#panel-registro').hidden = login;
   $('#tab-login').classList.toggle('activo', login);
@@ -315,11 +316,33 @@ function opcionesTareas() {
     .map(tarea => `<option value="${escapar(tarea.id_tarea)}">${escapar(tarea.nombre)}</option>`).join('');
 }
 
+/** RN26/Decisión #10: opciones públicas activas; sin selección se impide el alta. */
+async function cargarCatalogoMaterias() {
+  const formularios = [[$('#form-registro'), $('#aviso-catalogo-registro')], [$('#form-materia'), $('#aviso-catalogo-materia')]];
+  for (const [formulario] of formularios) formulario.querySelector('[type=submit]').disabled = true;
+  let datos = [], mensaje = '';
+  try {
+    ({ datos } = await api('/catalogo-materias'));
+    if (!datos.length) mensaje = 'No hay asignaturas disponibles en el catálogo; contacta al Administrador';
+  } catch (_) { mensaje = 'No se pudo cargar el catálogo de asignaturas. Intenta nuevamente.'; }
+  for (const [formulario, aviso] of formularios) {
+    const select = formulario.elements.id_catalogo_materia;
+    const anterior = select.value;
+    select.innerHTML = '<option value="">Selecciona una asignatura</option>' + datos.map(item => `<option value="${escapar(item.id_catalogo_materia)}">${escapar(item.nombre)}</option>`).join('');
+    select.value = anterior;
+    select.disabled = !datos.length;
+    aviso.textContent = mensaje;
+    const editando = formulario.id === 'form-materia' && formulario.elements.id.value;
+    select.required = !editando;
+    formulario.querySelector('[type=submit]').disabled = !datos.length && !editando;
+  }
+}
+
 /** RF09/HU16: muestra materias y controles de edición/eliminación. */
 function renderizarMaterias() {
   $('#total-materias').textContent = estado.materias.length;
   $('#lista-materias').innerHTML = estado.materias.length ? estado.materias.map(materia => `
-    <div class="item"><div class="item-fila"><div><strong>${escapar(materia.nombre)}</strong><br><small>${escapar(materia.horario || 'Sin horario')}</small></div>
+    <div class="item"><div class="item-fila"><div><strong>${escapar(materia.nombre)}</strong>${materia.id_catalogo_materia ? '' : ' <span class="chip">sin catálogo</span>'}<br><small>${escapar(materia.horario || 'Sin horario')}</small></div>
       <div class="acciones"><button class="boton secundario pequeno" data-accion="editar-materia" data-id="${escapar(materia.id_materia)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-materia" data-id="${escapar(materia.id_materia)}">Eliminar</button></div>
     </div></div>`).join('') : estadoVacio('Aún no hay materias registradas.');
   $('#tarea-materia').innerHTML = `<option value="">Sin materia</option>${opcionesMaterias()}`;
@@ -612,6 +635,7 @@ function limpiarMateria() {
   $('#form-materia').elements.id.value = '';
   $('#titulo-form-materia').textContent = 'Nueva materia';
   $('#cancelar-materia').hidden = true;
+  cargarCatalogoMaterias();
 }
 
 /** RF10/HU10: representa los segundos restantes del cronómetro. */
@@ -747,7 +771,11 @@ async function manejarAccion(evento) {
     if (accion === 'editar-materia') {
       const materia = estado.materias.find(item => item.id_materia === id);
       $('#form-materia').elements.id.value = id;
-      $('#form-materia').elements.nombre.value = materia.nombre;
+      await cargarCatalogoMaterias();
+      $('#form-materia').elements.id_catalogo_materia.value = materia.id_catalogo_materia || '';
+      $('#form-materia').elements.id_catalogo_materia.options[0].textContent = 'Conservar asignatura actual';
+      $('#form-materia').elements.id_catalogo_materia.required = false;
+      $('#form-materia [type=submit]').disabled = false;
       $('#form-materia').elements.horario.value = materia.horario || '';
       $('#titulo-form-materia').textContent = 'Editar materia';
       $('#cancelar-materia').hidden = false;
@@ -946,7 +974,7 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget;
     duranteEnvio(f, async () => {
       try {
-        await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { nombre: f.elements.materia.value, horario: f.elements.horario.value || null } }) });
+        await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { id_catalogo_materia: f.elements.id_catalogo_materia.value, horario: f.elements.horario.value || null } }) });
         await iniciarSesion(f.elements.correo.value, f.elements.contrasena.value); avisar('Cuenta creada correctamente.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
@@ -955,7 +983,11 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value;
     duranteEnvio(f, async () => {
       try {
-        const respuesta = await api(id ? `/materias/${id}` : '/materias', { method: id ? 'PUT' : 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, horario: f.elements.horario.value || null }) });
+        const seleccion = f.elements.id_catalogo_materia.value;
+        const actual = estado.materias.find(item => item.id_materia === id);
+        const datos = { horario: f.elements.horario.value || null };
+        if (seleccion && (!id || seleccion !== actual?.id_catalogo_materia)) datos.id_catalogo_materia = seleccion;
+        const respuesta = await api(id ? `/materias/${id}` : '/materias', { method: id ? 'PUT' : 'POST', body: JSON.stringify(datos) });
         estado.materias = id ? estado.materias.map(item => item.id_materia === id ? respuesta.dato : item) : [...estado.materias, respuesta.dato];
         limpiarMateria(); renderizarMaterias(); avisar(`Materia ${id ? 'actualizada' : 'creada'}.`, 'exito');
       } catch (error) { avisar(error.message, 'error'); }
@@ -1174,6 +1206,7 @@ function registrarEventos() {
 /** RF01/HU01: registra eventos y recupera una sesión si hay token. */
 async function iniciar() {
   registrarEventos();
+  await cargarCatalogoMaterias();
   if (estado.token) await cargarAplicacion(); else mostrarAcceso();
 }
 

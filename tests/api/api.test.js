@@ -22,10 +22,11 @@ const app = require('../../src/app');
 const Cuenta = require('../../src/models/Cuenta');
 const Reto = require('../../src/models/Reto');
 
+let id_catalogo_materia;
 const auth = token => ({ Authorization: `Bearer ${token}` });
 
 function register(data) {
-  return request(app).post('/api/auth/registro').send({ materia: { nombre: 'Materia inicial' }, ...data });
+  return request(app).post('/api/auth/registro').send({ materia: { id_catalogo_materia }, ...data });
 }
 
 async function login(correo, contrasena = 'ClaveSegura123!') {
@@ -35,6 +36,26 @@ async function login(correo, contrasena = 'ClaveSegura123!') {
 
 async function run() {
   await inicializarEsquema();
+  const contarRegistro = async () => Promise.all(['cuenta', 'preferencia_visual', 'materia'].map(async tabla =>
+    (await sequelize.query(`SELECT COUNT(*) AS n FROM ${tabla}`, { plain: true })).n));
+  const vacio = await contarRegistro();
+  await register({ nombre: 'Sin Catálogo', correo: 'vacio@test.local', contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia: 'ausente' } })
+    .expect(409).expect(({ body }) => assert.equal(body.error, 'No hay asignaturas disponibles en el catálogo; contacta al Administrador'));
+  assert.deepEqual(await contarRegistro(), vacio);
+  ({ id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo());
+  const inactivaCatalogo = await require('../helpers/catalogo').sembrarCatalogo('Asignatura inactiva', false);
+  for (const [id, status] of [[inactivaCatalogo.id_catalogo_materia, 409], ['ausente', 400]]) {
+    const antes = await contarRegistro();
+    await register({ nombre: 'Catálogo Inválido', correo: 'catalogo-invalido@test.local', contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia: id } }).expect(status);
+    assert.deepEqual(await contarRegistro(), antes);
+  }
+
+
+  for (const materia of [{ nombre: 'Texto libre' }, { id_catalogo_materia, nombre: 'Texto libre' }, { id_catalogo_materia, extra: true }]) {
+    const antes = await contarRegistro();
+    await register({ nombre: 'Texto Rechazado', correo: 'texto@test.local', contrasena: 'ClaveSegura123!', materia }).expect(400);
+    assert.deepEqual(await contarRegistro(), antes);
+  }
 
   await request(app).get('/api/health').expect(200).expect(({ body }) => assert.equal(body.base_datos, 'sqlite'));
 
@@ -45,7 +66,7 @@ async function run() {
 
   await request(app).post('/api/auth/registro').send({
     nombre: 'Escalamiento', correo: 'escalamiento@test.local', contrasena: 'ClaveSegura123!',
-    rol: 'Administrador', materia: { nombre: 'Materia inicial' }
+    rol: 'Administrador', materia: { id_catalogo_materia }
   }).expect(400);
   assert.equal(await Cuenta.count({ where: { correo: 'escalamiento@test.local' } }), 0);
 
@@ -102,12 +123,12 @@ async function run() {
   const adminToken = (await login('admin@test.local')).body.token;
   const reviewerToken = (await login('revisor@test.local')).body.token;
 
-  // RF01/RN26/HU29, Decisión #10: catálogo global; registro y materias conservan su contrato.
+  // RF01/RN26/HU29, Decisión #10: catálogo global y permisos administrativos.
   const catalogoUrl = '/api/catalogo-materias';
   // La excepción pública del catálogo no debe abrir otros catálogos protegidos.
   await request(app).get('/api/insignias').expect(401);
   await request(app).get('/api/niveles').expect(401);
-  await request(app).get(catalogoUrl).expect(200).expect(({ body }) => assert.deepEqual(body.datos, []));
+  await request(app).get(catalogoUrl).expect(200).expect(({ body }) => assert.deepEqual(body.datos, [{ id_catalogo_materia, nombre: 'Materia inicial' }]));
   const cat = (await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre: '  álgebra  ' }).expect(201)).body.dato;
   assert.equal(cat.nombre, 'álgebra');
   assert.equal(cat.activo, true);
@@ -163,10 +184,8 @@ async function run() {
   const historica = (await sequelize.query('SELECT id_materia,nombre FROM materia WHERE id_cuenta=:cuenta LIMIT 1', {
     replacements: { cuenta: studentRegistration.body.cuenta.id_cuenta }, type: sequelize.QueryTypes.SELECT
   }))[0];
-  // Asociación directa solo en esta BD temporal: el flujo de materias corresponde a D-2.
-  await sequelize.query('UPDATE materia SET id_catalogo_materia=:catalogo WHERE id_materia=:materia', {
-    replacements: { catalogo: catId, materia: historica.id_materia }
-  });
+  await request(app).put(`/api/materias/${historica.id_materia}`).set(auth(studentToken)).send({ id_catalogo_materia: catId }).expect(200);
+  historica.nombre = cat.nombre;
   await request(app).put(catPath).set(auth(adminToken)).send({ nombre: 'Álgebra avanzada' }).expect(200);
   assert.equal((await sequelize.query('SELECT nombre FROM materia WHERE id_materia=:id', {
     replacements: { id: historica.id_materia }, plain: true
@@ -215,8 +234,46 @@ async function run() {
     .send({ nombre: 'E' }).expect(400);
 
   const subject = await request(app).post('/api/materias').set(auth(studentToken))
-    .send({ nombre: 'Ingeniería de Software III', horario: 'Sábado' }).expect(201);
+    .send({ id_catalogo_materia, horario: 'Sábado' }).expect(201);
   const subjectId = subject.body.dato.id_materia;
+  assert.equal(subject.body.dato.id_catalogo_materia, id_catalogo_materia);
+  assert.equal(subject.body.dato.nombre, 'Materia inicial');
+  const inicial = (await sequelize.query('SELECT nombre,id_catalogo_materia FROM materia WHERE id_cuenta=:id LIMIT 1', {
+    replacements: { id: secondRegistration.body.cuenta.id_cuenta }, plain: true
+  }));
+  assert.deepEqual(inicial, { nombre: 'Materia inicial', id_catalogo_materia });
+  for (const [datos, status] of [
+    [{}, 400], [{ nombre: 'Texto libre' }, 400], [{ id_catalogo_materia, nombre: 'Falso' }, 400],
+    [{ id_catalogo_materia: 'ausente' }, 400], [{ id_catalogo_materia: inactivaCatalogo.id_catalogo_materia }, 409],
+    [{ id_catalogo_materia, horario: 'h'.repeat(101) }, 400]
+  ]) {
+    const antes = await contarRegistro();
+    await request(app).post('/api/materias').set(auth(studentToken)).send(datos).expect(status);
+    assert.deepEqual(await contarRegistro(), antes);
+  }
+  for (const [datos, status] of [[{ nombre: 'Texto libre' }, 400], [{ id_catalogo_materia: 'ausente' }, 400], [{ id_catalogo_materia: inactivaCatalogo.id_catalogo_materia }, 409]]) {
+    await request(app).put(`/api/materias/${subjectId}`).set(auth(studentToken)).send(datos).expect(status);
+  }
+  await request(app).put(`/api/materias/${subjectId}`).set(auth(secondToken)).send({ id_catalogo_materia }).expect(403);
+  await request(app).put(`/api/materias/${subjectId}`).set(auth(reviewerToken)).send({ horario: 'Lunes' }).expect(403);
+  await request(app).post('/api/materias').set(auth(studentToken)).send({ id_catalogo_materia, id_cuenta: secondRegistration.body.cuenta.id_cuenta }).expect(403);
+  const antiguaId = crypto.randomUUID();
+  await sequelize.query('INSERT INTO materia (id_materia,id_cuenta,nombre,horario) VALUES (:id,:cuenta,:nombre,NULL)', {
+    replacements: { id: antiguaId, cuenta: studentRegistration.body.cuenta.id_cuenta, nombre: 'Materia antigua' }
+  });
+  const antigua = (await request(app).put(`/api/materias/${antiguaId}`).set(auth(studentToken)).send({ horario: 'Martes', activa: false }).expect(200)).body.dato;
+  assert.equal(antigua.id_catalogo_materia, null);
+  assert.equal(antigua.nombre, 'Materia antigua');
+  const cambio = (await request(app).put(`/api/materias/${antiguaId}`).set(auth(studentToken)).send({ id_catalogo_materia: catId }).expect(200)).body.dato;
+  assert.equal(cambio.id_catalogo_materia, catId);
+  assert.equal(cambio.nombre, 'Álgebra avanzada');
+  await request(app).patch(`${catPath}/estado`).set(auth(adminToken)).send({ activo: false }).expect(200);
+  await request(app).put(catPath).set(auth(adminToken)).send({ nombre: 'Álgebra renombrada' }).expect(200);
+  const conservada = (await request(app).put(`/api/materias/${antiguaId}`).set(auth(studentToken)).send({ horario: 'Jueves' }).expect(200)).body.dato;
+  assert.equal(conservada.nombre, 'Álgebra avanzada');
+  assert.equal(conservada.id_catalogo_materia, catId);
+  await request(app).delete(`/api/materias/${antiguaId}`).set(auth(studentToken)).expect(204);
+
   // RN21: el permiso administrativo no autoriza relaciones entre propietarios distintos.
   await request(app).post('/api/tareas').set(auth(adminToken)).send({
     id_cuenta: secondRegistration.body.cuenta.id_cuenta, id_materia: subjectId,

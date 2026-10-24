@@ -22,7 +22,8 @@ const Notificacion = require('../../src/models/Notificacion');
 /** RF04/HU25: verifica todos los estados del aviso con transacciones reales. */
 async function run() {
   await inicializarEsquema();
-  const cuenta = await auth.register({ nombre: 'Recordatorios', correo: 'avisos@test.local', contrasena: 'Clave123!', materia: { nombre: 'Materia' } });
+  const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
+  const cuenta = await auth.register({ nombre: 'Recordatorios', correo: 'avisos@test.local', contrasena: 'Clave123!', materia: { id_catalogo_materia } });
   const tarea = await tareas.crearTarea(cuenta.id_cuenta, 'Entrega', '2028-03-01', 'Alta');
   const id = planificador.idAutomatico(tarea.id_tarea);
   assert.equal(id.length, 36);

@@ -101,11 +101,11 @@ const subjects = {
   /** RF09/HU16: Consulta un registro (materias). */
   get: async (req, res) => res.json({ dato: ensureOwned(await materia.obtenerMateria(req.params.id), req.user) }),
   /** RF09/HU16: Crea el registro mediante el servicio (materias). */
-  create: async (req, res) => res.status(201).json({ dato: await materia.crearMateria(accountId(req), req.body.nombre, req.body.horario) }),
+  create: async (req, res) => res.status(201).json({ dato: await materia.crearDesdeCatalogo(accountId(req), req.body.id_catalogo_materia, req.body.horario) }),
   /** RF09/HU16: Actualiza los campos permitidos por la ruta (materias). */
   update: async (req, res) => {
     ensureOwned(await materia.obtenerMateria(req.params.id), req.user);
-    res.json({ dato: await updated(materia.obtenerMateria, req.params.id, materia.actualizarMateria, req.body) });
+    res.json({ dato: await updated(materia.obtenerMateria, req.params.id, materia.actualizarDesdeCatalogo, req.body) });
   },
   /** RF09/HU16: Elimina el registro mediante el servicio (materias). */
   remove: async (req, res) => {

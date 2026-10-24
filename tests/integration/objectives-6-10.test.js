@@ -31,9 +31,10 @@ const { semanaIso, fechaIso } = require('../../src/services/periodoService');
 
 async function run() {
   await inicializarEsquema();
+  const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
   const cuenta = await authService.register({
     nombre: 'Estudiante Objetivos', correo: 'objetivos@test.local', contrasena: 'ClaveSegura123!',
-    materia: { nombre: 'Ingeniería de Software III' }
+    materia: { id_catalogo_materia }
   });
   const ahora = new Date('2026-09-21T13:00:00.000Z');
   const semana = semanaIso(ahora);
@@ -66,7 +67,7 @@ async function run() {
   // TC-O6-SESION: una sesión se guarda y recompensa una sola vez.
   const cuentaSesion = await authService.register({
     nombre: 'Estudiante Sesiones', correo: 'sesiones@test.local', contrasena: 'ClaveSegura123!',
-    materia: { nombre: 'Pruebas de sesión' }
+    materia: { id_catalogo_materia }
   });
   const retoSesiones = await reto.crearReto(cuentaSesion.id_cuenta, 'Completar dos sesiones', 'sesiones:2', 15, semana);
   const metaPomodoros = await meta.crearMeta(cuentaSesion.id_cuenta, semana, 'Completar dos Pomodoros', 2);
@@ -135,7 +136,7 @@ async function run() {
 
   const revisor = await authService.register({
     nombre: 'Revisor', correo: 'revisor-objetivos@test.local', contrasena: 'ClaveSegura123!',
-    materia: { nombre: 'Auditoría' }
+    materia: { id_catalogo_materia }
   });
   await Cuenta.update({ rol: 'Revisor institucional' }, { where: { id_cuenta: revisor.id_cuenta } });
   // TC-O10-REVISOR: solo se entregan cifras agregadas y anónimas.

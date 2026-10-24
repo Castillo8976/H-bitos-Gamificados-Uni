@@ -35,8 +35,9 @@ async function fallaSinCambiar(operacion) {
 /** RF05/RF07/HU26: cubre las cuatro correcciones expuestas por la API. */
 async function run() {
   await inicializarEsquema();
-  const estudiante = await auth.register({ nombre: 'Estudiante', correo: 'estudiante@test.local', contrasena: 'Clave123!', materia: { nombre: 'Materia' } });
-  const administrador = await auth.register({ nombre: 'Admin', correo: 'admin@test.local', contrasena: 'Clave123!', materia: { nombre: 'Materia' } });
+  const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
+  const estudiante = await auth.register({ nombre: 'Estudiante', correo: 'estudiante@test.local', contrasena: 'Clave123!', materia: { id_catalogo_materia } });
+  const administrador = await auth.register({ nombre: 'Admin', correo: 'admin@test.local', contrasena: 'Clave123!', materia: { id_catalogo_materia } });
   await Cuenta.update({ rol: 'Administrador' }, { where: { id_cuenta: administrador.id_cuenta } });
   const actor = administrador.id_cuenta;
   const destino = estudiante.id_cuenta;

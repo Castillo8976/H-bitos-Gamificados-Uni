@@ -35,8 +35,8 @@ router.delete('/cuentas/:id/datos', authorize('Estudiante'), wrap(controllers.ac
 
 router.get('/materias', studentOrAdmin, wrap(controllers.subjects.list));
 router.get('/materias/:id', studentOrAdmin, wrap(controllers.subjects.get));
-router.post('/materias', studentOrAdmin, allowFields('id_cuenta', 'nombre', 'horario'), requireFields('nombre'), wrap(controllers.subjects.create));
-router.put('/materias/:id', studentOrAdmin, allowFields('nombre', 'horario', 'activa'), booleanField('activa'), wrap(controllers.subjects.update));
+router.post('/materias', studentOrAdmin, allowFields('id_cuenta', 'id_catalogo_materia', 'horario'), requireFields('id_catalogo_materia'), wrap(controllers.subjects.create));
+router.put('/materias/:id', studentOrAdmin, allowFields('id_catalogo_materia', 'horario', 'activa'), booleanField('activa'), wrap(controllers.subjects.update));
 router.delete('/materias/:id', studentOrAdmin, wrap(controllers.subjects.remove));
 
 router.get('/tareas', studentOrAdmin, wrap(controllers.tasks.list));

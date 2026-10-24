@@ -92,12 +92,13 @@ async function autenticar(cdp, correo) {
 
 async function run() {
   await inicializarEsquema();
+  const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
   for (const [nombre, correo, rol] of [
     ['Estudiante Browser', 'estudiante-browser@test.local', 'Estudiante'],
     ['Administrador Browser', 'admin-browser@test.local', 'Administrador'],
     ['Revisor Browser', 'revisor-browser@test.local', 'Revisor institucional']
   ]) {
-    const cuenta = await authService.register({ nombre, correo, contrasena: 'ClaveSegura123!', materia: { nombre: 'Materia inicial' } });
+    const cuenta = await authService.register({ nombre, correo, contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia } });
     if (rol !== 'Estudiante') await Cuenta.update({ rol }, { where: { id_cuenta: cuenta.id_cuenta } });
   }
 
@@ -120,9 +121,27 @@ async function run() {
     await cdp.enviar('Runtime.enable'); await cdp.enviar('Page.enable');
     await esperarCondicion(cdp, "document.querySelector('#form-login')");
     await esperarCondicion(cdp, "document.readyState==='complete'");
-    await esperar(100);
+    await esperarCondicion(cdp, "document.querySelector('#form-registro select').options.length === 2");
     assert.equal(await cdp.evaluar(`(()=>{const t=document.querySelector('#tab-login');t.focus();t.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));return document.activeElement.id==='tab-registro'&&document.activeElement.getAttribute('aria-selected')==='true'})()`), true);
     assert.equal(await cdp.evaluar(`(()=>{const t=document.querySelector('#tab-registro');t.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));return document.activeElement.id==='tab-login'&&document.activeElement.getAttribute('aria-selected')==='true'})()`), true);
+
+    // RN26: catálogo vacío impide el registro; al reactivarlo se puede elegir una asignatura.
+    const CatalogoMateria = require('../../src/models/CatalogoMateria');
+    await CatalogoMateria.update({ activo: false }, { where: { id_catalogo_materia } });
+    await cdp.evaluar("document.querySelector('#tab-registro').click()");
+    await esperarCondicion(cdp, "document.querySelector('#aviso-catalogo-registro').textContent.includes('No hay asignaturas disponibles') && document.querySelector('#form-registro [type=submit]').disabled");
+    await CatalogoMateria.update({ activo: true }, { where: { id_catalogo_materia } });
+    await cdp.evaluar("document.querySelector('#tab-login').click();document.querySelector('#tab-registro').click()");
+    await esperarCondicion(cdp, "document.querySelector('#form-registro select').options.length === 2 && !document.querySelector('#form-registro [type=submit]').disabled");
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-registro');f.elements.nombre.value='Registro Navegador';f.elements.correo.value='registro-browser@test.local';f.elements.contrasena.value='ClaveSegura123!';f.elements.id_catalogo_materia.value=${JSON.stringify(id_catalogo_materia)};f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#aplicacion').hidden === false");
+    assert.equal(await Cuenta.count({ where: { correo: 'registro-browser@test.local' } }), 1);
+    await cdp.evaluar("document.querySelector('[data-vista=materias]').click()");
+    await esperarCondicion(cdp, "document.querySelector('#form-materia select').options.length === 2");
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-materia');f.elements.id_catalogo_materia.value=${JSON.stringify(id_catalogo_materia)};f.elements.horario.value='Lunes';f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#lista-materias').textContent.includes('Lunes')");
+    const cuentaRegistro = await Cuenta.findOne({ where: { correo: 'registro-browser@test.local' } });
+    assert.equal(await require('../../src/models/Materia').count({ where: { id_cuenta: cuentaRegistro.id_cuenta, id_catalogo_materia } }), 2);
 
     await autenticar(cdp, 'estudiante-browser@test.local');
     assert.equal(await cdp.evaluar("document.querySelector('#usuario-rol').textContent"), 'Estudiante');
@@ -192,7 +211,7 @@ async function run() {
 
     // P06: una sesión iniciada desde la interfaz se persiste mediante la API real.
     await cdp.evaluar("document.querySelector('[data-vista=pomodoro]').click();document.querySelector('#iniciar-temporizador').click()");
-    await esperar(1100);
+    await esperarCondicion(cdp, "estado.temporizador.transcurrido > 0");
     await cdp.evaluar("document.querySelector('#guardar-temporizador').click()");
     await esperarCondicion(cdp, "document.querySelector('#modal-recompensa').open");
     await cdp.evaluar("document.querySelector('#cerrar-recompensa').click()");

@@ -37,8 +37,9 @@ async function verificarTrasReinicio() {
 
 async function run() {
   await inicializarEsquema();
+  const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
   for (const [nombre, correo] of [['Estudiante Sesiones', 'sesiones@test.local'], ['Admin Sesiones', 'admin-sesiones@test.local']]) {
-    await request(app).post('/api/auth/registro').send({ nombre, correo, contrasena: 'ClaveSegura123!', materia: { nombre: 'Materia' } }).expect(201);
+    await request(app).post('/api/auth/registro').send({ nombre, correo, contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia } }).expect(201);
   }
   await Cuenta.update({ rol: 'Administrador' }, { where: { correo: 'admin-sesiones@test.local' } });
   const id = (await Cuenta.findOne({ where: { correo: 'sesiones@test.local' } })).id_cuenta;

@@ -18,19 +18,23 @@ function validateRegistration(req, _res, next) {
   try {
     entityValidator.objeto(req.body);
     const { nombre, correo, contrasena, materia } = req.body;
-    if (!nombre || !correo || !contrasena || !materia?.nombre) {
+    if (!nombre || !correo || !contrasena || !materia) {
       throw new HttpError(400, 'Nombre, correo, contraseña y materia inicial son obligatorios');
+    }
+    if (Object.keys(req.body).some(key => !['nombre', 'correo', 'contrasena', 'materia'].includes(key))) {
+      throw new HttpError(400, 'La solicitud contiene campos no permitidos');
     }
     validatePassword(contrasena, 8);
     entityValidator.objeto(materia, 'materia');
-    if (Object.keys(materia).some(key => !['nombre', 'horario'].includes(key))) {
-      throw new HttpError(400, 'materia contiene campos no permitidos');
-    }
     req.body = entityValidator.validar('cuentas', req.body);
     try {
+      if (Object.keys(materia).some(key => !['id_catalogo_materia', 'horario'].includes(key))) {
+        throw new HttpError(400, 'RN26: selecciona una asignatura mediante id_catalogo_materia; no se permite nombre libre ni campos extra');
+      }
+      if (!materia.id_catalogo_materia) throw new HttpError(400, 'id_catalogo_materia es obligatorio');
+      if (typeof materia.id_catalogo_materia !== 'string') throw new HttpError(400, 'id_catalogo_materia debe ser texto');
       req.body.materia = entityValidator.validar('materias', materia);
     } catch (error) {
-      // Los campos de la materia se llaman igual que los de la cuenta; se identifica el origen del error.
       throw new HttpError(error.status || 400, `Materia inicial: ${error.message}`);
     }
     next();

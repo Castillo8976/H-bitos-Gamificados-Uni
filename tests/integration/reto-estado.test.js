@@ -31,7 +31,8 @@ async function completarTareaNueva(idCuenta, nombre) {
 
 async function run() {
   await inicializarEsquema();
-  const cuenta = await authService.register({ nombre: 'Estudiante Retos', correo: 'retos@test.local', contrasena: 'ClaveSegura123!', materia: { nombre: 'Materia' } });
+  const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
+  const cuenta = await authService.register({ nombre: 'Estudiante Retos', correo: 'retos@test.local', contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia } });
   const id = cuenta.id_cuenta;
 
   // Inactivo: completar tareas no suma progreso ni acredita.

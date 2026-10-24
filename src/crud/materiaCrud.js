@@ -51,13 +51,14 @@ const crypto = require('crypto');             // Módulo nativo de Node.js para 
  * );
  */
 /** @implements RF01 @implements HU01 */
-async function crearMateria(id_cuenta, nombre, horario = null) {
+async function crearMateria(id_cuenta, nombre, horario = null, id_catalogo_materia = null, transaction) {
   const materia = await Materia.create({
     id_materia: crypto.randomUUID(), // UUID v4 como identificador primario único
     id_cuenta,                       // Clave foránea que vincula la materia con su propietario
     nombre,
+    id_catalogo_materia,
     horario                          // null si el usuario aún no definió el horario
-  });
+  }, { transaction });
 
   console.log('✅ Materia creada:', materia.id_materia, materia.nombre);
   return materia;
@@ -114,6 +115,7 @@ async function listarMaterias(id_cuenta) {
  * @async
  * @function obtenerMateria
  * @param {string} id - UUID v4 de la materia a buscar.
+ * @param {import('sequelize').Transaction} [transaction] - Transacción de la operación de catálogo.
  * @returns {Promise<Materia|null>} La instancia de Materia encontrada, o `null` si no existe.
  *
  * @example
@@ -121,9 +123,9 @@ async function listarMaterias(id_cuenta) {
  * if (!materia) console.log('La materia no existe');
  */
 /** @implements RF01 @implements HU16 */
-async function obtenerMateria(id) {
+async function obtenerMateria(id, transaction) {
   // findByPk busca por clave primaria; retorna null si no hay coincidencia
-  const materia = await Materia.findByPk(id);
+  const materia = await Materia.findByPk(id, { transaction });
 
   // materia?.nombre evita TypeError si el resultado es null
   console.log('🔍 Materia encontrada:', materia?.nombre ?? 'No existe');
@@ -162,10 +164,10 @@ async function obtenerMateria(id) {
  * });
  */
 /** @implements RF01 @implements HU16 */
-async function actualizarMateria(id, datos) {
+async function actualizarMateria(id, datos, transaction) {
   // Desestructura el primer elemento del arreglo: número de filas afectadas
   const [filas] = await Materia.update(datos, {
-    where: { id_materia: id }
+    where: { id_materia: id }, transaction
   });
 
   // filas === 0 indica que el WHERE no encontró ninguna materia con ese UUID

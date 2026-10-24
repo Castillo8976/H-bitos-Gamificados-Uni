@@ -34,6 +34,7 @@ async function register({ nombre, correo, contrasena, materia }) {
   if (existing) throw new HttpError(409, 'El correo ya está registrado');
   const passwordHash = await bcrypt.hash(contrasena, 10);
   const account = await sequelize.transaction(async transaction => {
+    const asignatura = await require('./catalogoMateriaService').obtenerActiva(materia.id_catalogo_materia, transaction, true);
     const created = await Cuenta.create({
       id_cuenta: crypto.randomUUID(),
       nombre: nombre.trim(),
@@ -48,7 +49,8 @@ async function register({ nombre, correo, contrasena, materia }) {
     await Materia.create({
       id_materia: crypto.randomUUID(),
       id_cuenta: created.id_cuenta,
-      nombre: materia.nombre.trim(),
+      id_catalogo_materia: asignatura.id_catalogo_materia,
+      nombre: asignatura.nombre,
       horario: materia.horario || null
     }, { transaction });
     return created;

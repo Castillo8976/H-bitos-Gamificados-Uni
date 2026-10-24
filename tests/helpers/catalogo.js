@@ -6,4 +6,14 @@ function sinCatalogo(ddl) {
     .replace('  id_catalogo_materia VARCHAR(36),\n', '')
     .replace(/  CONSTRAINT fk_materia_catalogo FOREIGN KEY \(id_catalogo_materia\)\n    REFERENCES catalogo_materia\(id_catalogo_materia\) ON DELETE RESTRICT ON UPDATE CASCADE,\n/u, '');
 }
-module.exports = { sinCatalogo };
+/** Siembra explícita solo en bases temporales de ensayo. */
+async function sembrarCatalogo(nombre = 'Materia inicial', activo = true) {
+  const storage = require('../../src/database').options.storage;
+  const os = require('node:os');
+  const path = require('node:path');
+  if (!storage || !path.resolve(storage).startsWith(os.tmpdir() + path.sep)) {
+    throw new Error('El catálogo de prueba exige DATABASE_STORAGE temporal');
+  }
+  return require('../../src/models/CatalogoMateria').create({ nombre, activo });
+}
+module.exports = { sinCatalogo, sembrarCatalogo };
