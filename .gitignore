@@ -20,3 +20,6 @@ Thumbs.db
 # Base de datos local (se recrea con sequelize.sync())
 # Descomenta la siguiente línea si NO quieres versionar los datos de prueba:
 # database.sqlite
+
+test-results/
+playwright-report/
