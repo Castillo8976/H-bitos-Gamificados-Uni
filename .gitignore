@@ -17,9 +17,15 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Base de datos local (se recrea con sequelize.sync())
-# Descomenta la siguiente línea si NO quieres versionar los datos de prueba:
-# database.sqlite
+# Base de datos local: cada instalación la crea con npm run db:migrate
+database.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Variables de entorno (se versiona solo .env.example)
+.env.*
+!.env.example
 
 test-results/
 playwright-report/
