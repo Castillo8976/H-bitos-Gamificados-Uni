@@ -78,7 +78,8 @@ incluimos en el punto 5; no son equivalentes a declarar correctamente el modelo.
 
 ### 🟡 5. Backend CRUD por entidad principal — Parcial
 
-Tenemos API y operaciones para las 13 entidades, con particularidades del
+Tenemos API y operaciones para las 13 entidades (14 desde la Decisión #10:
+`catalogo_materia`, `f62c5e5`), con particularidades del
 modelo: los puntos son movimientos y algunas operaciones son de lectura,
 asignación, marcado o desactivación. Ya coordinamos tareas y sesiones con
 recompensas mediante transacciones; esos flujos no funcionan de manera aislada.
@@ -427,6 +428,6 @@ significa que todos los requisitos de Construcción estén terminados.
 | Actualizar las historias de acuerdo al diagrama de clases | ✅ Documentado | `13-historias-usuario-criterios-aceptacion.md`: HU01, HU06, HU15, HU17, HU18, HU20, HU21 y HU25 citan ahora los atributos del diagrama. |
 | Casos de uso: faltan `<<include>>` y `<<extend>>` | ✅ Documentado | `02_Diagrama_de_Casos_de_Uso_General.drawio`: CU00 Iniciar sesión, 15 `<<include>>` y 3 `<<extend>>`; justificación en `07-casos-de-uso.md`. |
 | Documentar el caso de uso general y 3 CU críticos con trazabilidad CRUD | ✅ Documentado | `07-casos-de-uso.md`: CUG01 con ficha completa y trazabilidad CRUD de CU02, CU03 y CU06. |
-| La materia inicial debe seleccionarse de una tabla catálogo | 🟡 Solo diseño | `catalogo_materia` en E7 (Anexo A), E9, E12, HU29, RN26. **Sin implementar en código**; el formulario de registro sigue con texto libre. |
+| La materia inicial debe seleccionarse de una tabla catálogo | ✅ Implementado en el código local (24 de octubre de 2026) | `catalogo_materia` (tabla 14), administración en P17 y selección obligatoria en el registro y en «Nueva materia» (`f62c5e5`, `3eb2b71`; Decisión #10, pendiente de revisión docente). Pendiente: migración de la base principal y carga de asignaturas reales; E8, E9 y E12 aún lo muestran como planeado. |
 
-**Nota:** `E11-script-DDL-v2.sql`, el modelo `Materia`, las rutas y el frontend no se modificaron para el catálogo, a la espera de autorización. Las pruebas automáticas (`npm test`) siguen en verde.
+**Nota (histórica, previa a la Decisión #10):** `E11-script-DDL-v2.sql`, el modelo `Materia`, las rutas y el frontend no se modificaron para el catálogo, a la espera de autorización. **Actualización (24 de octubre de 2026):** el catálogo se implementó en D-1 y D-2 con pruebas en SQLite temporal.

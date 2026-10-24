@@ -262,7 +262,7 @@ GET  /api/auth/perfil
 
 Las rutas protegidas reciben el encabezado `Authorization: Bearer <token>`. Los roles aprobados son `Estudiante`, `Administrador` y `Revisor institucional`. El registro público siempre asigna el rol Estudiante.
 
-El registro recibe `nombre`, `correo`, `contrasena` y una `materia` inicial con `nombre` y `horario` opcional, cumpliendo HU01. En la misma transacción crea la cuenta, su preferencia visual y la primera materia.
+El registro recibe `nombre`, `correo`, `contrasena` y una `materia` inicial con `id_catalogo_materia` (una asignatura activa del catálogo) y `horario` opcional, cumpliendo HU01, HU29 y RN26 (Decisión #10). El nombre de la materia se copia del catálogo. En la misma transacción crea la cuenta, su preferencia visual y la primera materia. Mientras el catálogo no tenga asignaturas activas, el formulario muestra un aviso y el registro no puede completarse: un Administrador debe cargarlas antes desde P17.
 
 La primera cuenta privilegiada se prepara localmente, sin exponer un cambio de rol en el registro público:
 
@@ -274,7 +274,7 @@ BOOTSTRAP_ROLE="Administrador" \
 npm run bootstrap:account
 ```
 
-Los recursos se publican bajo `/api`: `cuentas`, `materias`, `tareas`, `preferencias`, `sesiones`, `recordatorios`, `notificaciones`, `puntos`, `insignias`, `cuenta-insignias`, `niveles`, `retos` y `metas`. También están disponibles `estadisticas/semanales`, `estadisticas/institucionales` y `exportacion/datos`. La matriz completa se encuentra en [M15](pjc/docs/trazabilidad/M15_trazabilidad_construccion.md).
+Los recursos se publican bajo `/api`: `cuentas`, `materias`, `tareas`, `preferencias`, `sesiones`, `recordatorios`, `notificaciones`, `puntos`, `insignias`, `cuenta-insignias`, `niveles`, `retos`, `metas` y `catalogo-materias`. `GET /api/catalogo-materias` es público y solo devuelve asignaturas activas; crear, editar, `PATCH /api/catalogo-materias/:id/estado` y eliminar requieren Administrador. Además: `PATCH /api/retos/:id/estado` (desactivar o reactivar un reto, propietario o Administrador) y `DELETE /api/cuentas/:id` (desactivación de la cuenta, que invalida todos sus tokens mediante `version_sesion`). También están disponibles `estadisticas/semanales`, `estadisticas/institucionales` y `exportacion/datos`. La matriz completa se encuentra en [M15](pjc/docs/trazabilidad/M15_trazabilidad_construccion.md).
 
 ## Pruebas
 
@@ -341,7 +341,7 @@ sin interactuar con tu perfil personal de Chrome.
 
 ## Esquema vigente
 
-El sistema contiene exactamente 13 tablas: `cuenta`, `materia`, `tarea`, `sesion_estudio`, `insignia`, `cuenta_insignia`, `punto`, `reto`, `meta`, `recordatorio`, `preferencia_visual`, `nivel_cuenta` y `notificacion`.
+El código define 14 tablas: `cuenta`, `materia`, `tarea`, `sesion_estudio`, `insignia`, `cuenta_insignia`, `punto`, `reto`, `meta`, `recordatorio`, `preferencia_visual`, `nivel_cuenta`, `notificacion` y `catalogo_materia` (añadida por la Decisión #10; hasta entonces eran 13). Al iniciar, `src/config/schema.js` aplica migraciones aditivas (`catalogo_materia`, `materia.id_catalogo_materia`, `reto.activo`, `cuenta.version_sesion`). Una base existente que aún no las tiene se migra en el primer arranque y los tokens emitidos antes dejan de ser válidos, por lo que se debe iniciar sesión de nuevo. La base principal del repositorio todavía no se ha migrado.
 
 La entidad `reporte` no forma parte del esquema. Las estadísticas se calculan a partir de las tablas transaccionales.
 

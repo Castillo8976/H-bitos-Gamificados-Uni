@@ -36,7 +36,7 @@
 | `InterfazTablero` | `<<boundary>>` | Pantallas P03 Dashboard y P11 Tablero. |
 | `ServicioEstadisticas` | `<<control>>` | Calcula en tiempo real datos de `Tarea`, `SesionEstudio`, `Punto` y `Meta`, sin tabla `reporte`. |
 | `InterfazGamificación` | `<<boundary>>` | Pantallas P08 Gamificación y P09 Insignias. |
-| `Almacenamiento` | `<<database>>` | Persistencia de las 13 entidades definidas en E7; no es una clase de entidad adicional. |
+| `Almacenamiento` | `<<database>>` | Persistencia de las 14 entidades definidas en E7 (13 hasta la Decisión #10); no es una clase de entidad adicional. |
 
 Esta clasificación permite conservar los nombres conceptuales de los diagramas de secuencia sin confundirlos con clases persistentes. Cuando un mensaje consulta o modifica información, la entidad afectada debe corresponder a una de las 13 equivalencias documentadas en M9.
 
@@ -44,7 +44,7 @@ Esta clasificación permite conservar los nombres conceptuales de los diagramas 
 
 ## Especificaciones textuales de secuencia por CRUD
 
-Para completar la cobertura exigida por el checklist sin duplicar diagramas gráficos, las siguientes secuencias textuales documentan las operaciones de las 13 entidades de E7. Cada bloque conserva la estructura UML **actor → boundary → control → entity/database**, usa los métodos vigentes de `/src/crud` y registra sus alternativas. Los cinco Draw.io existentes (Seq-01 a Seq-05) continúan como representación visual de los flujos críticos; esta sección completa la trazabilidad CRUD que no aparece en esos cinco archivos.
+Para completar la cobertura exigida por el checklist sin duplicar diagramas gráficos, las siguientes secuencias textuales documentan las operaciones de las 13 entidades originales de E7 (`catalogo_materia`, añadida por la Decisión #10, aún no tiene secuencia textual). Cada bloque conserva la estructura UML **actor → boundary → control → entity/database**, usa los métodos vigentes de `/src/crud` y registra sus alternativas. Los cinco Draw.io existentes (Seq-01 a Seq-05) continúan como representación visual de los flujos críticos; esta sección completa la trazabilidad CRUD que no aparece en esos cinco archivos.
 
 ### Seq-CRUD-01 — `Cuenta`
 

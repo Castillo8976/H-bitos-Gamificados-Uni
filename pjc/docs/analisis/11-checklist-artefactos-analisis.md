@@ -165,7 +165,7 @@ El punto está cubierto documentalmente. Para la entrega en Word deben anexarse 
 - Existen HU01–HU31.
 - Todas conservan el formato “Como…, quiero…, para…”.
 - Todas tienen criterios de aceptación estructurados en `13-historias-usuario-criterios-aceptacion.md`.
-- Las 13 entidades y sus acciones CRUD están cubiertas o tienen una excepción de integridad justificada. Las acciones nuevas de cuenta y estado de reto están aprobadas documentalmente; la interfaz y el modelo necesarios permanecen pendientes de implementación.
+- Las 13 entidades y sus acciones CRUD están cubiertas o tienen una excepción de integridad justificada. **Actualización (24 de octubre de 2026):** con la Decisión #10 el esquema del código tiene 14 entidades (`catalogo_materia`); la desactivación de cuenta, el estado de reto y el catálogo están implementados en el código local (Decisiones #08–#10, pendientes de revisión docente). La base principal aún no tiene aplicadas esas migraciones.
 
 ### Requisitos funcionales
 

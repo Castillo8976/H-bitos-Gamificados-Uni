@@ -168,6 +168,10 @@ HU30 se sincronizarán en la Fase 7. El logout individual mantiene la revocació
 en memoria. La protección de la última cuenta Administradora activa sigue sin
 decisión. La migración de la base principal requiere una autorización aparte.
 
+**Actualización (24 de octubre de 2026, Fase 7A):** RN27, HU27, HU30 y M9
+(`desactivarCuenta`; la reactivación usa `actualizarCuenta`) quedaron
+sincronizados con el código local (`28b601a`). E8, E9 y E12 siguen sin cambios.
+
 ---
 
 ## Decisión #09
@@ -228,6 +232,10 @@ de RNF-16 se validan en la API y no como CHECK de SQLite (E9 dibuja el CHECK de
 sincronizarán en la Fase 7. La migración de la base principal (`version_sesion` y
 `reto.activo`) requiere una autorización aparte.
 
+**Actualización (24 de octubre de 2026, Fase 7A):** RN28, HU06, HU18, HU31,
+CU06, la matriz `14`, M5 y M9 quedaron sincronizados con el código local
+(`b113445`). Los demás pendientes de este apartado se mantienen.
+
 ---
 
 ## Decisión #10
@@ -268,3 +276,11 @@ Adoptada por el equipo el 24 de octubre de 2026; pendiente de revisión docente.
 RN26, HU29, CU01 y CU13 siguen como planeadas hasta su sincronización en la
 Fase 7. E8, E9 y E12 no se modifican y conservan `catalogo_materia` como
 planeada. La migración de la base principal requiere una autorización aparte.
+
+**Actualización (24 de octubre de 2026, Fase 7A):** implementada en el código
+local (`f62c5e5`, `3eb2b71`). RN26, HU29, CU01, CU13 y las matrices M quedaron
+sincronizadas. Esta decisión resuelve, a nivel del equipo, la pregunta 5 de la
+Decisión #06 (materia inicial), sin modificar el texto histórico de esa
+decisión y pendiente de revisión docente. Siguen pendientes la migración de la
+base principal, la carga de asignaturas reales y la actualización de E8, E9 y
+E12.

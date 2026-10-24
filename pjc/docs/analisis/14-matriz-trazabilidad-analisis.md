@@ -10,12 +10,12 @@
 
 | OE | RF | HU de origen | CU | RN aplicables | Entidades y atributos principales | Pantallas / acciones |
 |---|---|---|---|---|---|---|
-| OE01 | RF01 | HU01, HU16, HU20, HU27, HU29 *(planeada)*, HU30 | CU00, CU01, CU11, CU13 | RN01–RN03, RN26 *(planeada)*, RN27 | `cuenta(nombre, correo, contrasena_hash, activa, rol, fecha_registro)`; `materia(nombre, horario, activa)`; `catalogo_materia(nombre, activo)` *(planeada)* | Registro: Crear cuenta; Agenda: Crear, Ver, Editar, Eliminar materia; Perfil: Ver, Guardar, Desactivar cuenta; Admin: Desactivar/reactivar cuenta |
+| OE01 | RF01 | HU01, HU16, HU20, HU27, HU29, HU30 | CU00, CU01, CU11, CU13 | RN01–RN03, RN26, RN27 | `cuenta(nombre, correo, contrasena_hash, activa, rol, fecha_registro)`; `materia(nombre, horario, activa)`; `materia.id_catalogo_materia` (FK opcional); `catalogo_materia(nombre, activo)` (tabla 14, Decisión #10); `cuenta.version_sesion` (Decisión #08) | Registro: Crear cuenta; Agenda: Crear, Ver, Editar, Eliminar materia; Perfil: Ver, Guardar, Desactivar cuenta; Admin: Desactivar/reactivar cuenta; Admin P17: Administrar catálogo de asignaturas |
 | OE01 | RF02 | HU02, HU19 | CU02 | RN04–RN06 | `tarea(nombre, fecha_entrega, prioridad, estado, id_materia)` | Tareas: Nueva, Ver, Editar, Eliminar |
 | OE01, OE03 | RF03 | HU03 | CU03 | RN07–RN09 | `tarea(estado, fecha_completada)`; `punto(cantidad, origen, id_origen)` | Tareas: Completar |
 | OE01 | RF04 | HU04, HU24, HU25 | CU10, CU15 | RN05, RN06, RN16–RN19 | `recordatorio(fecha_programada, enviado, activo)`; `notificacion(tipo, mensaje, leida)` | Recordatorios: Activar/desactivar, Eliminar; Notificaciones: Ver, Marcar leída, Marcar todas, Eliminar |
 | OE03 | RF05 | HU05, HU22, HU26 | CU06, CU13, CU14 | RN11 | `insignia(nombre, descripcion, condicion, icono)`; `cuenta_insignia` | Gamificación: Ver insignias; Admin: Crear, Editar, Eliminar insignia, Revocar asignación |
-| OE03 | RF06 | HU06, HU18, HU31 | CU06, CU13 | RN10, RN28 | `reto(descripcion, condicion, puntos_recompensa, semana, progreso, completado, activo)` *(activo planeado)* | Gamificación: Crear manualmente, Ver, Editar, Completar, Activar, Desactivar, Reactivar y Eliminar reto; Administración: cambiar estado *(pendiente de implementación)* |
+| OE03 | RF06 | HU06, HU18, HU31 | CU06, CU13 | RN10, RN28 | `reto(descripcion, condicion, puntos_recompensa, semana, progreso, completado, activo)` (`activo`: Decisión #09) | Gamificación: Crear manualmente, Ver, Editar, Completar, Activar, Desactivar, Reactivar y Eliminar reto; Administración: cambiar estado |
 | OE03 | RF07 | HU03, HU06, HU07, HU23, HU26 | CU03, CU06, CU13, CU14 | RN07–RN10, RN15 | `punto`; `nivel_cuenta(nombre, puntos_minimos, orden)` | Gamificación: Ver puntos/nivel; Admin: Gestionar niveles, Consultar/corregir movimientos |
 | OE03, OE04 | RF08 | HU07, HU08 | CU05, CU06 | RN09, RN11, RN15 | `punto`, `cuenta_insignia`, `reto`, `meta`, `nivel_cuenta` | Dashboard/Gamificación: Consultar resumen |
 | OE01 | RF09 | HU02, HU09 | CU02, CU07 | RN04 | `tarea(id_materia, prioridad, estado, fecha_entrega, nombre)` | Tareas: Filtrar, Buscar, Limpiar filtros |
@@ -33,11 +33,11 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Pantalla o módulo | Acción / botón | Tipo | RF | HU | CU |
 |---|---|---|---|---|---|
 | Registro | Crear cuenta | Usuario | RF01 | HU01 | CU01 |
-| Registro | Seleccionar materia inicial del catálogo *(PLANEADO; hoy es texto libre)* | Usuario | RF01 | HU01, HU29 | CU01 |
+| Registro | Seleccionar materia inicial del catálogo (desplegable de entradas activas) | Usuario | RF01 | HU01, HU29 | CU01 |
 | Perfil | Consultar perfil | Usuario | RF01 | HU20 | CU11 |
 | Perfil | Guardar cambios | Usuario | RF01 | HU20 | CU11 |
-| Perfil | Desactivar cuenta propia *(API implementada; botón y confirmación pendientes)* | Usuario | RF01 | HU30 | CU11 |
-| Agenda | Crear materia | Usuario | RF01 | HU01 | CU01 |
+| Perfil | Desactivar cuenta propia (diálogo Confirmar/Cancelar) | Usuario | RF01 | HU30 | CU11 |
+| Agenda | Crear materia (seleccionando una asignatura activa del catálogo) | Usuario | RF01 | HU01, HU16 | CU01 |
 | Agenda | Consultar materias | Usuario | RF01 | HU01, HU16 | CU01 |
 | Agenda | Editar materia | Usuario | RF01 | HU16 | CU01 |
 | Agenda | Eliminar materia | Usuario | RF01 | HU16 | CU01 |
@@ -55,7 +55,7 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Gamificación | Ver puntos y nivel | Usuario | RF07, RF08 | HU07 | CU06 |
 | Gamificación | Ver insignias | Usuario | RF05, RF08 | HU05 | CU06 |
 | Gamificación | Crear reto manualmente / Ver / Editar campos permitidos / Completar manualmente | Usuario | RF06 | HU06, HU18 | CU06 |
-| Gamificación | Activar / Desactivar / Reactivar reto propio *(PLANEADO)* | Usuario | RF06 | HU06, HU18 | CU06 |
+| Gamificación | Activar / Desactivar / Reactivar reto propio | Usuario | RF06 | HU06, HU18 | CU06 |
 | Tablero | Consultar semana actual | Usuario | RF08, RF11 | HU08 | CU05 |
 | Tablero | Cambiar semana | Usuario | RF11 | HU11 | CU05 |
 | Metas | Crear / Ver / Editar / Eliminar | Usuario | RF15 | HU15, HU17 | CU05 |
@@ -72,7 +72,8 @@ Cada acción visible debe conservar esta cadena. Las acciones automáticas se id
 | Administración | Gestionar cuentas | Usuario autorizado | RF01 | HU27 | CU13 |
 | Administración | Gestionar insignias | Usuario autorizado | RF05 | HU22 | CU13 |
 | Administración | Gestionar niveles | Usuario autorizado | RF07 | HU23 | CU13 |
-| Administración | Activar / Desactivar / Reactivar reto *(PLANEADO)* | Usuario autorizado | RF06 | HU31 | CU13 |
+| Administración | Activar / Desactivar / Reactivar reto | Usuario autorizado | RF06 | HU31 | CU13 |
+| Administración | Crear / Editar nombre / Desactivar / Reactivar / Eliminar asignatura del catálogo | Usuario autorizado | RF01 | HU29 | CU13 |
 | Administración | Reactivar cuenta | Usuario autorizado | RF01 | HU27 | CU13 |
 | Administración | Revocar insignia | Usuario autorizado | RF05 | HU26 | CU14 |
 | Administración | Corregir movimiento de puntos | Usuario autorizado | RF07 | HU26 | CU14 |
