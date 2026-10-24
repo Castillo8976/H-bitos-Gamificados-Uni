@@ -162,10 +162,10 @@ async function iniciarSesion(correo, contrasena) {
   try {
     respuesta = await api('/auth/login', { method: 'POST', body: JSON.stringify({ correo, contrasena }) });
   } catch (error) {
-    if (error.contenido?.requiere_verificacion) { abrirCodigoCorreo(error.contenido.desafio, 'verificar'); return; }
+    if (error.contenido?.requiere_verificacion) { abrirCodigoCorreo(error.contenido.desafio, 'verificar', correo); return; }
     throw error;
   }
-  if (respuesta.requiere_codigo) { abrirCodigoCorreo(respuesta.desafio, 'login'); return; }
+  if (respuesta.requiere_codigo) { abrirCodigoCorreo(respuesta.desafio, 'login', correo); return; }
   await aceptarSesionCorreo(respuesta);
 }
 
@@ -1088,7 +1088,7 @@ function registrarEventos() {
     duranteEnvio(f, async () => {
       try {
         const registro = await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { id_catalogo_materia: f.elements.id_catalogo_materia.value, horario: f.elements.horario.value || null } }) });
-        if (registro.requiere_verificacion) { abrirCodigoCorreo(registro.desafio, 'verificar'); f.elements.contrasena.value = ''; return; }
+        if (registro.requiere_verificacion) { abrirCodigoCorreo(registro.desafio, 'verificar', f.elements.correo.value); f.elements.contrasena.value = ''; return; }
         await iniciarSesion(f.elements.correo.value, f.elements.contrasena.value); avisar('Cuenta creada correctamente.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
@@ -1349,37 +1349,54 @@ async function iniciar() {
 }
 
 // Bloque D: controles ocultos hasta recibir configuración explícita del servidor.
-let configuracionCorreo = { verificacion_correo: false, segundo_factor: 'off', reenvio_segundos: 60 };
+let configuracionCorreo = { verificacion_correo: false, segundo_factor: 'off', reenvio_segundos: 60, caducidad_minutos: 10 };
 let operacionCodigoCorreo = 'verificar';
 let correoReenvio = null;
 let temporizadorCorreo;
+let plazosCorreo;
 async function aceptarSesionCorreo(respuesta) {
   estado.token = respuesta.token;
   sessionStorage.setItem(CLAVE_TOKEN, respuesta.token);
   estado.cuenta = respuesta.cuenta;
   await cargarAplicacion();
 }
-function cuentaRegresivaCorreo() {
+function mensajeCodigoEnviado() {
+  const enviado = `Código enviado${correoReenvio ? ` a ${correoReenvio}` : ''}. Caduca en ${configuracionCorreo.caducidad_minutos} minutos`;
+  return operacionCodigoCorreo === 'verificar' && !$('#desafio-correo').value
+    ? `Si existe una cuenta pendiente, llegará un código. ${enviado}` : enviado;
+}
+function cuentaRegresivaCorreo(reiniciar = true) {
   clearInterval(temporizadorCorreo);
-  // El servidor vuelve a comprobar el cooldown, incluso si se cierra este diálogo.
-  let restante = Number(configuracionCorreo.reenvio_segundos) || 0;
+  // El servidor vuelve a comprobar los plazos, incluso si se cierra este diálogo.
+  const ahora = Date.now();
+  if (reiniciar) plazosCorreo = {
+    reenviarDesde: ahora + Number(configuracionCorreo.reenvio_segundos) * 1000,
+    caduca: ahora + Number(configuracionCorreo.caducidad_minutos) * 60000
+  };
+  const { reenviarDesde, caduca } = plazosCorreo;
   const boton = $('#reenviar-codigo-correo');
   const actualizar = () => {
-    boton.disabled = restante > 0;
-    boton.textContent = restante > 0 ? `Reenviar en ${restante} s` : 'Reenviar código';
-    if (restante-- <= 0) clearInterval(temporizadorCorreo);
+    const restante = Math.max(0, Math.ceil((reenviarDesde - Date.now()) / 1000));
+    const vencido = Date.now() >= caduca;
+    boton.disabled = !vencido && restante > 0;
+    boton.textContent = boton.disabled ? `Reenviar en ${restante} s` : 'Reenviar código';
+    if (vencido) {
+      $('#estado-codigo-correo').textContent = 'El código caducó; solicita otro';
+      clearInterval(temporizadorCorreo);
+    }
   };
   actualizar(); temporizadorCorreo = setInterval(actualizar, 1000);
 }
-function abrirCodigoCorreo(desafio, operacion, correo = null) {
+function abrirCodigoCorreo(desafio, operacion, correo = null, enviando = false) {
   operacionCodigoCorreo = operacion; correoReenvio = correo;
   $('#form-codigo-correo').reset();
   $('#desafio-correo').value = desafio || '';
   $('#titulo-codigo-correo').textContent = operacion === 'login' ? 'Segundo paso de acceso' : 'Confirma tu correo';
-  $('#estado-codigo-correo').textContent = 'Escribe el código del mensaje. Si falta el identificador, cópialo del correo.';
+  $('#estado-codigo-correo').textContent = enviando ? 'Enviando código…' : mensajeCodigoEnviado();
   $('#reenviar-codigo-correo').hidden = operacion === 'cambio';
   $('#modal-codigo-correo').showModal();
-  cuentaRegresivaCorreo();
+  if (enviando) { clearInterval(temporizadorCorreo); plazosCorreo = null; $('#reenviar-codigo-correo').disabled = true; }
+  else cuentaRegresivaCorreo();
   $('#codigo-correo').focus();
 }
 async function iniciarCorreoOpcional() {
@@ -1397,27 +1414,42 @@ async function iniciarCorreoOpcional() {
     duranteEnvio(f, async () => {
       try {
         const ruta = { verificar: '/correo/verificar', login: '/login/codigo', cambio: '/correo/cambio/confirmar' }[operacionCodigoCorreo];
-        const resultado = await api(`/auth${ruta}`, { method: 'POST', body: JSON.stringify({ desafio: f.elements.desafio.value, codigo: f.elements.codigo.value }) });
+        const identificador = operacionCodigoCorreo === 'verificar' && !f.elements.desafio.value && correoReenvio
+          ? { correo: correoReenvio } : { desafio: f.elements.desafio.value };
+        const resultado = await api(`/auth${ruta}`, { method: 'POST', body: JSON.stringify({ ...identificador, codigo: f.elements.codigo.value }) });
         $('#modal-codigo-correo').close(); await aceptarSesionCorreo(resultado);
       } catch (error) { $('#estado-codigo-correo').textContent = error.message; f.elements.codigo.value = ''; }
     });
   });
   $('#reenviar-codigo-correo').addEventListener('click', async () => {
+    const boton = $('#reenviar-codigo-correo');
+    boton.disabled = true;
+    clearInterval(temporizadorCorreo);
+    $('#estado-codigo-correo').textContent = 'Reenviando…';
     try {
       const ruta = operacionCodigoCorreo === 'login' ? '/login/codigo/reenviar' : '/correo/reenviar';
-      const datos = correoReenvio ? { correo: correoReenvio } : { desafio: $('#desafio-correo').value };
+      const datos = $('#desafio-correo').value ? { desafio: $('#desafio-correo').value } : { correo: correoReenvio };
       await api(`/auth${ruta}`, { method: 'POST', body: JSON.stringify(datos) });
-      $('#estado-codigo-correo').textContent = 'Si corresponde, recibirás un código nuevo. El anterior deja de servir.';
+      $('#estado-codigo-correo').textContent = mensajeCodigoEnviado();
       cuentaRegresivaCorreo();
-    } catch (error) { $('#estado-codigo-correo').textContent = error.message; }
+    } catch (error) {
+      if (plazosCorreo) cuentaRegresivaCorreo(false);
+      $('#estado-codigo-correo').textContent = error.message; boton.disabled = false;
+    }
   });
   $('#form-reenviar-verificacion').addEventListener('submit', evento => {
-    evento.preventDefault(); const f = evento.currentTarget; const correo = f.elements.correo.value;
+    evento.preventDefault(); const f = evento.currentTarget; const correo = f.elements.correo.value.trim();
     duranteEnvio(f, async () => {
       try {
+        abrirCodigoCorreo('', 'verificar', correo, true);
         await api('/auth/correo/reenviar', { method: 'POST', body: JSON.stringify({ correo }) });
-        abrirCodigoCorreo('', 'verificar', correo);
-      } catch (error) { avisar(error.message, 'error'); }
+        $('#estado-codigo-correo').textContent = mensajeCodigoEnviado();
+        cuentaRegresivaCorreo();
+      } catch (error) {
+        $('#estado-codigo-correo').textContent = error.message;
+        $('#reenviar-codigo-correo').disabled = false;
+        avisar(error.message, 'error');
+      }
     });
   });
   $('#form-mfa-correo').addEventListener('submit', evento => {

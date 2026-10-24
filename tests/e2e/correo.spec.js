@@ -33,6 +33,10 @@ test('registro, código incorrecto, código correcto y rechazo de reutilización
   const usuario = await registrar(page, undefined, { correo: true });
   const datos = await ultimoCodigo(request, usuario.correo);
   expect(await tokenPagina(page)).toBeNull();
+  await expect(page.locator('#desafio-correo')).toHaveAttribute('type', 'hidden');
+  await expect(page.locator('#desafio-correo')).toBeHidden();
+  await expect(page.locator('#form-codigo-correo input:visible')).toHaveCount(1);
+  await expect(page.locator('#estado-codigo-correo')).toHaveText(`Código enviado a ${usuario.correo}. Caduca en 10 minutos`);
   const incorrecto = datos.codigo === '000000' ? '111111' : '000000';
   await confirmar(page, incorrecto);
   await expect(page.locator('#estado-codigo-correo')).toHaveText('Código incorrecto');
@@ -84,7 +88,7 @@ test('reenvío controlado rota el código y respeta el límite', async ({ page, 
   await page.clock.runFor(61_000);
   await expect(boton).toBeEnabled();
   await boton.click();
-  await expect(page.locator('#estado-codigo-correo')).toContainText('recibirás un código nuevo');
+  await expect(page.locator('#estado-codigo-correo')).toContainText('Caduca en 10 minutos');
   await expect(boton).toBeDisabled();
   // Agotar los tres reenvíos permitidos y comprobar que no se generan más mensajes.
   await expect.poll(async () => {
@@ -99,9 +103,52 @@ test('reenvío controlado rota el código y respeta el límite', async ({ page, 
   await expect(page.locator('#aplicacion')).toBeVisible();
 });
 
-test('código vencido se rechaza', async () => {
-  test.skip(true, 'TTL mínimo de un minuto en el backend; page.clock solo afecta al navegador y el control E2E es de solo lectura.');
-  // El TTL mínimo del servidor es un minuto. page.clock solo altera el navegador;
-  // el control autorizado es de solo lectura y no altera reloj ni desafíos del servidor.
-  // Se omite para evitar esperas reales de un minuto o cambios en src/.
+test('reenviar verificación por correo permite confirmar escribiendo solo el código', async ({ page, request }) => {
+  await page.clock.install();
+  const usuario = await registrar(page, undefined, { correo: true });
+  await page.reload();
+  const form = page.locator('#form-reenviar-verificacion');
+  await form.locator('[name=correo]').fill(usuario.correo);
+  await form.locator('button').click();
+  await expect(page.locator('#modal-codigo-correo')).toBeVisible();
+  await expect(page.locator('#desafio-correo')).toBeHidden();
+  await expect(page.locator('#desafio-correo')).toHaveValue('');
+  await expect(page.locator('#form-codigo-correo input:visible')).toHaveCount(1);
+  await expect(page.locator('#estado-codigo-correo')).toContainText('Si existe una cuenta pendiente, llegará un código.');
+  await expect(page.locator('#estado-codigo-correo')).toContainText(`Código enviado a ${usuario.correo}. Caduca en 10 minutos`);
+  await page.clock.runFor(10 * 60_000);
+  await expect(page.locator('#estado-codigo-correo')).toHaveText('El código caducó; solicita otro');
+  await expect(page.locator('#reenviar-codigo-correo')).toBeEnabled();
+  // El reloj del navegador no altera el código vigente del servidor.
+  const envio = page.waitForRequest(r => r.url().endsWith('/api/auth/correo/verificar'));
+  await verificar(page, request, usuario);
+  const datos = (await envio).postDataJSON();
+  expect(Object.keys(datos).sort()).toEqual(['codigo', 'correo']);
+  expect(datos.correo).toBe(usuario.correo);
+});
+
+test('envío y reenvío muestran progreso y errores 503 y 429 del API', async ({ page }) => {
+  await page.goto('/');
+  const form = page.locator('#form-reenviar-verificacion');
+  await expect(form).toBeVisible();
+  await form.locator('[name=correo]').fill('pendiente@test.local');
+  let peticion;
+  await page.route('**/api/auth/correo/reenviar', route => { peticion = route; });
+  await form.locator('button').click();
+  await expect(page.locator('#estado-codigo-correo')).toHaveText('Enviando código…');
+  await expect.poll(() => Boolean(peticion)).toBe(true);
+  await peticion.fulfill({ status: 503, json: { error: 'Correo no disponible; intenta más tarde' } });
+  await expect(page.locator('#estado-codigo-correo')).toHaveText('Correo no disponible; intenta más tarde');
+  peticion = null;
+  await page.locator('#reenviar-codigo-correo').click();
+  await expect(page.locator('#estado-codigo-correo')).toHaveText('Reenviando…');
+  await expect.poll(() => Boolean(peticion)).toBe(true);
+  await peticion.fulfill({ status: 429, json: { error: 'Espera antes de reenviar' } });
+  await expect(page.locator('#estado-codigo-correo')).toHaveText('Espera antes de reenviar');
+  await expect(page.locator('#reenviar-codigo-correo')).toBeEnabled();
+  peticion = null;
+  await page.locator('#reenviar-codigo-correo').click();
+  await expect.poll(() => Boolean(peticion)).toBe(true);
+  await peticion.fulfill({ status: 202, json: { mensaje: 'Si corresponde, recibirás instrucciones en tu correo' } });
+  await expect(page.locator('#estado-codigo-correo')).toContainText('Caduca en 10 minutos');
 });

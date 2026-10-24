@@ -38,10 +38,18 @@ async function crear(cuenta, proposito, destino) {
   return crud.transaccion(transaction => nuevoEnTransaccion(cuenta, proposito, destino, transaction));
 }
 /** Los fallos de código se guardan antes de lanzar el error para no revertir los intentos. */
-async function consumir(id, codigo, proposito, idCuenta, efecto) {
+async function consumir(id, codigo, proposito, idCuenta, efecto, correo) {
   habilitado(proposito);
   const result = await crud.transaccion(async transaction => {
-    const desafio = await crud.obtener(id, transaction);
+    let desafio;
+    if (!id && proposito === 'verificar_correo' && correo) {
+      const cuenta = await Cuenta.findOne({ where: { correo: correo.trim().toLowerCase(), activa: true, correo_verificado: false }, transaction });
+      if (cuenta) {
+        const Desafio = require('../models/DesafioAutenticacion');
+        desafio = await Desafio.findOne({ where: { id_cuenta: cuenta.id_cuenta, proposito, consumido_en: null }, order: [['creado_en', 'DESC']], transaction });
+        id = desafio?.id_desafio;
+      }
+    } else if (id) desafio = await crud.obtener(id, transaction);
     if (!desafio || desafio.proposito !== proposito || (idCuenta && desafio.id_cuenta !== idCuenta)) {
       return { error: new HttpError(400, 'Código incorrecto o desafío no disponible') };
     }
@@ -141,9 +149,9 @@ async function recuperar(id, datos) {
   });
 }
 /** Confirma la propiedad del correo en la misma transacción que consume el código. */
-function verificarCorreo(id, codigo) {
+function verificarCorreo(id, codigo, correo) {
   return consumir(id, codigo, 'verificar_correo', null,
-    (cuenta, _desafio, transaction) => cuenta.update({ correo_verificado: true }, { transaction }));
+    (cuenta, _desafio, transaction) => cuenta.update({ correo_verificado: true }, { transaction }), correo);
 }
 /** La cuenta debe seguir enrolada y activa al completar el segundo paso. */
 function completarLogin(id, codigo) {

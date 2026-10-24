@@ -32,10 +32,10 @@ async function profile(req, res) {
 
 const configuracion = (_req, res) => {
   const config = configuration();
-  res.json({ verificacion_correo: config.verificacion_correo, segundo_factor: config.segundo_factor, reenvio_segundos: config.cooldown });
+  res.json({ verificacion_correo: config.verificacion_correo, segundo_factor: config.segundo_factor, reenvio_segundos: config.cooldown, caducidad_minutos: config.ttl });
 };
 /** Bloque D opcional: delega verificación y segundo paso; solo los resultados finales emiten JWT. */
-const verificar = async (req, res) => res.json(authService.emitirToken(await desafios.verificarCorreo(req.body.desafio, req.body.codigo)));
+const verificar = async (req, res) => res.json(authService.emitirToken(await desafios.verificarCorreo(req.body.desafio, req.body.codigo, req.body.correo)));
 const codigoLogin = async (req, res) => res.json(authService.emitirToken(await desafios.completarLogin(req.body.desafio, req.body.codigo)));
 const reenviarCorreo = async (req, res) => res.status(202).json(await desafios.reenviar(req.body, 'verificar_correo'));
 const reenviarLogin = async (req, res) => res.status(202).json(await desafios.reenviar(req.body, 'segundo_factor'));

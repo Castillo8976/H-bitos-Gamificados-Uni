@@ -153,6 +153,7 @@ function validateEmailAuth(operacion) {
     const email = value => typeof value === 'string' && value.length <= 100 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
     const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     if (operacion === 'codigo' && (!uuid(body.desafio) || typeof body.codigo !== 'string' || !/^\d{6}$/.test(body.codigo))) return error('Indica el desafío y un código de seis dígitos');
+    if (operacion === 'verificacion' && (!((uuid(body.desafio) && body.correo === undefined) || (email(body.correo) && body.desafio === undefined)) || typeof body.codigo !== 'string' || !/^\d{6}$/.test(body.codigo))) return error('Indica desafío o correo y un código de seis dígitos');
     if (operacion === 'reenvio' && !((uuid(body.desafio) && body.correo === undefined) || (email(body.correo) && body.desafio === undefined))) return error('Indica desafío o correo');
     if (['mfa', 'cambio'].includes(operacion) && (typeof body.contrasena !== 'string' || !body.contrasena || Buffer.byteLength(body.contrasena) > 72)) return error('Contraseña requerida');
     if (operacion === 'mfa' && typeof body.activar !== 'boolean') return error('activar debe ser booleano');

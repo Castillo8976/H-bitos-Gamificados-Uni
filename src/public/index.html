@@ -214,7 +214,7 @@
     <div class="celebracion"><h2 id="titulo-codigo-correo">Confirma tu correo</h2>
       <p>Consulta el mensaje enviado a tu correo.</p>
       <form id="form-codigo-correo" class="formulario">
-        <label for="desafio-correo">Identificador del desafío <span class="opcional">obligatorio</span></label><input id="desafio-correo" name="desafio" required autocomplete="off">
+        <input id="desafio-correo" name="desafio" type="hidden">
         <label for="codigo-correo">Código de seis dígitos <span class="opcional">obligatorio</span></label><input id="codigo-correo" name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" aria-describedby="ayuda-codigo-correo" required>
         <small id="ayuda-codigo-correo" class="ayuda-campo">Escribe los seis dígitos del mensaje más reciente.</small>
         <button class="boton primario" type="submit">Confirmar código</button>

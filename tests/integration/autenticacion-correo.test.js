@@ -47,12 +47,50 @@ async function run() {
   await inicializarEsquema();
   const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
   const registro = correo => post('/registro', { nombre: 'Prueba Correo', correo, contrasena: password, materia: { id_catalogo_materia } }, 201);
-  assert.deepEqual((await request(app).get('/api/auth/configuracion')).body, { verificacion_correo: true, segundo_factor: 'optional', reenvio_segundos: Number(process.env.AUTH_CODE_RESEND_COOLDOWN_SECONDS || 60) });
+  assert.deepEqual((await request(app).get('/api/auth/configuracion')).body, { verificacion_correo: true, segundo_factor: 'optional', reenvio_segundos: Number(process.env.AUTH_CODE_RESEND_COOLDOWN_SECONDS || 60), caducidad_minutos: Number(process.env.AUTH_CODE_TTL_MINUTES || 10) });
   // Producción falla al cargar configuración antes de abrir BD o puertos.
   assert.throws(() => execFileSync(process.execPath, ['-e', "require('./src/config/authEmail')"], {
     cwd: path.resolve(__dirname, '../..'), stdio: 'pipe',
     env: { ...process.env, NODE_ENV: 'production', AUTH_CODE_SECRET: '', MAIL_TRANSPORT: 'memoria' }
   }), error => /MAIL_TRANSPORT=smtp/.test(error.stderr.toString()));
+  // Verificación sin identificador: validación exclusiva, normalización y consumo único.
+  const porCorreo = await registro('por-correo@test.local');
+  const codigoAnterior = codigo();
+  const nuevaSolicitud = await login('por-correo@test.local', 403);
+  assert.equal(nuevaSolicitud.token, undefined);
+  const codigoCorreo = codigo();
+  const verificarPorCorreo = (correo, code, status = 400) => post('/correo/verificar', { correo, codigo: code }, status);
+  await post('/correo/verificar', { desafio: nuevaSolicitud.desafio, correo: 'por-correo@test.local', codigo: codigoCorreo }, 400);
+  await post('/correo/verificar', { codigo: codigoCorreo }, 400);
+  for (const datos of [
+    { correo: 'invalido', codigo: codigoCorreo }, { correo: 'por-correo@test.local', codigo: 123456 },
+    { correo: 'por-correo@test.local', codigo: '12345' }, { desafio: '', correo: 'por-correo@test.local', codigo: codigoCorreo }
+  ]) await post('/correo/verificar', datos, 400);
+  await verificar(porCorreo.desafio, codigoAnterior, 400);
+  const porCorreoSesion = await verificarPorCorreo('  POR-CORREO@test.local  ', codigoCorreo, 200);
+  assert.ok(porCorreoSesion.token);
+  assert.equal(porCorreoSesion.cuenta.correo_verificado, true);
+  const errorGenerico = { error: 'Código incorrecto o desafío no disponible' };
+  assert.deepEqual(await verificarPorCorreo('por-correo@test.local', codigoCorreo), errorGenerico);
+  assert.deepEqual(await verificarPorCorreo('ausente@test.local', codigoCorreo), errorGenerico);
+  const intentosCorreo = await registro('intentos-correo@test.local');
+  const codigoIntentos = codigo();
+  const errorCodigo = codigoIntentos === '000000' ? '111111' : '000000';
+  const desafioIntentos = await Desafio.findByPk(intentosCorreo.desafio);
+  for (let i = 1; i <= 5; i++) {
+    await verificarPorCorreo('intentos-correo@test.local', errorCodigo);
+    assert.equal((await Desafio.findByPk(desafioIntentos.id_desafio)).intentos, i);
+  }
+  assert.ok((await Desafio.findByPk(desafioIntentos.id_desafio)).consumido_en);
+  assert.deepEqual(await verificarPorCorreo('intentos-correo@test.local', codigoIntentos), errorGenerico);
+  const expiraCorreo = await registro('expira-correo@test.local');
+  const codigoExpiraCorreo = codigo();
+  await Desafio.update({ expira_en: new Date(0) }, { where: { id_desafio: expiraCorreo.desafio } });
+  const errorVencido = await verificarPorCorreo('expira-correo@test.local', codigoExpiraCorreo);
+  assert.match(errorVencido.error, /vencido/);
+  assert.equal(errorVencido.token, undefined);
+  await Cuenta.update({ activa: false }, { where: { correo: 'expira-correo@test.local' } });
+  assert.deepEqual(await verificarPorCorreo('expira-correo@test.local', codigoExpiraCorreo), errorGenerico);
   const primera = await registro('primera@test.local');
   assert.equal(primera.requiere_verificacion, true); assert.equal(primera.token, undefined);
   assert.equal((await Cuenta.findOne({ where: { correo: 'primera@test.local' } })).correo_verificado, false);
@@ -197,7 +235,7 @@ async function run() {
   process.env.AUTH_EMAIL_VERIFICATION = 'false'; process.env.AUTH_EMAIL_MFA = 'off';
   assert.ok((await login('nuevo@test.local')).token);
   assert.ok((await login('fallo@test.local')).token);
-  assert.deepEqual((await request(app).get('/api/auth/configuracion')).body, { verificacion_correo: false, segundo_factor: 'off', reenvio_segundos: Number(process.env.AUTH_CODE_RESEND_COOLDOWN_SECONDS || 60) });
+  assert.deepEqual((await request(app).get('/api/auth/configuracion')).body, { verificacion_correo: false, segundo_factor: 'off', reenvio_segundos: Number(process.env.AUTH_CODE_RESEND_COOLDOWN_SECONDS || 60), caducidad_minutos: Number(process.env.AUTH_CODE_TTL_MINUTES || 10) });
   await post('/correo/verificar', { desafio: nuevo.desafio, codigo: nuevoCodigo }, 404);
   assert.deepEqual(await db.query('PRAGMA foreign_key_check', { type: db.QueryTypes.SELECT }), []);
   for (const mensaje of mail.mensajes) {
