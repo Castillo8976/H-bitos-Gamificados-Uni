@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'studyquest-materia-concurrencia-'));
 process.env.DATABASE_STORAGE = path.join(directory, 'prueba.sqlite');
+process.env.SQLITE_BUSY_TIMEOUT_MS = '0';
 
 const sqlite3 = require('sqlite3');
 const db = require('../../src/database');

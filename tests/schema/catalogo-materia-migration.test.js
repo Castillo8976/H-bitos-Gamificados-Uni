@@ -37,7 +37,7 @@ async function run() {
   let esquema;
   for (let arranque = 0; arranque < 2; arranque++) {
     await inicializarEsquema();
-    assert.equal((await tablas()).length, 14);
+    assert.equal((await tablas()).length, 15);
     assert.deepEqual(await contar(anteriores), conteos);
     assert.deepEqual(await select(consultaMaterias), materias);
     assert.deepEqual(await select('SELECT * FROM tarea ORDER BY id_tarea'), tareas);
@@ -61,7 +61,7 @@ async function run() {
   await assert.rejects(db.query("INSERT INTO catalogo_materia (id_catalogo_materia,nombre,activo) VALUES ('mal','Inválida',2)"), /constraint/i);
   await assert.rejects(db.query("INSERT INTO catalogo_materia (id_catalogo_materia,nombre) VALUES ('dup','ASIGNATURA DE ENSAYO')"), /constraint/i);
   assert.deepEqual(await select('PRAGMA foreign_key_check'), []);
-  console.log('✅ M1: 13 → 14 tablas; datos intactos, FK opcional, idempotencia y RESTRICT verificados');
+  console.log('✅ M1: 13 → 15 tablas; datos intactos, FK opcional, idempotencia y RESTRICT verificados');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   await db.close(); fs.rmSync(directory, { recursive: true, force: true });

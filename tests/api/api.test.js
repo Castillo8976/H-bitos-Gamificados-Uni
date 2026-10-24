@@ -391,6 +391,17 @@ async function run() {
     descripcion: 'Completar API', condicion: 'tareas:1', puntos_recompensa: 20, semana: '2026-W39'
   }).expect(201);
   const challengeId = challenge.body.dato.id_reto;
+  // HU06/HU18: obligatorios y unicidad antes de completar (los demás negativos ya están cubiertos abajo).
+  const datosReto = { descripcion: 'Reto obligatorio', condicion: 'tareas:2', puntos_recompensa: 10, semana: '2026-W38' };
+  for (const campo of Object.keys(datosReto)) {
+    const incompleto = { ...datosReto };
+    delete incompleto[campo];
+    await request(app).post('/api/retos').set(auth(studentToken)).send(incompleto).expect(400);
+  }
+  await request(app).post('/api/retos').set(auth(studentToken)).send({ ...datosReto, semana: '2026-W39' }).expect(409);
+  await request(app).get(`/api/retos/${challengeId}`).set(auth(secondToken)).expect(403);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(secondToken)).send({ progreso: 1 }).expect(403);
+
   assert.equal(challenge.body.dato.activo, true);
   await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ progreso: 1 }).expect(200);
 

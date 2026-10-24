@@ -11,6 +11,7 @@
  */
 
 const Cuenta = require('../models/Cuenta'); // Modelo Sequelize de la entidad Cuenta
+const { Transaction } = require('sequelize');
 const crypto = require('crypto');            // Módulo nativo de Node.js para generar UUIDs
 const bcrypt = require('bcryptjs');          // Librería para hash seguro de contraseñas
 
@@ -151,7 +152,7 @@ async function actualizarCuenta(id, datos) {
     console.log(filas > 0 ? '✅ Cuenta actualizada' : '⚠️ No se encontró la cuenta');
     return;
   }
-  await Cuenta.sequelize.transaction(async transaction => {
+  await Cuenta.sequelize.transaction({ type: Transaction.TYPES.IMMEDIATE }, async transaction => {
     if (Object.keys(resto).length) await Cuenta.update(resto, { where: { id_cuenta: id }, transaction });
     await desactivarCuenta(id, transaction);
   });

@@ -144,3 +144,23 @@ function nonBlankText(field, maxLength = 200) {
 }
 
 module.exports = { requireFields, validateRegistration, validateLogin, allowFields, enumField, positiveInteger, integerRange, challengeCondition, nonNegativeInteger, booleanField, nonBlankText };
+
+/** Bloque D opcional: valida códigos y operaciones sin aceptar conversiones de tipos. */
+function validateEmailAuth(operacion) {
+  return (req, _res, next) => {
+    const body = req.body;
+    const error = mensaje => next(new HttpError(400, mensaje));
+    const email = value => typeof value === 'string' && value.length <= 100 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+    const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    if (operacion === 'codigo' && (!uuid(body.desafio) || typeof body.codigo !== 'string' || !/^\d{6}$/.test(body.codigo))) return error('Indica el desafío y un código de seis dígitos');
+    if (operacion === 'reenvio' && !((uuid(body.desafio) && body.correo === undefined) || (email(body.correo) && body.desafio === undefined))) return error('Indica desafío o correo');
+    if (['mfa', 'cambio'].includes(operacion) && (typeof body.contrasena !== 'string' || !body.contrasena || Buffer.byteLength(body.contrasena) > 72)) return error('Contraseña requerida');
+    if (operacion === 'mfa' && typeof body.activar !== 'boolean') return error('activar debe ser booleano');
+    if (operacion === 'cambio' && !email(body.correo_nuevo)) return error('Correo nuevo inválido');
+    if (operacion === 'recuperacion' && (!Object.keys(body).length ||
+        (body.mfa_correo !== undefined && body.mfa_correo !== false) ||
+        (body.correo_verificado !== undefined && body.correo_verificado !== true))) return error('Solo se permite mfa_correo=false o correo_verificado=true');
+    next();
+  };
+}
+module.exports.validateEmailAuth = validateEmailAuth;

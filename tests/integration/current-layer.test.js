@@ -12,8 +12,9 @@ process.env.DATABASE_STORAGE = path.join(testDirectory, 'database.sqlite');
 const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 
-// Carga explícita de los 14 modelos (Decisión #10) que conforman el esquema vigente.
+// Carga explícita de los 15 modelos, incluyendo la ampliación opcional Bloque D.
 [
+  'DesafioAutenticacion',
   'CatalogoMateria',
   'Cuenta',
   'Materia',
@@ -52,7 +53,7 @@ async function ejecutarPrueba() {
     { type: sequelize.QueryTypes.SELECT }
   );
   // Decisión #10: catálogo global añadido por M1.
-  assert.equal(tablas.length, 14, 'El esquema debe contener exactamente 14 tablas');
+  assert.equal(tablas.length, 15, 'El esquema debe contener exactamente 15 tablas');
 
   const cuenta = await cuentaCrud.crearCuenta(
     'Usuario de prueba',
@@ -166,7 +167,7 @@ async function ejecutarPrueba() {
   assert.equal(llavesInvalidas.length, 0);
 
   console.log('\n✅ PRUEBA INTEGRAL SUPERADA');
-  console.log('   14 tablas, CRUD principales, gamificación e integridad referencial verificados.');
+  console.log('   15 tablas, CRUD principales, gamificación e integridad referencial verificados.');
   console.log('   La base temporal fue:', process.env.DATABASE_STORAGE);
 }
 

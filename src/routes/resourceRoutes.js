@@ -10,7 +10,7 @@ const controllers = require('../controllers/resourceControllers');
 const asyncHandler = require('../middlewares/asyncHandler');
 const { authenticateRequest, authorize } = require('../middlewares/authentication');
 const { validateEntityRequest } = require('../validators/entityValidator');
-const { requireFields, allowFields, enumField, positiveInteger, integerRange, challengeCondition, nonNegativeInteger, booleanField, nonBlankText } = require('../validators/requestValidator');
+const { requireFields, allowFields, enumField, positiveInteger, integerRange, challengeCondition, nonNegativeInteger, booleanField, nonBlankText, validateEmailAuth } = require('../validators/requestValidator');
 
 const router = express.Router();
 const studentOrAdmin = authorize('Estudiante', 'Administrador');
@@ -27,6 +27,7 @@ router.patch('/catalogo-materias/:id/estado', admin, allowFields('activo'), requ
 router.delete('/catalogo-materias/:id', admin, allowFields(), wrap(controllers.subjectCatalog.remove));
 router.use(validateEntityRequest);
 
+router.patch('/cuentas/:id/seguridad', admin, allowFields('mfa_correo', 'correo_verificado'), validateEmailAuth('recuperacion'), wrap(require('../controllers/authController').recuperar));
 router.get('/cuentas', admin, wrap(controllers.accounts.list));
 router.get('/cuentas/:id', studentOrAdmin, wrap(controllers.accounts.get));
 router.put('/cuentas/:id', studentOrAdmin, allowFields('nombre', 'correo', 'activa', 'rol'), booleanField('activa'), enumField('rol', ['Estudiante','Administrador','Revisor institucional']), wrap(controllers.accounts.update));

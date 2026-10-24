@@ -18,6 +18,11 @@ async function run() {
   await request(app).get('/admin').expect(200).expect('Content-Type', /html/);
   await request(app).get('/revisor').expect(200).expect('Content-Type', /html/);
   assert.match(pagina.text, /id="form-login"/);
+  for (const id of ['modal-codigo-correo', 'form-codigo-correo', 'codigo-correo', 'estado-codigo-correo', 'reenviar-codigo-correo', 'form-mfa-correo', 'form-cambio-correo', 'form-reenviar-verificacion']) {
+    assert.ok(pagina.text.includes(`id="${id}"`));
+  }
+  assert.match(pagina.text, /inputmode="numeric" autocomplete="one-time-code" maxlength="6"/);
+  assert.match(pagina.text, /id="estado-codigo-correo"[^>]*aria-live="polite"/);
   // RF01/HU20: evita seleccionar formularios duplicados u obsoletos.
   const ids = [...pagina.text.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(new Set(ids).size, ids.length, 'Cada identificador HTML debe ser único');
@@ -61,6 +66,19 @@ async function run() {
   assert.match(cliente.text, /\/retos\/\$\{id\}\/estado`, \{ method: 'PATCH'/);
   assert.match(cliente.text, /reto\.completado \? '' : `<button[^`]*data-accion="eliminar-reto"/);
   assert.match(pagina.text, /name="puntos_recompensa" type="number" min="1" max="10000"/);
+  // HU06/HU18: editor accesible con límites y acción explícita de completado.
+  const formularioReto = pagina.text.match(/<form id="form-reto"[\s\S]*?<\/form>/)?.[0];
+  assert.ok(formularioReto);
+  assert.match(formularioReto, /aria-labelledby="titulo-form-reto"/);
+  assert.match(formularioReto, /name="descripcion" required maxlength="200"/);
+  assert.match(formularioReto, /name="tipo_condicion" required/);
+  for (const tipo of ['tareas', 'sesiones', 'minutos', 'pomodoros']) assert.ok(formularioReto.includes(`value="${tipo}"`));
+  assert.match(formularioReto, /name="objetivo" type="number" min="1" step="1" required/);
+  assert.match(formularioReto, /name="puntos_recompensa" type="number" min="1" max="10000" step="1" required/);
+  assert.match(formularioReto, /name="semana" type="week" required/);
+  assert.match(formularioReto, /name="progreso" type="number" min="0"/);
+  assert.match(cliente.text, /data-accion="completar-reto"/);
+  assert.match(cliente.text, /\/retos\/\$\{id\}\/completar`, \{ method: 'PATCH'/);
   assert.match(cliente.text, /mostrarRecompensa/);
   assert.match(cliente.text, /catalogo-materias\?todas=true/);
   for (const accion of ['editar-catalogo', 'estado-catalogo', 'eliminar-catalogo']) assert.ok(cliente.text.includes(accion));

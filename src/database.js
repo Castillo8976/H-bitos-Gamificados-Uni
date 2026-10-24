@@ -24,8 +24,34 @@
  * @requires path
  */
 
-const { Sequelize } = require('sequelize'); // Constructor principal de Sequelize
+const { Sequelize, Transaction } = require('sequelize'); // Constructor principal de Sequelize
 const path = require('path');               // Módulo nativo para construir rutas de forma segura
+const sqlite3 = require('sqlite3');
+
+const busyTimeoutMs = Number(process.env.SQLITE_BUSY_TIMEOUT_MS ?? 5000);
+if (!Number.isInteger(busyTimeoutMs) || busyTimeoutMs < 0 || busyTimeoutMs > 2147483647) {
+  throw new Error('SQLITE_BUSY_TIMEOUT_MS debe ser un entero entre 0 y 2147483647');
+}
+
+/** SQLite solo admite un escritor. Encolar los escritores administrados evita que
+ * las esperas nativas de BEGIN ocupen todos los hilos de libuv e impidan el COMMIT.
+ * Las conexiones externas siguen sujetas a busy_timeout.
+ */
+class SQLiteSequelize extends Sequelize {
+  constructor(options) {
+    super(options);
+    this.escrituraPendiente = Promise.resolve();
+  }
+
+  transaction(options, callback) {
+    if (options?.type !== Transaction.TYPES.IMMEDIATE || typeof callback !== 'function') {
+      return super.transaction(options, callback);
+    }
+    const resultado = this.escrituraPendiente.then(() => super.transaction(options, callback));
+    this.escrituraPendiente = resultado.catch(() => {});
+    return resultado;
+  }
+}
 
 
 /**
@@ -64,8 +90,19 @@ const path = require('path');               // Módulo nativo para construir rut
  * await sequelize.authenticate(); // verifica la conexión
  * // El esquema se inicializa desde E11 mediante config/schema.js.
  */
-const sequelize = new Sequelize({
+const sequelize = new SQLiteSequelize({
   dialect: 'sqlite',  // Motor: SQLite (archivo local, sin servidor externo)
+  // Sequelize 6 omite afterConnect en SQLite. El constructor cubre cada conexión,
+  // incluidas las independientes que abre para las transacciones.
+  dialectModule: {
+    ...sqlite3,
+    Database: class extends sqlite3.Database {
+      constructor(...args) {
+        super(...args);
+        this.configure('busyTimeout', busyTimeoutMs);
+      }
+    }
+  },
 
   // Ruta absoluta y multiplataforma al archivo de la base de datos.
   // path.join garantiza separadores correctos en Windows (\) y Unix (/)

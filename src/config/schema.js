@@ -56,7 +56,7 @@ function dividirSentencias(sql) {
 }
 
 /**
- * Inicializa SQLite exclusivamente desde E11. No usa sequelize.sync(),
+ * Inicializa SQLite desde E11 y extensiones aditivas explícitas. No usa sequelize.sync(),
  * evitando mantener un segundo esquema implícito.
  * @implements CRF-001
  */
@@ -81,6 +81,21 @@ async function inicializarEsquema() {
   if (!columnasCuenta.some(columna => columna.name === 'version_sesion')) {
     await sequelize.query('ALTER TABLE cuenta ADD COLUMN version_sesion INTEGER NOT NULL DEFAULT 0 CHECK (version_sesion >= 0)');
   }
+  // Bloque D opcional: las cuentas anteriores se consideran verificadas para conservar su acceso.
+  for (const [campo, defecto] of [['correo_verificado', 1], ['mfa_correo', 0]]) {
+    if (!columnasCuenta.some(columna => columna.name === campo)) {
+      await sequelize.query(`ALTER TABLE cuenta ADD COLUMN ${campo} INTEGER NOT NULL DEFAULT ${defecto} CHECK (${campo} IN (0,1))`);
+    }
+  }
+  await sequelize.query(`CREATE TABLE IF NOT EXISTS desafio_autenticacion (
+    id_desafio VARCHAR(36) NOT NULL PRIMARY KEY,
+    id_cuenta VARCHAR(36) NOT NULL REFERENCES cuenta(id_cuenta) ON DELETE CASCADE,
+    proposito VARCHAR(30) NOT NULL CHECK (proposito IN ('verificar_correo','segundo_factor','cambiar_correo')),
+    codigo_hash TEXT NOT NULL, destino VARCHAR(120),
+    intentos INTEGER NOT NULL DEFAULT 0, reenvios INTEGER NOT NULL DEFAULT 0,
+    ultimo_envio DATETIME, expira_en DATETIME NOT NULL, consumido_en DATETIME,
+    creado_en DATETIME NOT NULL
+  )`);
   // RF01/RN26/HU29 (Decisión #10, M1): conserva materias históricas sin asociación automática.
   const columnasMateria = await sequelize.query('PRAGMA table_info(materia)', { type: sequelize.QueryTypes.SELECT });
   if (!columnasMateria.some(columna => columna.name === 'id_catalogo_materia')) {
@@ -93,4 +108,35 @@ async function inicializarEsquema() {
   }
 }
 
-module.exports = { ddlPath, dividirSentencias, inicializarEsquema };
+/** Columnas añadidas por migraciones aditivas posteriores a E11 (CRF-005, Decisiones #08–#10 y Bloque D). */
+const COLUMNAS_ADITIVAS = [
+  ['preferencia_visual', 'notificaciones_recordatorios'], ['preferencia_visual', 'notificaciones_retos'],
+  ['cuenta', 'version_sesion'], ['cuenta', 'correo_verificado'], ['cuenta', 'mfa_correo'],
+  ['materia', 'id_catalogo_materia'], ['reto', 'activo']
+];
+
+/** Solo lectura: lista lo que inicializarEsquema() cambiaría en una base existente; vacía si la base es nueva o está al día. */
+async function migracionesPendientes() {
+  const tablas = new Set((await sequelize.query("SELECT name FROM sqlite_master WHERE type='table'", { type: sequelize.QueryTypes.SELECT })).map(t => t.name));
+  if (!tablas.has('cuenta')) return [];
+  const ddl = await fs.readFile(ddlPath, 'utf8');
+  const pendientes = [...ddl.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/gi)].map(m => m[1]).filter(t => !tablas.has(t)).map(t => `tabla ${t}`);
+  if (!tablas.has('desafio_autenticacion')) pendientes.push('tabla desafio_autenticacion');
+  const [tarea] = await sequelize.query("SELECT sql FROM sqlite_master WHERE type='table' AND name='tarea'", { type: sequelize.QueryTypes.SELECT });
+  if (tarea && !tarea.sql.includes("'En progreso'")) pendientes.push('estados de tarea (CRF-005)');
+  for (const [tabla, columna] of COLUMNAS_ADITIVAS) {
+    if (!tablas.has(tabla)) continue;
+    const columnas = await sequelize.query(`PRAGMA table_info(${tabla})`, { type: sequelize.QueryTypes.SELECT });
+    if (!columnas.some(c => c.name === columna)) pendientes.push(`${tabla}.${columna}`);
+  }
+  return pendientes;
+}
+
+/** Para scripts operativos: crea una base nueva, pero rechaza migrar implícitamente una existente. */
+async function prepararEsquemaSinMigrar() {
+  const pendientes = await migracionesPendientes();
+  if (pendientes.length) throw new Error(`la base requiere migraciones (${pendientes.join(', ')}); haga un respaldo y ejecute npm run db:migrate`);
+  await inicializarEsquema();
+}
+
+module.exports = { ddlPath, dividirSentencias, inicializarEsquema, migracionesPendientes, prepararEsquemaSinMigrar };

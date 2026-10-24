@@ -12,6 +12,7 @@
  */
 
 const Reto = require('../models/Reto');
+const { Transaction } = require('sequelize');
 const Punto = require('../models/Punto');
 const crypto = require('crypto');
 
@@ -164,7 +165,7 @@ async function actualizarProgresoReto(id, incremento) {
 async function completarReto(id) {
   // RN10/RN28 (Decisión #09): una sola transacción; el UPDATE condicionado elige un único ganador
   // y uq_punto_evento (id_cuenta, origen, id_origen) respalda la acreditación única del reto.
-  return Reto.sequelize.transaction(async transaction => {
+  return Reto.sequelize.transaction({ type: Transaction.TYPES.IMMEDIATE }, async transaction => {
     const [filas] = await Reto.update(
       { completado: true },
       { where: { id_reto: id, completado: false, activo: true }, transaction }

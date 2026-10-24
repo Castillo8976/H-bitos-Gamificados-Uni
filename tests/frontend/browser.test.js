@@ -149,6 +149,45 @@ async function run() {
     assert.equal(await cdp.evaluar("document.querySelectorAll('#form-preferencias').length"), 1);
     assert.deepEqual(await cdp.evaluar(`Array.from(document.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(e=>!e.labels?.length&&!e.getAttribute('aria-label')&&!e.getAttribute('aria-labelledby')).map(e=>e.id||e.name)`), []);
 
+    // HU06/HU18/RN10/RN28: crear, duplicar, editar y completar desde controles reales.
+    await cdp.evaluar("document.querySelector('[data-vista=gamificacion]').click();document.querySelector('#mostrar-form-reto').click()");
+    assert.equal(await cdp.evaluar("document.activeElement===document.querySelector('#form-reto [name=descripcion]')"), true);
+    assert.equal(await cdp.evaluar("document.querySelector('#form-reto').elements.semana.value === semanaActualReto()"), true);
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-reto');f.elements.descripcion.value='Reto desde Chrome';f.elements.tipo_condicion.value='minutos';f.elements.objetivo.value=30;f.elements.puntos_recompensa.value=15;f.elements.semana.value='2026-W48';f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#panel-form-reto').hidden && estado.retos.some(r=>r.descripcion==='Reto desde Chrome')");
+    const retoBrowserId = await cdp.evaluar("estado.retos.find(r=>r.descripcion==='Reto desde Chrome').id_reto");
+    assert.equal(await cdp.evaluar("estado.retos.find(r=>r.descripcion==='Reto desde Chrome').condicion"), 'minutos:30');
+    await cdp.evaluar(`(()=>{document.querySelector('#mostrar-form-reto').click();const f=document.querySelector('#form-reto');f.elements.descripcion.value='Semana duplicada';f.elements.objetivo.value=2;f.elements.puntos_recompensa.value=10;f.elements.semana.value='2026-W48';f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#avisos .error')");
+    assert.match(await cdp.evaluar("document.querySelector('#avisos').textContent"), /El registro ya existe/i);
+    assert.equal(await cdp.evaluar("estado.retos.length"), 1);
+    await cdp.evaluar("document.querySelector('#cancelar-reto').click();document.querySelector('#lista-retos-metas [data-accion=editar-reto]').click()");
+    assert.deepEqual(await cdp.evaluar(`(()=>{const f=document.querySelector('#form-reto');return [f.elements.descripcion.value,f.elements.tipo_condicion.value,f.elements.objetivo.value,f.elements.puntos_recompensa.value,f.elements.semana.value,f.elements.progreso.value]})()`), ['Reto desde Chrome', 'minutos', '30', '15', '2026-W48', '0']);
+    await cdp.evaluar("(()=>{const f=document.querySelector('#form-reto');f.elements.puntos_recompensa.value=23;f.elements.progreso.value=2;f.requestSubmit()})()");
+    await esperarCondicion(cdp, "document.querySelector('#panel-form-reto').hidden && estado.retos[0].puntos_recompensa===23 && estado.retos[0].progreso===2");
+    const retoGuardado = await require('../../src/models/Reto').findByPk(retoBrowserId);
+    assert.equal(retoGuardado.puntos_recompensa, 23);
+    assert.equal(retoGuardado.progreso, 2);
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=estado-reto]').click()");
+    await esperarCondicion(cdp, 'estado.retos[0].activo === false');
+    assert.equal(await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]')===null"), true);
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=estado-reto]').click()");
+    await esperarCondicion(cdp, 'estado.retos[0].activo === true');
+    const puntosAntesReto = await cdp.evaluar('estado.totalPuntos');
+    await cdp.evaluar('window.confirmOriginal=window.confirm;window.confirm=()=>false');
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]').click()");
+    assert.equal(await cdp.evaluar('estado.retos[0].completado'), false);
+    await cdp.evaluar('window.confirm=()=>true');
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]').click()");
+    await esperarCondicion(cdp, 'estado.retos[0].completado && estado.totalPuntos === '+(puntosAntesReto + 23));
+    assert.equal(await cdp.evaluar("document.querySelector('#gamificacion-puntos').textContent"), String(puntosAntesReto + 23));
+    assert.equal(await cdp.evaluar("document.querySelectorAll('#lista-retos-metas [data-accion=completar-reto],#lista-retos-metas [data-accion=editar-reto],#lista-retos-metas [data-accion=eliminar-reto]').length"), 0);
+    // Reintento del mismo crédito contra API real: el contrato es idempotente (200).
+    await cdp.evaluar(`api('/retos/${retoBrowserId}/completar',{method:'PATCH'}).then(()=>recargarGamificacion())`);
+    assert.equal(await cdp.evaluar('estado.totalPuntos'), puntosAntesReto + 23);
+    assert.deepEqual(await sequelize.query("SELECT COUNT(*) AS n, SUM(cantidad) AS total FROM punto WHERE origen = 'Reto' AND id_origen = :id", { replacements: { id: retoBrowserId }, plain: true }), { n: 1, total: 23 });
+    await cdp.evaluar('window.confirm=window.confirmOriginal');
+
     // P04/P05 y objetivo 6: la acción real crea y completa una tarea y abre la recompensa.
     await cdp.evaluar("document.querySelector('[data-vista=tareas]').click();document.querySelector('#mostrar-form-tarea').click()");
     assert.equal(await cdp.evaluar("document.activeElement===document.querySelector('#form-tarea [name=nombre]')"), true);

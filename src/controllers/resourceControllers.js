@@ -75,6 +75,9 @@ const accounts = {
     if (!isAdmin(req.user) && ['rol', 'activa'].some(key => Object.hasOwn(req.body, key))) {
       throw new HttpError(403, 'Solo el administrador puede cambiar rol o estado de una cuenta');
     }
+    if (req.user.rol === 'Estudiante' && Object.hasOwn(req.body, 'correo') && require('../config/authEmail').configuration().verificacion_correo) {
+      throw new HttpError(400, 'Para cambiar el correo usa el flujo /api/auth/correo/cambio y confirma el código');
+    }
     const allowed = isAdmin(req.user) ? ['nombre', 'correo', 'activa', 'rol'] : ['nombre', 'correo'];
     const data = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
     if (!Object.keys(data).length) throw new HttpError(400, 'No hay campos permitidos para actualizar');

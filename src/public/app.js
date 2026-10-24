@@ -61,6 +61,7 @@ async function api(ruta, opciones = {}) {
   if (!respuesta.ok) {
     const error = new Error(contenido?.error || 'No fue posible completar la solicitud');
     error.status = respuesta.status;
+    error.contenido = contenido;
     throw error;
   }
   return contenido;
@@ -71,7 +72,8 @@ async function api(ruta, opciones = {}) {
 function avisar(mensaje, tipo = 'informacion') {
   const aviso = document.createElement('div');
   aviso.className = `aviso ${tipo}`;
-  aviso.textContent = mensaje;
+  aviso.setAttribute('role', tipo === 'error' ? 'alert' : 'status');
+  aviso.textContent = `${tipo === 'error' ? 'Error: ' : tipo === 'exito' ? 'Listo: ' : ''}${mensaje}`;
   // Una sola confirmación evita cubrir la interfaz cuando hay acciones rápidas.
   $('#avisos').replaceChildren(aviso);
   // Los errores permanecen más tiempo para poder leerlos y corregir el formulario.
@@ -82,9 +84,16 @@ function avisar(mensaje, tipo = 'informacion') {
 /** RF02/HU02: deshabilita botones del formulario mientras termina su solicitud. */
 async function duranteEnvio(formulario, trabajo) {
   const botones = [...formulario.querySelectorAll('button')];
-  botones.forEach(boton => { boton.disabled = true; });
+  formulario.setAttribute('aria-busy', 'true');
+  botones.forEach(boton => {
+    boton.disabled = true;
+    if (boton.type === 'submit') boton.setAttribute('aria-busy', 'true');
+  });
   try { return await trabajo(); }
-  finally { botones.forEach(boton => { boton.disabled = false; }); }
+  finally {
+    formulario.removeAttribute('aria-busy');
+    botones.forEach(boton => { boton.disabled = false; boton.removeAttribute('aria-busy'); });
+  }
 }
 
 /** RF01/HU01: presenta login/registro y oculta la aplicación. */
@@ -105,8 +114,12 @@ function navegar(nombre) {
   const destino = $(`#vista-${nombre}`);
   if (!destino || destino.dataset.permitida === 'false') return;
   $$('.vista').forEach(vista => { vista.hidden = vista.dataset.seccion !== nombre; });
-  $$('.nav-item').forEach(item => item.classList.toggle('activo', item.dataset.vista === nombre));
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  $$('.nav-item').forEach(item => {
+    const activa = item.dataset.vista === nombre;
+    item.classList.toggle('activo', activa);
+    if (activa) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
+  });
+  window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   const titulo = destino.querySelector('h2');
   if (titulo) {
     titulo.tabIndex = -1;
@@ -145,13 +158,15 @@ async function cerrarSesion(revocar = true) {
 
 /** RF01/HU01: autentica, conserva el token y carga la cuenta. */
 async function iniciarSesion(correo, contrasena) {
-  const respuesta = await api('/auth/login', {
-    method: 'POST', body: JSON.stringify({ correo, contrasena })
-  });
-  estado.token = respuesta.token;
-  sessionStorage.setItem(CLAVE_TOKEN, respuesta.token);
-  estado.cuenta = respuesta.cuenta;
-  await cargarAplicacion();
+  let respuesta;
+  try {
+    respuesta = await api('/auth/login', { method: 'POST', body: JSON.stringify({ correo, contrasena }) });
+  } catch (error) {
+    if (error.contenido?.requiere_verificacion) { abrirCodigoCorreo(error.contenido.desafio, 'verificar'); return; }
+    throw error;
+  }
+  if (respuesta.requiere_codigo) { abrirCodigoCorreo(respuesta.desafio, 'login'); return; }
+  await aceptarSesionCorreo(respuesta);
 }
 
 /** Consulta un recurso sin impedir que carguen las demás tarjetas. */
@@ -260,6 +275,54 @@ function estadoVacio(mensaje) {
   return `<p class="estado-vacio">${escapar(mensaje)}</p>`;
 }
 
+/** Bloque E: representa valores existentes sin modificar el progreso del servidor. */
+function progresoVisual(actual, objetivo, etiqueta) {
+  const maximo = Number(objetivo);
+  const valor = Number(actual);
+  if (!Number.isFinite(maximo) || maximo <= 0 || !Number.isFinite(valor)) return '';
+  return `<progress max="${maximo}" value="${Math.max(0, Math.min(valor, maximo))}" aria-label="${escapar(etiqueta)}" aria-valuetext="${escapar(actual)} de ${maximo}"></progress>`;
+}
+
+/** Bloque E: el texto hace perceptible el estado del reto además de su color. */
+function estadoRetoVisual(reto) {
+  const estadoVisual = reto.completado ? 'completado' : reto.activo ? 'activo' : 'inactivo';
+  return `<span class="chip estado-${estadoVisual}">${estadoVisual === 'completado' ? 'Completado' : estadoVisual === 'activo' ? 'Activo' : 'Inactivo'}</span>`;
+}
+
+/** RNF-06: acompaña la validación nativa con un error junto al campo. */
+function prepararValidacionVisual() {
+  let secuencia = 0;
+  const errores = new WeakMap();
+  function limpiar(campo) {
+    const error = errores.get(campo);
+    if (!error) return;
+    campo.removeAttribute('aria-invalid');
+    const descripciones = (campo.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== error.id);
+    if (descripciones.length) campo.setAttribute('aria-describedby', descripciones.join(' '));
+    else campo.removeAttribute('aria-describedby');
+    error.remove();
+    errores.delete(campo);
+  }
+  document.addEventListener('invalid', evento => {
+    const campo = evento.target;
+    if (!campo.matches('input,select,textarea')) return;
+    limpiar(campo);
+    const error = document.createElement('small');
+    error.id = `error-campo-${++secuencia}`;
+    error.className = 'error-campo';
+    error.textContent = `Revisa este campo: ${campo.validationMessage}`;
+    campo.setAttribute('aria-invalid', 'true');
+    campo.setAttribute('aria-describedby', `${campo.getAttribute('aria-describedby') || ''} ${error.id}`.trim());
+    campo.insertAdjacentElement('afterend', error);
+    errores.set(campo, error);
+  }, true);
+  document.addEventListener('input', evento => limpiar(evento.target));
+  document.addEventListener('change', evento => limpiar(evento.target));
+  document.addEventListener('reset', evento => {
+    evento.target.querySelectorAll('[aria-invalid="true"]').forEach(limpiar);
+  });
+}
+
 /** RF09/HU09: resuelve el nombre de la materia desde el estado cargado. */
 function materiaDe(id) {
   return estado.materias.find(materia => materia.id_materia === id)?.nombre || 'Sin materia';
@@ -282,6 +345,8 @@ function renderizarUsuario() {
   $('#form-perfil').elements.nombre.value = estado.cuenta.nombre;
   $('#form-perfil').elements.correo.value = estado.cuenta.correo;
   $('#perfil-rol').textContent = estado.cuenta.rol;
+  $('#form-perfil').elements.correo.readOnly = configuracionCorreo.verificacion_correo && estado.cuenta.rol === 'Estudiante';
+  $('#form-mfa-correo').elements.activar.checked = Boolean(estado.cuenta.mfa_correo);
 }
 
 /** RF08/HU08: muestra contadores y próximos pendientes. */
@@ -373,11 +438,11 @@ function renderizarGamificacion() {
   $('#total-insignias').textContent = `${obtenidas.size}/${estado.insignias.length}`;
   $('#lista-insignias').innerHTML = estado.insignias.length ? estado.insignias.map(insignia => {
     const asignacion = obtenidas.get(insignia.id_insignia);
-    return `<div class="item insignia ${asignacion ? 'obtenida' : 'bloqueada'}" title="${escapar(insignia.descripcion)} · Condición: ${escapar(insignia.condicion)}"><strong>${asignacion ? '🏅' : '🔒'} ${escapar(insignia.nombre)}</strong><small>${asignacion ? `Obtenida ${escapar(fechaLegible(asignacion.fecha_obtenida))}` : `Condición: ${escapar(insignia.condicion)}`}</small></div>`;
+    return `<div class="item insignia ${asignacion ? 'obtenida' : 'bloqueada'}" title="${escapar(insignia.descripcion)} · Condición: ${escapar(insignia.condicion)}"><strong>${escapar(insignia.nombre)}</strong><span class="chip ${asignacion ? 'logro' : 'estado-inactivo'}">${asignacion ? 'Obtenida' : 'Por desbloquear'}</span><small>${asignacion ? `Obtenida ${escapar(fechaLegible(asignacion.fecha_obtenida))}` : `Condición: ${escapar(insignia.condicion)}`}</small></div>`;
   }).join('') : estadoVacio('El catálogo de insignias está vacío.');
   const avances = [
-    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`),
-    ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
+    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small>${estadoRetoVisual(reto)}${progresoVisual(reto.progreso, String(reto.condicion).split(':')[1], 'Progreso del reto')}</div><div class="acciones">${reto.completado ? '' : `<button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button>`}${botonEstadoReto(reto)}${reto.activo && !reto.completado && reto.id_cuenta === estado.cuenta.id_cuenta ? `<button class="boton primario pequeno" data-accion="completar-reto" data-id="${escapar(reto.id_reto)}">Completar</button>` : ''}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`),
+    ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small>${progresoVisual(meta.valor_actual, meta.valor_objetivo, 'Progreso de la meta')}</div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
   ];
   $('#lista-retos-metas').innerHTML = avances.length ? avances.join('') : estadoVacio('No tienes retos o metas registrados.');
   const movimientos = [...estado.puntos].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
@@ -408,7 +473,7 @@ function renderizarEstadisticas() {
     'Puntos del periodo': dato.puntos_obtenidos,
     'Sesiones Pomodoro': dato.sesiones_pomodoro
   });
-  $('#estadisticas-metas').innerHTML = dato.metas.length ? dato.metas.map(meta => `<div class="item"><strong>${escapar(meta.descripcion)}</strong><small>${meta.valor_actual}/${meta.valor_objetivo} · ${meta.cumplida ? 'Cumplida' : 'En progreso'}</small></div>`).join('') : estadoVacio('No hay meta para esta semana.');
+  $('#estadisticas-metas').innerHTML = dato.metas.length ? dato.metas.map(meta => `<div class="item"><strong>${escapar(meta.descripcion)}</strong><small>${meta.valor_actual}/${meta.valor_objetivo} · ${meta.cumplida ? 'Cumplida' : 'En progreso'}</small>${progresoVisual(meta.valor_actual, meta.valor_objetivo, 'Progreso de la meta semanal')}</div>`).join('') : estadoVacio('No hay meta para esta semana.');
   $('#estadisticas-retos').innerHTML = dato.retos.length ? dato.retos.map(reto => `<div class="item"><strong>${escapar(reto.descripcion)}</strong><small>Progreso ${reto.progreso} · ${reto.completado ? 'Completado' : 'En progreso'}</small></div>`).join('') : estadoVacio('No hay reto para esta semana.');
 }
 
@@ -466,7 +531,7 @@ function renderizarAdministracion() {
   $('#admin-correccion-cuenta').innerHTML = opcionesCuenta;
   $('#admin-insignia-correccion').innerHTML = estado.insignias
     .map(item => `<option value="${escapar(item.id_insignia)}">${escapar(item.nombre)}</option>`).join('');
-  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
+  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small>${estadoRetoVisual(reto)}${progresoVisual(reto.progreso, String(reto.condicion).split(':')[1], 'Progreso del reto')}</div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
   const puntos = estado.puntosAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${item.cantidad} puntos</strong><br><small>${escapar(item.origen)} · ${escapar(fechaLegible(item.fecha))}</small></div><button class="boton peligro pequeno" data-accion="eliminar-punto-admin" data-id="${escapar(item.id_punto)}">Eliminar movimiento</button></div></div>`);
   const asignaciones = estado.insigniasCuentaAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${escapar(item.insignia?.nombre || 'Insignia')}</strong><br><small>Asignada ${escapar(fechaLegible(item.fecha_obtenida))}</small></div><button class="boton peligro pequeno" data-accion="revocar-insignia-admin" data-id="${escapar(item.id_insignia)}" data-cuenta="${escapar(item.id_cuenta)}">Revocar</button></div></div>`);
   $('#lista-correcciones-admin').innerHTML = [...puntos, ...asignaciones].join('') || estadoVacio('No hay movimientos o insignias para corregir.');
@@ -499,9 +564,9 @@ async function recargarGamificacion() {
 /** RF03/HU03: muestra la recompensa confirmada por el backend. */
 function mostrarRecompensa(resultado) {
   const partes = [`<p><strong>+${resultado.puntos_otorgados} puntos</strong></p>`];
-  if (resultado.insignias_desbloqueadas?.length) partes.push(`<p>🏅 ${escapar(resultado.insignias_desbloqueadas.join(', '))}</p>`);
-  if (resultado.retos_completados?.length) partes.push(`<p>🏆 ${escapar(resultado.retos_completados.join(', '))}</p>`);
-  if (resultado.metas_cumplidas?.length) partes.push(`<p>🎯 ${escapar(resultado.metas_cumplidas.join(', '))}</p>`);
+  if (resultado.insignias_desbloqueadas?.length) partes.push(`<p>Insignias: ${escapar(resultado.insignias_desbloqueadas.join(', '))}</p>`);
+  if (resultado.retos_completados?.length) partes.push(`<p>Retos completados: ${escapar(resultado.retos_completados.join(', '))}</p>`);
+  if (resultado.metas_cumplidas?.length) partes.push(`<p>Metas cumplidas: ${escapar(resultado.metas_cumplidas.join(', '))}</p>`);
   if (resultado.nuevo_nivel) partes.push(`<p>Nuevo nivel: ${escapar(resultado.nivel)}</p>`);
   $('#detalle-recompensa').innerHTML = partes.join('');
   $('#modal-recompensa').showModal();
@@ -629,6 +694,52 @@ function cerrarTarea() {
   $('#panel-form-tarea').hidden = true;
 }
 
+/** HU06/HU18: semana ISO local, incluyendo el año ISO en los cambios de año. */
+function semanaActualReto() {
+  const hoy = new Date();
+  const jueves = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
+  jueves.setUTCDate(jueves.getUTCDate() + 4 - (jueves.getUTCDay() || 7));
+  const inicio = new Date(Date.UTC(jueves.getUTCFullYear(), 0, 1));
+  const semana = Math.ceil(((jueves - inicio) / 86400000 + 1) / 7);
+  return `${jueves.getUTCFullYear()}-W${String(semana).padStart(2, '0')}`;
+}
+
+/** HU06/HU18: editor compartido para crear y editar retos propios pendientes. */
+function abrirReto(reto = null) {
+  const f = $('#form-reto');
+  f.reset();
+  f.elements.id.value = reto?.id_reto || '';
+  f.elements.descripcion.value = reto?.descripcion || '';
+  f.elements.puntos_recompensa.value = reto?.puntos_recompensa ?? '';
+  f.elements.semana.value = reto?.semana || semanaActualReto();
+  const condicion = /^(tareas|sesiones|minutos|pomodoros):([1-9]\d*)$/.exec(reto?.condicion || 'tareas:1');
+  f.querySelector('[value="antigua"]')?.remove();
+  // Los registros antiguos pueden conservar su condición libre al editar otros campos.
+  if (!condicion) f.elements.tipo_condicion.add(new Option(`Actual: ${reto.condicion}`, 'antigua'));
+  f.elements.tipo_condicion.value = condicion?.[1] || 'antigua';
+  f.elements.objetivo.value = condicion?.[2] || '';
+  f.elements.objetivo.disabled = !condicion;
+  f.elements.progreso.value = reto?.progreso ?? 0;
+  f.elements.progreso.disabled = !reto;
+  $('#campo-progreso-reto').hidden = !reto;
+  $('#titulo-form-reto').textContent = reto ? 'Editar reto' : 'Nuevo reto';
+  $('#panel-form-reto').hidden = false;
+  $('#mostrar-form-reto').setAttribute('aria-expanded', 'true');
+  $('#panel-form-reto').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  f.elements.descripcion.focus({ preventScroll: true });
+}
+
+/** HU06/HU18: cierra el editor y devuelve el foco a su acción de apertura. */
+function cerrarReto() {
+  const id = $('#form-reto').elements.id.value;
+  $('#form-reto').reset();
+  $('#form-reto').elements.id.value = '';
+  $('#panel-form-reto').hidden = true;
+  $('#mostrar-form-reto').setAttribute('aria-expanded', 'false');
+  const editar = $$('#lista-retos-metas [data-accion="editar-reto"]').find(b => b.dataset.id === id);
+  (editar || $('#mostrar-form-reto')).focus();
+}
+
 /** RF09/HU16: devuelve el formulario de materia al modo de creación. */
 function limpiarMateria() {
   $('#form-materia').reset();
@@ -722,7 +833,7 @@ function detenerTemporizador(restablecer = true) {
   $('#iniciar-temporizador').textContent = 'Iniciar';
   $('#guardar-temporizador').hidden = true;
   $('#cancelar-temporizador').hidden = true;
-  $('#estado-temporizador').textContent = 'Listo para comenzar una sesión Pomodoro.';
+  $('#estado-temporizador').textContent = modo === 'libre' ? 'Listo para comenzar una sesión libre.' : 'Listo para comenzar una sesión Pomodoro.';
   $('#tarjeta-temporizador').classList.remove('enfoque');
 }
 
@@ -815,11 +926,13 @@ async function manejarAccion(evento) {
     }
     if (accion === 'editar-reto') {
       const reto = estado.retos.find(item => item.id_reto === id);
-      const descripcion = prompt('Descripción del reto', reto.descripcion);
-      if (descripcion === null || !descripcion.trim()) return;
-      const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion: descripcion.trim() }) });
-      estado.retos = estado.retos.map(item => item.id_reto === id ? respuesta.dato : item);
-      renderizarGamificacion(); avisar('Reto actualizado.', 'exito');
+      if (reto && !reto.completado) abrirReto(reto);
+    }
+    if (accion === 'completar-reto' && confirm('¿Deseas completar este reto y acreditar su recompensa?')) {
+      boton.disabled = true;
+      await api(`/retos/${id}/completar`, { method: 'PATCH' });
+      await recargarGamificacion();
+      avisar('Reto completado. Puntos actualizados.', 'exito');
     }
     if (accion === 'estado-reto') {
       const activo = boton.dataset.activo === 'true';
@@ -974,7 +1087,8 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget;
     duranteEnvio(f, async () => {
       try {
-        await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { id_catalogo_materia: f.elements.id_catalogo_materia.value, horario: f.elements.horario.value || null } }) });
+        const registro = await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { id_catalogo_materia: f.elements.id_catalogo_materia.value, horario: f.elements.horario.value || null } }) });
+        if (registro.requiere_verificacion) { abrirCodigoCorreo(registro.desafio, 'verificar'); f.elements.contrasena.value = ''; return; }
         await iniciarSesion(f.elements.correo.value, f.elements.contrasena.value); avisar('Cuenta creada correctamente.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
@@ -994,6 +1108,25 @@ function registrarEventos() {
     });
   });
   $('#cancelar-materia').addEventListener('click', limpiarMateria);
+  $('#mostrar-form-reto').addEventListener('click', () => abrirReto());
+  $('#cerrar-form-reto').addEventListener('click', cerrarReto);
+  $('#cancelar-reto').addEventListener('click', cerrarReto);
+  $('#form-reto').elements.tipo_condicion.addEventListener('change', evento => {
+    $('#form-reto').elements.objetivo.disabled = evento.target.value === 'antigua';
+  });
+  $('#form-reto').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value;
+    duranteEnvio(f, async () => {
+      try {
+        const datos = { descripcion: f.elements.descripcion.value, puntos_recompensa: Number(f.elements.puntos_recompensa.value), semana: f.elements.semana.value };
+        if (f.elements.tipo_condicion.value !== 'antigua') datos.condicion = `${f.elements.tipo_condicion.value}:${f.elements.objetivo.value}`;
+        if (id) datos.progreso = Number(f.elements.progreso.value);
+        const respuesta = await api(id ? `/retos/${id}` : '/retos', { method: id ? 'PUT' : 'POST', body: JSON.stringify(datos) });
+        estado.retos = id ? estado.retos.map(item => item.id_reto === id ? respuesta.dato : item) : [...estado.retos, respuesta.dato];
+        renderizarGamificacion(); cerrarReto(); avisar(`Reto ${id ? 'actualizado' : 'creado'}.`, 'exito');
+      } catch (error) { avisar(error.message, 'error'); }
+    });
+  });
   $('#mostrar-form-tarea').addEventListener('click', () => abrirTarea());
   $('#cerrar-form-tarea').addEventListener('click', cerrarTarea);
   $('#cancelar-tarea').addEventListener('click', cerrarTarea);
@@ -1014,7 +1147,10 @@ function registrarEventos() {
   $$('[data-panel-gamificacion]').forEach(tab => tab.addEventListener('click', () => {
     const historial = tab.dataset.panelGamificacion === 'historial';
     $('#panel-historial-gamificacion').hidden = !historial;
-    $$('.tab-gamificacion').forEach(item => item.classList.toggle('activo', item === tab));
+    $$('.tab-gamificacion').forEach(item => {
+      item.classList.toggle('activo', item === tab);
+      item.setAttribute('aria-pressed', String(item === tab));
+    });
   }));
   $$('input[name="modo-temporizador"]').forEach(input => input.addEventListener('change', () => {
     if (estado.temporizador.activo) return;
@@ -1060,7 +1196,7 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget;
     duranteEnvio(f, async () => {
       try {
-        const respuesta = await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'PUT', body: JSON.stringify({ nombre: f.elements.nombre.value.trim(), correo: f.elements.correo.value.trim() }) });
+        const respuesta = await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'PUT', body: JSON.stringify({ nombre: f.elements.nombre.value.trim(), ...(configuracionCorreo.verificacion_correo && estado.cuenta.rol === 'Estudiante' ? {} : { correo: f.elements.correo.value.trim() }) }) });
         estado.cuenta = respuesta.dato; renderizarUsuario(); avisar('Perfil actualizado.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
@@ -1205,9 +1341,105 @@ function registrarEventos() {
 /** Punto de entrada del navegador. Intenta restaurar una sesión de la pestaña. */
 /** RF01/HU01: registra eventos y recupera una sesión si hay token. */
 async function iniciar() {
+  prepararValidacionVisual();
   registrarEventos();
+  await iniciarCorreoOpcional();
   await cargarCatalogoMaterias();
   if (estado.token) await cargarAplicacion(); else mostrarAcceso();
+}
+
+// Bloque D: controles ocultos hasta recibir configuración explícita del servidor.
+let configuracionCorreo = { verificacion_correo: false, segundo_factor: 'off', reenvio_segundos: 60 };
+let operacionCodigoCorreo = 'verificar';
+let correoReenvio = null;
+let temporizadorCorreo;
+async function aceptarSesionCorreo(respuesta) {
+  estado.token = respuesta.token;
+  sessionStorage.setItem(CLAVE_TOKEN, respuesta.token);
+  estado.cuenta = respuesta.cuenta;
+  await cargarAplicacion();
+}
+function cuentaRegresivaCorreo() {
+  clearInterval(temporizadorCorreo);
+  // El servidor vuelve a comprobar el cooldown, incluso si se cierra este diálogo.
+  let restante = Number(configuracionCorreo.reenvio_segundos) || 0;
+  const boton = $('#reenviar-codigo-correo');
+  const actualizar = () => {
+    boton.disabled = restante > 0;
+    boton.textContent = restante > 0 ? `Reenviar en ${restante} s` : 'Reenviar código';
+    if (restante-- <= 0) clearInterval(temporizadorCorreo);
+  };
+  actualizar(); temporizadorCorreo = setInterval(actualizar, 1000);
+}
+function abrirCodigoCorreo(desafio, operacion, correo = null) {
+  operacionCodigoCorreo = operacion; correoReenvio = correo;
+  $('#form-codigo-correo').reset();
+  $('#desafio-correo').value = desafio || '';
+  $('#titulo-codigo-correo').textContent = operacion === 'login' ? 'Segundo paso de acceso' : 'Confirma tu correo';
+  $('#estado-codigo-correo').textContent = 'Escribe el código del mensaje. Si falta el identificador, cópialo del correo.';
+  $('#reenviar-codigo-correo').hidden = operacion === 'cambio';
+  $('#modal-codigo-correo').showModal();
+  cuentaRegresivaCorreo();
+  $('#codigo-correo').focus();
+}
+async function iniciarCorreoOpcional() {
+  try { configuracionCorreo = await api('/auth/configuracion'); } catch (_) { return; }
+  const verificacion = configuracionCorreo.verificacion_correo;
+  const mfa = configuracionCorreo.segundo_factor === 'optional';
+  $('#seguridad-correo').hidden = !verificacion && !mfa;
+  $('#form-mfa-correo').hidden = !mfa;
+  $('#form-cambio-correo').hidden = !verificacion;
+  $('#form-reenviar-verificacion').hidden = !verificacion;
+  $('#cerrar-codigo-correo').addEventListener('click', () => $('#modal-codigo-correo').close());
+  $('#modal-codigo-correo').addEventListener('close', () => { clearInterval(temporizadorCorreo); $('#codigo-correo').value = ''; });
+  $('#form-codigo-correo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        const ruta = { verificar: '/correo/verificar', login: '/login/codigo', cambio: '/correo/cambio/confirmar' }[operacionCodigoCorreo];
+        const resultado = await api(`/auth${ruta}`, { method: 'POST', body: JSON.stringify({ desafio: f.elements.desafio.value, codigo: f.elements.codigo.value }) });
+        $('#modal-codigo-correo').close(); await aceptarSesionCorreo(resultado);
+      } catch (error) { $('#estado-codigo-correo').textContent = error.message; f.elements.codigo.value = ''; }
+    });
+  });
+  $('#reenviar-codigo-correo').addEventListener('click', async () => {
+    try {
+      const ruta = operacionCodigoCorreo === 'login' ? '/login/codigo/reenviar' : '/correo/reenviar';
+      const datos = correoReenvio ? { correo: correoReenvio } : { desafio: $('#desafio-correo').value };
+      await api(`/auth${ruta}`, { method: 'POST', body: JSON.stringify(datos) });
+      $('#estado-codigo-correo').textContent = 'Si corresponde, recibirás un código nuevo. El anterior deja de servir.';
+      cuentaRegresivaCorreo();
+    } catch (error) { $('#estado-codigo-correo').textContent = error.message; }
+  });
+  $('#form-reenviar-verificacion').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget; const correo = f.elements.correo.value;
+    duranteEnvio(f, async () => {
+      try {
+        await api('/auth/correo/reenviar', { method: 'POST', body: JSON.stringify({ correo }) });
+        abrirCodigoCorreo('', 'verificar', correo);
+      } catch (error) { avisar(error.message, 'error'); }
+    });
+  });
+  $('#form-mfa-correo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        const resultado = await api('/auth/mfa', { method: 'POST', body: JSON.stringify({ activar: f.elements.activar.checked, contrasena: f.elements.contrasena.value }) });
+        estado.cuenta = resultado.cuenta; renderizarUsuario(); avisar('Segundo paso actualizado.', 'exito');
+      } catch (error) { avisar(error.message, 'error'); }
+      finally { f.elements.contrasena.value = ''; }
+    });
+  });
+  $('#form-cambio-correo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        const resultado = await api('/auth/correo/cambio', { method: 'POST', body: JSON.stringify({ correo_nuevo: f.elements.correo_nuevo.value, contrasena: f.elements.contrasena.value }) });
+        abrirCodigoCorreo(resultado.desafio, 'cambio');
+      } catch (error) { avisar(error.message, 'error'); }
+      finally { f.elements.contrasena.value = ''; }
+    });
+  });
 }
 
 iniciar();

@@ -118,6 +118,9 @@ const Cuenta = sequelize.define('cuenta', {
    * Versión de sesión (RF01/HU30/RN27, Decisión #08). Se incrementa solo al pasar de activa a inactiva;
    * los JWT con otra versión se rechazan. Es interna: nunca se expone ni se edita desde la API.
    */
+  correo_verificado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+  mfa_correo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+
   version_sesion: {
     type: DataTypes.INTEGER,
     allowNull: false,
