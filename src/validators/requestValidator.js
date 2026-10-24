@@ -27,7 +27,12 @@ function validateRegistration(req, _res, next) {
       throw new HttpError(400, 'materia contiene campos no permitidos');
     }
     req.body = entityValidator.validar('cuentas', req.body);
-    req.body.materia = entityValidator.validar('materias', materia);
+    try {
+      req.body.materia = entityValidator.validar('materias', materia);
+    } catch (error) {
+      // Los campos de la materia se llaman igual que los de la cuenta; se identifica el origen del error.
+      throw new HttpError(error.status || 400, `Materia inicial: ${error.message}`);
+    }
     next();
   } catch (error) { next(error); }
 }
@@ -35,7 +40,7 @@ function validateRegistration(req, _res, next) {
 /** RF01/HU01: evita tipos inválidos y truncamiento silencioso de bcrypt (72 bytes). */
 function validatePassword(valor, minimo = 1) {
   if (typeof valor !== 'string' || valor.length < minimo || Buffer.byteLength(valor, 'utf8') > 72) {
-    throw new HttpError(400, `contrasena debe tener mínimo ${minimo} caracteres y máximo 72 bytes UTF-8`);
+    throw new HttpError(400, `La contraseña debe tener mínimo ${minimo} ${minimo === 1 ? 'carácter' : 'caracteres'} y máximo 72 bytes UTF-8 (las tildes y la ñ ocupan 2 bytes)`);
   }
 }
 

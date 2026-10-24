@@ -54,7 +54,9 @@ function escapar(valor = '') {
 async function api(ruta, opciones = {}) {
   const encabezados = { ...(opciones.body ? { 'Content-Type': 'application/json' } : {}), ...opciones.headers };
   if (estado.token) encabezados.Authorization = `Bearer ${estado.token}`;
-  const respuesta = await fetch(`${API}${ruta}`, { ...opciones, headers: encabezados });
+  let respuesta;
+  try { respuesta = await fetch(`${API}${ruta}`, { ...opciones, headers: encabezados }); }
+  catch (_) { throw new Error('No se pudo conectar con el servidor. Verifica que esté en ejecución.'); }
   const contenido = respuesta.status === 204 ? null : await respuesta.json().catch(() => null);
   if (!respuesta.ok) {
     const error = new Error(contenido?.error || 'No fue posible completar la solicitud');
@@ -72,7 +74,8 @@ function avisar(mensaje, tipo = 'informacion') {
   aviso.textContent = mensaje;
   // Una sola confirmación evita cubrir la interfaz cuando hay acciones rápidas.
   $('#avisos').replaceChildren(aviso);
-  window.setTimeout(() => aviso.remove(), 3200);
+  // Los errores permanecen más tiempo para poder leerlos y corregir el formulario.
+  window.setTimeout(() => aviso.remove(), tipo === 'error' ? 8000 : 3200);
 }
 
 /** Deshabilita temporalmente un formulario para evitar envíos duplicados. */

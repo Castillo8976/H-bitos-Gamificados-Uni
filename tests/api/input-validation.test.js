@@ -47,4 +47,36 @@ for (const contrasena of [12345678, {}, 'á'.repeat(37), 'a'.repeat(73), 'corta'
 assert.equal(ejecutar(validateRegistration, { ...registro, materia: { nombre: 'Materia', rol: 'Administrador' } }).status, 400);
 assert.equal(ejecutar(validateLogin, { correo: ['uno@ejemplo.com'], contrasena: 'Segura123!' }).status, 400);
 assert.equal(ejecutar(validateLogin, { correo: 'uno@ejemplo.com', contrasena: {} }).status, 400);
-console.log('✅ RF01/RF02/RF15: tipos, fechas, tamaños, semanas y credenciales validados');
+
+/** RF01/HU01 (E7): nombre de cuenta de 2 a 60 caracteres con letras Unicode, espacios, apóstrofo y guion. */
+for (const nombre of ['Al', 'José Ñandú', "O'Brien-Pérez", 'D’Alembert', 'Zoë Ângela', 'á'.repeat(60), '  Ana  ']) {
+  assert.ok(validator.validar('cuentas', { nombre }).nombre, `debería aceptar ${nombre}`);
+}
+assert.equal(validator.validar('cuentas', { nombre: '  Ana  ' }).nombre, 'Ana');
+for (const nombre of ['A', ' A ', 'a'.repeat(61), 'Ana2', 'Ana_Mar', 'Ana.', '<script>', 'Ana😀', 'Ana\tMar', '', '   ', 42, ['Ana']]) {
+  rechaza('cuentas', { nombre });
+}
+assert.match(ejecutar(validateRegistration, { ...registro, nombre: 'R2-D2' }).message, /entre 2 y 60 caracteres/);
+
+/** RF01/HU01: límites exactos de correo (100), contraseña (8 caracteres a 72 bytes), materia (80) y horario (100). */
+const correo100 = `${'a'.repeat(88)}@ejemplo.com`;
+assert.equal(correo100.length, 100);
+assert.equal(ejecutar(validateRegistration, { ...registro, correo: correo100 }), undefined);
+assert.equal(ejecutar(validateRegistration, { ...registro, correo: `a${correo100}` }).status, 400);
+for (const contrasena of ['12345678', 'a'.repeat(72), 'á'.repeat(36)]) {
+  assert.equal(ejecutar(validateRegistration, { ...registro, contrasena }), undefined);
+}
+assert.match(ejecutar(validateRegistration, { ...registro, contrasena: '1234567' }).message, /La contraseña debe tener mínimo 8 caracteres/);
+assert.equal(ejecutar(validateRegistration, { ...registro, materia: { nombre: 'm'.repeat(80), horario: 'h'.repeat(100) } }), undefined);
+for (const materia of [{ nombre: 'm'.repeat(81) }, { nombre: 'Materia', horario: 'h'.repeat(101) }, { nombre: '   ' }, { nombre: 7 }]) {
+  const error = ejecutar(validateRegistration, { ...registro, materia });
+  assert.equal(error.status, 400);
+}
+assert.match(ejecutar(validateRegistration, { ...registro, materia: { nombre: 'm'.repeat(81) } }).message, /^Materia inicial: /);
+assert.equal(ejecutar(validateRegistration, { ...registro, materia: { nombre: 'Materia', horario: null } }), undefined);
+for (const faltante of ['nombre', 'correo', 'contrasena', 'materia']) {
+  const { [faltante]: _omitido, ...incompleto } = registro;
+  assert.equal(ejecutar(validateRegistration, incompleto).status, 400);
+}
+for (const body of [null, [], 'texto']) assert.equal(ejecutar(validateRegistration, body).status, 400);
+console.log('✅ RF01/RF02/RF15: tipos, fechas, tamaños, semanas, nombre (E7) y credenciales validados');

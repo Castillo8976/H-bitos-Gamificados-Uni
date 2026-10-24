@@ -34,7 +34,7 @@
         <p class="texto-secundario">Usa una cuenta registrada en esta base local.</p>
         <form id="form-login" class="formulario">
           <label>Correo<input name="correo" type="email" autocomplete="email" placeholder="nombre@correo.com" required></label>
-          <label>Contraseña<input name="contrasena" type="password" autocomplete="current-password" minlength="8" required></label>
+          <label>Contraseña<input name="contrasena" type="password" autocomplete="current-password" required></label>
           <button class="boton primario ancho" type="submit">Iniciar sesión</button>
         </form>
       </div>
@@ -42,11 +42,13 @@
         <p class="eyebrow">Primer paso</p><h2>Crear una cuenta</h2>
         <p class="texto-secundario">La materia inicial es obligatoria según HU01.</p>
         <form id="form-registro" class="formulario">
-          <label>Nombre completo<input name="nombre" autocomplete="name" required></label>
-          <label>Correo<input name="correo" type="email" autocomplete="email" required></label>
-          <label>Contraseña<input name="contrasena" type="password" autocomplete="new-password" minlength="8" required></label>
-          <label>Materia inicial<input name="materia" placeholder="Ingeniería de Software III" required></label>
-          <label>Horario <span class="opcional">opcional</span><input name="horario" placeholder="Sábado 8:00 a. m."></label>
+          <label>Nombre completo<input name="nombre" autocomplete="name" minlength="2" maxlength="60" aria-describedby="ayuda-nombre" required>
+            <small id="ayuda-nombre" class="opcional">De 2 a 60 caracteres: letras, espacios, apóstrofo o guion.</small></label>
+          <label>Correo<input name="correo" type="email" autocomplete="email" maxlength="100" required></label>
+          <label>Contraseña<input name="contrasena" type="password" autocomplete="new-password" minlength="8" aria-describedby="ayuda-contrasena" required>
+            <small id="ayuda-contrasena" class="opcional">Mínimo 8 caracteres y máximo 72 bytes (las tildes y la ñ ocupan 2).</small></label>
+          <label>Materia inicial<input name="materia" placeholder="Ingeniería de Software III" maxlength="80" required></label>
+          <label>Horario <span class="opcional">opcional</span><input name="horario" placeholder="Sábado 8:00 a. m." maxlength="100"></label>
           <button class="boton primario ancho" type="submit">Registrarme</button>
         </form>
       </div>

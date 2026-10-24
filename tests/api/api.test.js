@@ -22,7 +22,7 @@ const Cuenta = require('../../src/models/Cuenta');
 
 const auth = token => ({ Authorization: `Bearer ${token}` });
 
-async function register(data) {
+function register(data) {
   return request(app).post('/api/auth/registro').send({ materia: { nombre: 'Materia inicial' }, ...data });
 }
 
@@ -47,11 +47,41 @@ async function run() {
   }).expect(400);
   assert.equal(await Cuenta.count({ where: { correo: 'escalamiento@test.local' } }), 0);
 
+  // RF01/HU01 (E7): nombre fuera de contrato, campos no autorizados y tipos inválidos no crean cuentas.
+  for (const [nombre, correo] of [['A', 'corto@test.local'], ['Ana2', 'digito@test.local'], ['<b>Ana</b>', 'html@test.local'], ['a'.repeat(61), 'largo@test.local']]) {
+    const rechazo = await register({ nombre, correo, contrasena: 'ClaveSegura123!' }).expect(400);
+    assert.match(rechazo.body.error, /60 caracteres/);
+    assert.equal(await Cuenta.count({ where: { correo } }), 0);
+  }
+  await register({ nombre: 'Campo Extra', correo: 'extra@test.local', contrasena: 'ClaveSegura123!', activa: false }).expect(400);
+  await register({ nombre: 'Materia Inválida', correo: 'materia@test.local', contrasena: 'ClaveSegura123!', materia: { nombre: 'm'.repeat(81) } })
+    .expect(400).expect(({ body }) => assert.match(body.error, /^Materia inicial: /));
+  await register({ nombre: 'Tipo Inválido', correo: 'tipo@test.local', contrasena: 12345678 }).expect(400);
+  assert.equal(await Cuenta.count({ where: { correo: ['extra@test.local', 'materia@test.local', 'tipo@test.local'] } }), 0);
+
+  // RF01/HU01 (RN03): si falla la materia inicial, la transacción no deja cuenta, preferencia ni materia parciales.
+  const contar = async tabla => (await sequelize.query(`SELECT COUNT(*) AS n FROM ${tabla}`, { plain: true })).n;
+  const tablasRegistro = ['cuenta', 'preferencia_visual', 'materia'];
+  const antes = await Promise.all(tablasRegistro.map(contar));
+  await sequelize.query("CREATE TRIGGER fallo_materia BEFORE INSERT ON materia BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END");
+  try {
+    // Sequelize agrupa todo SQLITE_CONSTRAINT como UniqueConstraintError (409); se verifica el fallo, no su código.
+    await register({ nombre: 'Registro Parcial', correo: 'parcial@test.local', contrasena: 'ClaveSegura123!' })
+      .expect(({ status }) => assert.ok(status >= 400, `se esperaba un error, se obtuvo ${status}`));
+  } finally {
+    await sequelize.query('DROP TRIGGER IF EXISTS fallo_materia');
+  }
+  assert.deepEqual(await Promise.all(tablasRegistro.map(contar)), antes);
+  assert.equal(await Cuenta.count({ where: { correo: 'parcial@test.local' } }), 0);
+
   const studentRegistration = await register({ nombre: 'Estudiante Uno', correo: 'uno@test.local', contrasena: 'ClaveSegura123!' });
   assert.equal(studentRegistration.status, 201);
   assert.equal(studentRegistration.body.cuenta.rol, 'Estudiante');
   assert.equal('contrasena_hash' in studentRegistration.body.cuenta, false);
   assert.equal((await register({ nombre: 'Duplicado', correo: 'uno@test.local', contrasena: 'ClaveSegura123!' })).status, 409);
+  // RF01/RN01: el correo se normaliza antes de comprobar la unicidad.
+  await register({ nombre: 'Duplicado', correo: '  UNO@Test.Local ', contrasena: 'ClaveSegura123!' }).expect(409)
+    .expect(({ body }) => assert.equal(body.error, 'El correo ya está registrado'));
 
   const secondRegistration = await register({ nombre: 'Estudiante Dos', correo: 'dos@test.local', contrasena: 'ClaveSegura123!' });
   assert.equal(secondRegistration.status, 201);
@@ -104,6 +134,9 @@ async function run() {
     .send({ nombre: 'Intento de escalada', rol: 'Administrador' }).expect(403);
   await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
     .send({ nombre: 'Estudiante Actualizado' }).expect(200);
+  // RF01/HU20: la edición del perfil aplica el mismo contrato de nombre que el registro.
+  await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
+    .send({ nombre: 'E' }).expect(400);
 
   const subject = await request(app).post('/api/materias').set(auth(studentToken))
     .send({ nombre: 'Ingeniería de Software III', horario: 'Sábado' }).expect(201);

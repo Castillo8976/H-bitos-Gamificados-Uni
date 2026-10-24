@@ -74,6 +74,10 @@ class EntityValidator {
       if (tipo === 'BOOLEAN' && typeof valor !== 'boolean') throw new HttpError(400, `${campo} debe ser booleano`);
       if (tipo === 'INTEGER' && !Number.isSafeInteger(valor)) throw new HttpError(400, `${campo} debe ser un entero seguro`);
     }
+    // RF01/HU01/HU20 (E7): nombre de cuenta de 2 a 60 caracteres; letras Unicode, espacios, apóstrofo y guion.
+    if (recurso === 'cuentas' && resultado.nombre !== undefined && !/^[\p{L}\p{M} '’-]{2,60}$/u.test(resultado.nombre)) {
+      throw new HttpError(400, 'El nombre debe tener entre 2 y 60 caracteres y solo puede contener letras, espacios, apóstrofo o guion');
+    }
     if (resultado.correo !== undefined) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resultado.correo)) throw new HttpError(400, 'correo no es válido');
       resultado.correo = resultado.correo.toLowerCase();
