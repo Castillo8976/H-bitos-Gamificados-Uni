@@ -35,7 +35,7 @@ const expected = {
   insignia: ['id_insignia','nombre','descripcion','condicion','icono'],
   cuenta_insignia: ['id_cuenta','id_insignia','fecha_obtenida'],
   punto: ['id_punto','id_cuenta','cantidad','origen','id_origen','fecha'],
-  reto: ['id_reto','id_cuenta','descripcion','condicion','puntos_recompensa','semana','progreso','completado'],
+  reto: ['id_reto','id_cuenta','descripcion','condicion','puntos_recompensa','semana','progreso','completado','activo'],
   meta: ['id_meta','id_cuenta','semana','descripcion','valor_objetivo','valor_actual','cumplida'],
   recordatorio: ['id_recordatorio','id_tarea','id_cuenta','fecha_programada','mensaje','enviado','activo'],
   preferencia_visual: ['id_preferencia','id_cuenta','tema','modo_oscuro','avatar','notificaciones_recordatorios','notificaciones_retos','fecha_actualizado'],
@@ -127,7 +127,7 @@ async function run() {
     materia: { activa: '1' }, tarea: { estado: "'Pendiente'" },
     sesion_estudio: { fecha: 'CURRENT_DATE', modo_enfoque: '0' },
     cuenta_insignia: { fecha_obtenida: 'CURRENT_DATE' }, punto: { fecha: 'CURRENT_DATE' },
-    reto: { progreso: '0', completado: '0' }, meta: { valor_actual: '0', cumplida: '0' },
+    reto: { progreso: '0', completado: '0', activo: '1' }, meta: { valor_actual: '0', cumplida: '0' },
     recordatorio: { enviado: '0', activo: '1' },
     notificacion: { leida: '0', fecha: 'CURRENT_DATE' }
   };
@@ -140,15 +140,15 @@ async function run() {
   }
 
   const requiredChecks = {
-    cuenta: ['activa IN (0,1)', "rol IN ('Estudiante','Administrador','Revisor institucional')"],
+    cuenta: ['activa IN (0,1)', "rol IN ('Estudiante','Administrador','Revisor institucional')", 'length(trim(nombre)) BETWEEN 2 AND 60'],
     nivel_cuenta: ['puntos_minimos >= 0', 'orden > 0'],
     preferencia_visual: ["tema IN ('purple','teal','amber','coral','blue','green')", 'modo_oscuro IN (0,1)'],
     materia: ['activa IN (0,1)'],
     tarea: ["prioridad IN ('Alta','Media','Baja')", "estado IN ('Pendiente','En progreso','Completada')"],
-    sesion_estudio: ['duracion_minutos > 0', 'modo_enfoque IN (0,1)'],
+    sesion_estudio: ['duracion_minutos BETWEEN 1 AND 1440', 'modo_enfoque IN (0,1)'],
     punto: ['cantidad > 0', "origen IN ('Tarea','Reto','Sesion')"],
-    reto: ['puntos_recompensa > 0', 'progreso >= 0', 'completado IN (0,1)'],
-    meta: ['valor_objetivo > 0', 'valor_actual >= 0', 'cumplida IN (0,1)'],
+    reto: ['puntos_recompensa BETWEEN 1 AND 10000', 'progreso >= 0', 'completado IN (0,1)', 'activo IN (0,1)'],
+    meta: ['valor_objetivo BETWEEN 1 AND 10080', 'valor_actual >= 0', 'cumplida IN (0,1)'],
     recordatorio: ['enviado IN (0,1)', 'activo IN (0,1)'],
     notificacion: ["tipo IN ('Insignia','Reto','Meta','Nivel','Sistema')", 'leida IN (0,1)']
   };
@@ -192,6 +192,18 @@ async function run() {
     /UNIQUE|constraint.*uq_punto_evento/i
   );
   await sequelize.query("INSERT INTO punto (id_punto, id_cuenta, cantidad, origen, id_origen, fecha) VALUES ('p-3', 'acct-idempotencia', 10, 'Tarea', NULL, '2026-09-21')");
+  await assert.rejects(() => sequelize.query(
+    "INSERT INTO cuenta (id_cuenta, nombre, correo, contrasena_hash) VALUES ('acct-short-name', 'A', 'short-name@test.local', 'hash')"
+  ));
+  await assert.rejects(() => sequelize.query(
+    "INSERT INTO reto (id_reto,id_cuenta,descripcion,condicion,puntos_recompensa,semana) VALUES ('reto-bad-reward','acct-idempotencia','Reto','tareas:1',10001,'2026-W39')"
+  ));
+  await assert.rejects(() => sequelize.query(
+    "INSERT INTO meta (id_meta,id_cuenta,semana,descripcion,valor_objetivo) VALUES ('meta-bad-target','acct-idempotencia','2026-W39','Meta',10081)"
+  ));
+  await assert.rejects(() => sequelize.query(
+    "INSERT INTO sesion_estudio (id_sesion,id_cuenta,duracion_minutos) VALUES ('sesion-bad-duration','acct-idempotencia',1441)"
+  ));
 
   const expectedForeignKeys = [
     ['preferencia_visual','id_cuenta','cuenta','id_cuenta','CASCADE'],

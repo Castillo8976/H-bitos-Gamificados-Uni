@@ -139,7 +139,8 @@ const SesionEstudio = sequelize.define('sesion_estudio', {
    */
   duracion_minutos: {
     type: DataTypes.INTEGER, // Número entero: minutos sin decimales
-    allowNull: false         // Campo obligatorio: toda sesión debe tener duración registrada
+    allowNull: false,        // Campo obligatorio: toda sesión debe tener duración registrada
+    validate: { min: 1, max: 1440 }
   },
 
   /**

@@ -25,6 +25,7 @@ const meta = require('../../src/services/metaService');
 const Punto = require('../../src/models/Punto');
 const Tarea = require('../../src/models/Tarea');
 const Cuenta = require('../../src/models/Cuenta');
+const Reto = require('../../src/models/Reto');
 const Notificacion = require('../../src/models/Notificacion');
 const CuentaInsignia = require('../../src/models/CuentaInsignia');
 const { semanaIso, fechaIso } = require('../../src/services/periodoService');
@@ -148,6 +149,25 @@ async function run() {
     estadisticas.obtenerEstadisticasSemana(cuenta.id_cuenta, '2026-09-28', '2026-09-21'),
     error => error.status === 400
   );
+
+  const cuentaConRetoInactivo = await authService.register({
+    nombre: 'Estudiante Reto Inactivo', correo: 'reto-inactivo@test.local', contrasena: 'ClaveSegura123!',
+    materia: { nombre: 'Pruebas de retos' }
+  });
+  const retoInactivo = await reto.crearReto(cuentaConRetoInactivo.id_cuenta, 'Completar una tarea', 'tareas:1', 12, semana);
+  await Reto.update({ activo: false }, { where: { id_reto: retoInactivo.id_reto } });
+  const tareaDuranteInactividad = await tarea.crearTarea(cuentaConRetoInactivo.id_cuenta, 'No acumular progreso', '2027-12-31', 'Media');
+  await gamificacion.completarTareaConGamificacion(cuentaConRetoInactivo.id_cuenta, tareaDuranteInactividad.id_tarea, { ahora });
+  assert.equal((await reto.obtenerReto(retoInactivo.id_reto)).progreso, 0);
+  assert.equal(await Punto.count({ where: { origen: 'Reto', id_origen: retoInactivo.id_reto } }), 0);
+  await Reto.update({ activo: true }, { where: { id_reto: retoInactivo.id_reto } });
+  const tareaTrasReactivar = await tarea.crearTarea(cuentaConRetoInactivo.id_cuenta, 'Acumular progreso activo', '2027-12-31', 'Media');
+  await gamificacion.completarTareaConGamificacion(cuentaConRetoInactivo.id_cuenta, tareaTrasReactivar.id_tarea, { ahora });
+  assert.equal((await reto.obtenerReto(retoInactivo.id_reto)).completado, true);
+  assert.equal(await Punto.count({ where: { origen: 'Reto', id_origen: retoInactivo.id_reto } }), 1);
+  await Reto.update({ activo: false }, { where: { id_reto: retoInactivo.id_reto } });
+  await Reto.update({ activo: true }, { where: { id_reto: retoInactivo.id_reto } });
+  assert.equal(await Punto.count({ where: { origen: 'Reto', id_origen: retoInactivo.id_reto } }), 1);
 
   const integridad = await sequelize.query('PRAGMA integrity_check', { type: sequelize.QueryTypes.SELECT });
   assert.equal(integridad[0].integrity_check, 'ok');

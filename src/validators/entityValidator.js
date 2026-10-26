@@ -14,6 +14,12 @@ const modelos = {
   niveles: require('../models/NivelCuenta'), retos: require('../models/Reto'), metas: require('../models/Meta')
 };
 
+const rangosEnteros = {
+  retos: { puntos_recompensa: [1, 10000] },
+  metas: { valor_objetivo: [1, 10080] },
+  sesiones: { duracion_minutos: [1, 1440] }
+};
+
 /** RF02/HU02: valida contratos de entrada sin confiar en conversiones del ORM.
  * No sustituye las restricciones de E11 ni las comprobaciones de propiedad.
  */
@@ -69,10 +75,18 @@ class EntityValidator {
           throw new HttpError(400, `${campo} debe contener texto${maximo ? ` de máximo ${maximo} caracteres` : ''}`);
         }
         resultado[campo] = texto;
+        if (recurso === 'cuentas' && campo === 'nombre' &&
+          ([...texto].length < 2 || !/^[\p{L}\p{M} '-]+$/u.test(texto))) {
+          throw new HttpError(400, 'nombre debe contener entre 2 y 60 caracteres y solo letras, espacios, apóstrofos o guiones');
+        }
         if (tipo === 'DATEONLY') this.fecha(texto, campo);
       }
       if (tipo === 'BOOLEAN' && typeof valor !== 'boolean') throw new HttpError(400, `${campo} debe ser booleano`);
       if (tipo === 'INTEGER' && !Number.isSafeInteger(valor)) throw new HttpError(400, `${campo} debe ser un entero seguro`);
+      const rango = rangosEnteros[recurso]?.[campo];
+      if (tipo === 'INTEGER' && rango && (valor < rango[0] || valor > rango[1])) {
+        throw new HttpError(400, `${campo} debe ser un entero entre ${rango[0]} y ${rango[1]}`);
+      }
     }
     if (resultado.correo !== undefined) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resultado.correo)) throw new HttpError(400, 'correo no es válido');

@@ -19,6 +19,7 @@ const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 const app = require('../../src/app');
 const Cuenta = require('../../src/models/Cuenta');
+const Materia = require('../../src/models/Materia');
 
 const auth = token => ({ Authorization: `Bearer ${token}` });
 
@@ -70,8 +71,23 @@ async function run() {
   const adminToken = (await login('admin@test.local')).body.token;
   const reviewerToken = (await login('revisor@test.local')).body.token;
 
+  await request(app).put(`/api/cuentas/${adminRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken))
+    .send({ activa: false }).expect(409);
+  await request(app).put(`/api/cuentas/${adminRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken))
+    .send({ rol: 'Estudiante' }).expect(409);
+
   await request(app).post('/api/auth/login').send({ correo: 'uno@test.local', contrasena: 'Incorrecta!' }).expect(401);
   await request(app).delete(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken)).expect(204);
+  assert.equal((await login('inactiva@test.local')).status, 403);
+  await request(app).delete(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(secondToken)).expect(403);
+  await request(app).put(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken))
+    .send({ activa: true }).expect(200);
+  const ownDeactivationToken = (await login('inactiva@test.local')).body.token;
+  await request(app).delete(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`)
+    .set(auth(ownDeactivationToken)).expect(204);
+  assert.equal((await Cuenta.findByPk(inactiveRegistration.body.cuenta.id_cuenta)).activa, false);
+  assert.equal(await Materia.count({ where: { id_cuenta: inactiveRegistration.body.cuenta.id_cuenta } }), 1);
+  await request(app).get('/api/auth/perfil').set(auth(ownDeactivationToken)).expect(401);
   assert.equal((await login('inactiva@test.local')).status, 403);
   await request(app).get('/api/materias').expect(401);
   await request(app).get('/api/estadisticas/semanales').expect(401);
@@ -99,11 +115,17 @@ async function run() {
   await request(app).post('/api/sesiones').set(auth(studentToken)).send({ duracion_minutos: Number.MAX_SAFE_INTEGER + 1 }).expect(400);
   await request(app).put('/api/preferencias').set(auth(studentToken)).send({ avatar: 'a'.repeat(51) }).expect(400);
   await request(app).post('/api/metas').set(auth(studentToken)).send({ semana: '2025-W53', descripcion: 'Meta', valor_objetivo: 1 }).expect(400);
+  const suggestedGoal = await request(app).post('/api/metas/sugerida').set(auth(studentToken)).send({ semana: '2027-W01' }).expect(200);
+  assert.equal(suggestedGoal.body.dato.semana, '2027-W01');
+  const suggestedGoalAgain = await request(app).post('/api/metas/sugerida').set(auth(studentToken)).send({ semana: '2027-W01' }).expect(200);
+  assert.equal(suggestedGoalAgain.body.dato.id_meta, suggestedGoal.body.dato.id_meta);
   await request(app).get('/api/cuentas').set(auth(adminToken)).expect(200);
   await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
     .send({ nombre: 'Intento de escalada', rol: 'Administrador' }).expect(403);
   await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
     .send({ nombre: 'Estudiante Actualizado' }).expect(200);
+  await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
+    .send({ activa: false }).expect(403);
 
   const subject = await request(app).post('/api/materias').set(auth(studentToken))
     .send({ nombre: 'Ingeniería de Software III', horario: 'Sábado' }).expect(201);
@@ -225,6 +247,16 @@ async function run() {
     descripcion: 'Completar API', condicion: 'api >= 1', puntos_recompensa: 20, semana: '2026-W39'
   }).expect(201);
   const challengeId = challenge.body.dato.id_reto;
+  assert.equal(challenge.body.dato.activo, true);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(secondToken))
+    .send({ activo: false }).expect(403);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken))
+    .send({ activo: false }).expect(200).expect(({ body }) => assert.equal(body.dato.activo, false));
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(adminToken))
+    .send({ activo: true }).expect(200).expect(({ body }) => assert.equal(body.dato.activo, true));
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(adminToken))
+    .send({ descripcion: 'Edición no autorizada' }).expect(403);
+  await request(app).delete(`/api/retos/${challengeId}`).set(auth(adminToken)).expect(403);
   await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ progreso: 1 }).expect(200);
   await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200);
 

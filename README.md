@@ -213,6 +213,8 @@ responsive conectada a la API real. Permite probar:
 - Cronómetro Pomodoro 25/5, modo Libre, descansos automáticos y registro de sesiones.
 - Cambio de tareas a estado `En progreso`.
 - Consulta de puntos, nivel, insignias, retos y metas.
+- Sugerencia automática e idempotente de una meta semanal por cuenta.
+- Filtros de tareas por materia, estado, prioridad y rango de fechas de entrega.
 - Recompensa transaccional al completar tareas o guardar sesiones.
 - Tablero semanal calculado en tiempo real y exportación JSON.
 - Creación y administración de recordatorios; programación automática al crear tareas.
@@ -260,7 +262,7 @@ POST /api/auth/logout
 GET  /api/auth/perfil
 ```
 
-Las rutas protegidas reciben el encabezado `Authorization: Bearer <token>`. Los roles aprobados son `Estudiante`, `Administrador` y `Revisor institucional`. El registro público siempre asigna el rol Estudiante.
+Las rutas protegidas reciben el encabezado `Authorization: Bearer <token>`. Los roles aprobados son `Estudiante`, `Administrador` y `Revisor institucional`. El registro público siempre asigna el rol Estudiante. El backend impide desactivar o degradar al último Administrador activo.
 
 El registro recibe `nombre`, `correo`, `contrasena` y una `materia` inicial con `nombre` y `horario` opcional, cumpliendo HU01. En la misma transacción crea la cuenta, su preferencia visual y la primera materia.
 
@@ -274,7 +276,7 @@ BOOTSTRAP_ROLE="Administrador" \
 npm run bootstrap:account
 ```
 
-Los recursos se publican bajo `/api`: `cuentas`, `materias`, `tareas`, `preferencias`, `sesiones`, `recordatorios`, `notificaciones`, `puntos`, `insignias`, `cuenta-insignias`, `niveles`, `retos` y `metas`. También están disponibles `estadisticas/semanales`, `estadisticas/institucionales` y `exportacion/datos`. La matriz completa se encuentra en [M15](pjc/docs/trazabilidad/M15_trazabilidad_construccion.md).
+Los recursos se publican bajo `/api`: `cuentas`, `materias`, `tareas`, `preferencias`, `sesiones`, `recordatorios`, `notificaciones`, `puntos`, `insignias`, `cuenta-insignias`, `niveles`, `retos` y `metas`. También están disponibles `metas/sugerida`, `estadisticas/semanales`, `estadisticas/institucionales` y `exportacion/datos`. La matriz completa se encuentra en [M15](pjc/docs/trazabilidad/M15_trazabilidad_construccion.md).
 
 ## Pruebas
 

@@ -19,6 +19,7 @@ const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 const authService = require('../../src/services/authService');
 const Cuenta = require('../../src/models/Cuenta');
+const Materia = require('../../src/models/Materia');
 const app = require('../../src/app');
 const planificador = require('../../src/services/planificadorRecordatoriosService');
 const Notificacion = require('../../src/models/Notificacion');
@@ -102,10 +103,21 @@ async function run() {
   });
   const puerto = servidor.address().port;
   const puertoCdp = 9333;
-  const chrome = spawn('/usr/bin/google-chrome', [
-    '--headless=new', '--no-sandbox', '--disable-gpu', `--remote-debugging-port=${puertoCdp}`,
-    `--user-data-dir=${path.join(directory, 'chrome')}`, '--remote-allow-origins=*', 'about:blank'
-  ], { stdio: 'ignore' });
+  const candidatosChrome = process.platform === 'win32' ? [
+    process.env['ProgramFiles'] && path.join(process.env['ProgramFiles'], 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    process.env['ProgramFiles(x86)'] && path.join(process.env['ProgramFiles(x86)'], 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'Application', 'chrome.exe')
+  ] : ['/usr/bin/google-chrome'];
+  const ejecutableChrome = process.env.CHROME_BIN || candidatosChrome.find(ruta => ruta && fs.existsSync(ruta));
+  if (!ejecutableChrome) throw new Error('No se encontró Chrome; define CHROME_BIN para ejecutar la prueba de navegador.');
+  const chrome = await new Promise((resolve, reject) => {
+    const proceso = spawn(ejecutableChrome, [
+      '--headless=new', '--no-sandbox', '--disable-gpu', `--remote-debugging-port=${puertoCdp}`,
+      `--user-data-dir=${path.join(directory, 'chrome')}`, '--remote-allow-origins=*', 'about:blank'
+    ], { stdio: 'ignore' });
+    proceso.once('error', reject);
+    proceso.once('spawn', () => resolve(proceso));
+  });
 
   let cdp;
   try {
@@ -199,6 +211,23 @@ async function run() {
     await esperarCondicion(cdp, "document.querySelector('#estado-exportacion').textContent.includes('exitosamente')");
     assert.equal(await cdp.evaluar("document.querySelector('[data-vista=administracion]').hidden"), true);
 
+    await cdp.evaluar(`(()=>{document.querySelector('[data-vista=configuracion]').click();
+      window.fetchOriginal=window.fetch;window.solicitudesDesactivacion=0;
+      window.fetch=(url,opciones={})=>{if(url==='/api/cuentas/${estudianteId}'&&opciones.method==='DELETE')window.solicitudesDesactivacion++;
+      return window.fetchOriginal(url,opciones)};document.querySelector('#desactivar-cuenta').click()})()`);
+    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').open"), true);
+    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').textContent.includes('estas seguro que quieres desactivar?')"), true);
+    assert.equal(await cdp.evaluar("document.querySelector('#cancelar-desactivar-cuenta').textContent.trim()"), 'Cancelar');
+    assert.equal(await cdp.evaluar("document.querySelector('#confirmar-desactivar-cuenta').textContent.trim()"), 'Confirmar');
+    await cdp.evaluar("document.querySelector('#cancelar-desactivar-cuenta').click()");
+    assert.equal(await cdp.evaluar('window.solicitudesDesactivacion'), 0);
+    assert.equal((await Cuenta.findByPk(estudianteId)).activa, true);
+    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click();document.querySelector('#confirmar-desactivar-cuenta').click()");
+    await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
+    assert.equal(await cdp.evaluar('window.solicitudesDesactivacion'), 1);
+    assert.equal((await Cuenta.findByPk(estudianteId)).activa, false);
+    assert.equal(await Materia.count({ where: { id_cuenta: estudianteId } }), 1);
+
     await cdp.evaluar("sessionStorage.clear();location.reload()"); await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
     await autenticar(cdp, 'admin-browser@test.local');
     assert.equal(await cdp.evaluar("document.querySelector('#usuario-rol').textContent"), 'Administrador');
@@ -217,10 +246,19 @@ async function run() {
     console.log('✅ Chrome: Estudiante, Administrador, Revisor y responsive verificados sin errores');
   } finally {
     if (cdp) cdp.cerrar();
-    chrome.kill('SIGTERM');
+    if (chrome.exitCode === null && chrome.signalCode === null) chrome.kill('SIGTERM');
+    await new Promise(resolve => {
+      if (chrome.exitCode !== null || chrome.signalCode !== null) resolve();
+      else chrome.once('close', resolve);
+    });
     await new Promise(resolve => servidor.close(resolve));
     await sequelize.close();
-    fs.rmSync(directory, { recursive: true, force: true });
+    try {
+      fs.rmSync(directory, { recursive: true, force: true, maxRetries: 20, retryDelay: 500 });
+    } catch (error) {
+      if (process.platform !== 'win32' || error.code !== 'EPERM') throw error;
+      console.warn(`⚠️ No se pudo limpiar inmediatamente el perfil temporal de Chrome: ${directory}`);
+    }
   }
 }
 

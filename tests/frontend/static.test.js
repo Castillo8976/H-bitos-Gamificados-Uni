@@ -32,6 +32,14 @@ async function run() {
   assert.match(pagina.text, /data-seccion="administracion"/);
   assert.match(pagina.text, /data-seccion="institucional"/);
   assert.match(pagina.text, /id="modal-recompensa"/);
+  assert.match(pagina.text, /id="desactivar-cuenta"/);
+  assert.match(pagina.text, /id="modal-desactivar-cuenta"/);
+  assert.match(pagina.text, /id="filtro-fecha-desde"/);
+  assert.match(pagina.text, /id="filtro-fecha-hasta"/);
+  assert.match(pagina.text, /estas seguro que quieres desactivar\?/);
+  assert.match(pagina.text, /id="cancelar-desactivar-cuenta"[^>]*>Cancelar/);
+  assert.match(pagina.text, /id="confirmar-desactivar-cuenta"[^>]*>Confirmar/);
+  assert.match(pagina.text, /name="puntos_recompensa" type="number" min="1" max="10000"/);
 
   const estilos = await request(app).get('/styles.css').expect(200).expect('Content-Type', /css/);
   assert.match(estilos.text, /--primario:#534ab7/);
@@ -44,6 +52,8 @@ async function run() {
   assert.match(cliente.text, /\/estadisticas\/institucionales/);
   assert.match(cliente.text, /\/exportacion\/datos/);
   assert.match(cliente.text, /mostrarRecompensa/);
+  assert.match(cliente.text, /configurarValidacionesCampos/);
+  assert.match(cliente.text, /\/retos\/\$\{id\}\/estado/);
   assert.doesNotMatch(cliente.text, /localStorage/);
 
   console.log('✅ Frontend: acceso, pantallas, estilos responsive y cliente API publicados');

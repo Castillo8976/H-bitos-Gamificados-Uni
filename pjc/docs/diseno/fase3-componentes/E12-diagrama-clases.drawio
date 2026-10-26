@@ -312,7 +312,7 @@
     <mxCell id="cls297" value="- completado: boolean" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
   <mxGeometry y="162" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="retoActivo" value="- activo: boolean (pendiente)" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
+    <mxCell id="retoActivo" value="- activo: boolean" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
   <mxGeometry y="184" width="260" height="22" as="geometry"/>
 </mxCell>
     <mxCell id="cls298" value="" style="line;strokeColor=#d6b656;" vertex="1" parent="cls290">
@@ -336,10 +336,10 @@
     <mxCell id="cls304" value="+ actualizarReto()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
   <mxGeometry y="322" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="retoActivar" value="+ activarReto() (pendiente)" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
+    <mxCell id="retoActivar" value="+ cambiarEstadoReto()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
   <mxGeometry y="344" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="retoDesactivar" value="+ desactivarReto() (pendiente)" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
+    <mxCell id="retoDesactivar" value="+ cambiarEstadoReto() (estado activo/inactivo)" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
   <mxGeometry y="366" width="260" height="22" as="geometry"/>
 </mxCell>
     <mxCell id="cls305" value="+ eliminarReto()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls290">
@@ -372,20 +372,23 @@
     <mxCell id="cls314" value="+ crearMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
   <mxGeometry y="168" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="cls315" value="+ listarMetas()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
+  <mxCell id="metaSugerida" value="+ sugerirMetaSemanal()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
   <mxGeometry y="190" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="cls316" value="+ obtenerMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
+  <mxCell id="cls315" value="+ listarMetas()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
   <mxGeometry y="212" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="cls317" value="+ actualizarProgresoMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
+    <mxCell id="cls316" value="+ obtenerMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
   <mxGeometry y="234" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="cls318" value="+ actualizarMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
+    <mxCell id="cls317" value="+ actualizarProgresoMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
   <mxGeometry y="256" width="260" height="22" as="geometry"/>
 </mxCell>
-    <mxCell id="cls319" value="+ eliminarMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
+    <mxCell id="cls318" value="+ actualizarMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
   <mxGeometry y="278" width="260" height="22" as="geometry"/>
+</mxCell>
+    <mxCell id="cls319" value="+ eliminarMeta()" style="text;html=1;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none;" vertex="1" parent="cls306">
+  <mxGeometry y="300" width="260" height="22" as="geometry"/>
 </mxCell>
     <mxCell id="cls320" value="Recordatorio" style="swimlane;html=1;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;horizontalStack=0;resizeParent=0;collapsible=0;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
   <mxGeometry x="360" y="926" width="260" height="300" as="geometry"/>

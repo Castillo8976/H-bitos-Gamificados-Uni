@@ -6,7 +6,7 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS cuenta (
   id_cuenta VARCHAR(36) NOT NULL,
-  nombre VARCHAR(60) NOT NULL,
+  nombre VARCHAR(60) NOT NULL CHECK (length(trim(nombre)) BETWEEN 2 AND 60),
   correo VARCHAR(100) NOT NULL,
   contrasena_hash VARCHAR(255) NOT NULL,
   fecha_registro DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS sesion_estudio (
   id_cuenta VARCHAR(36) NOT NULL,
   id_tarea VARCHAR(36),
   fecha DATE NOT NULL DEFAULT CURRENT_DATE,
-  duracion_minutos INTEGER NOT NULL CHECK (duracion_minutos > 0),
+  duracion_minutos INTEGER NOT NULL CHECK (duracion_minutos BETWEEN 1 AND 1440),
   modo_enfoque INTEGER NOT NULL DEFAULT 0 CHECK (modo_enfoque IN (0,1)),
   CONSTRAINT pk_sesion_estudio PRIMARY KEY (id_sesion),
   CONSTRAINT fk_sesion_estudio_cuenta FOREIGN KEY (id_cuenta)
@@ -131,10 +131,11 @@ CREATE TABLE IF NOT EXISTS reto (
   id_cuenta VARCHAR(36) NOT NULL,
   descripcion VARCHAR(200) NOT NULL,
   condicion VARCHAR(100) NOT NULL,
-  puntos_recompensa INTEGER NOT NULL CHECK (puntos_recompensa > 0),
+  puntos_recompensa INTEGER NOT NULL CHECK (puntos_recompensa BETWEEN 1 AND 10000),
   semana VARCHAR(10) NOT NULL,
   progreso INTEGER NOT NULL DEFAULT 0 CHECK (progreso >= 0),
   completado INTEGER NOT NULL DEFAULT 0 CHECK (completado IN (0,1)),
+  activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1)),
   CONSTRAINT pk_reto PRIMARY KEY (id_reto),
   CONSTRAINT uq_reto_cuenta_semana UNIQUE (id_cuenta,semana),
   CONSTRAINT fk_reto_cuenta FOREIGN KEY (id_cuenta)
@@ -146,7 +147,7 @@ CREATE TABLE IF NOT EXISTS meta (
   id_cuenta VARCHAR(36) NOT NULL,
   semana VARCHAR(10) NOT NULL,
   descripcion VARCHAR(200) NOT NULL,
-  valor_objetivo INTEGER NOT NULL CHECK (valor_objetivo > 0),
+  valor_objetivo INTEGER NOT NULL CHECK (valor_objetivo BETWEEN 1 AND 10080),
   valor_actual INTEGER NOT NULL DEFAULT 0 CHECK (valor_actual >= 0),
   cumplida INTEGER NOT NULL DEFAULT 0 CHECK (cumplida IN (0,1)),
   CONSTRAINT pk_meta PRIMARY KEY (id_meta),

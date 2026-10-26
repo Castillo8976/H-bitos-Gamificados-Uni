@@ -16,6 +16,15 @@ function rechaza(recurso, datos, opciones) {
 for (const valor of [null, [], 'texto', 4]) rechaza('tareas', valor);
 for (const valor of ['', '   ', 123, {}, 'a'.repeat(121)]) rechaza('tareas', { nombre: valor });
 assert.equal(validator.validar('tareas', { nombre: 'a'.repeat(120) }).nombre.length, 120);
+for (const nombre of ['A', 'Juan123', "Ana!"]) rechaza('cuentas', { nombre });
+assert.equal(validator.validar('cuentas', { nombre: "María O'Neil-Gómez" }).nombre, "María O'Neil-Gómez");
+rechaza('retos', { puntos_recompensa: 0 });
+rechaza('retos', { puntos_recompensa: 10001 });
+assert.equal(validator.validar('retos', { puntos_recompensa: 10000 }).puntos_recompensa, 10000);
+rechaza('metas', { valor_objetivo: 10081 });
+assert.equal(validator.validar('metas', { valor_objetivo: 10080 }).valor_objetivo, 10080);
+rechaza('sesiones', { duracion_minutos: 1441 });
+assert.equal(validator.validar('sesiones', { duracion_minutos: 1440 }).duracion_minutos, 1440);
 for (const fecha of ['2026-02-29', '2026-04-31', '21/09/2026', '2026-1-01', 123, null]) {
   rechaza('tareas', { fecha_entrega: fecha });
 }
@@ -41,9 +50,14 @@ function ejecutar(middleware, body) {
 }
 const registro = { nombre: 'Estudiante', correo: 'uno@ejemplo.com', contrasena: 'Segura123!', materia: { nombre: 'Materia' } };
 assert.equal(ejecutar(validateRegistration, { ...registro }), undefined);
+for (const nombre of ['A', 'Nombre1', 'Nombre!']) {
+  assert.equal(ejecutar(validateRegistration, { ...registro, nombre }).status, 400);
+}
+assert.equal(ejecutar(validateRegistration, { ...registro, nombre: "María O'Neil-Gómez" }), undefined);
 for (const contrasena of [12345678, {}, 'á'.repeat(37), 'a'.repeat(73), 'corta']) {
   assert.equal(ejecutar(validateRegistration, { ...registro, contrasena }).status, 400);
 }
+assert.equal(ejecutar(validateRegistration, { ...registro, contrasena: '12345678' }), undefined);
 assert.equal(ejecutar(validateRegistration, { ...registro, materia: { nombre: 'Materia', rol: 'Administrador' } }).status, 400);
 assert.equal(ejecutar(validateLogin, { correo: ['uno@ejemplo.com'], contrasena: 'Segura123!' }).status, 400);
 assert.equal(ejecutar(validateLogin, { correo: 'uno@ejemplo.com', contrasena: {} }).status, 400);

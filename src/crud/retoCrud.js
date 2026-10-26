@@ -128,6 +128,7 @@ async function actualizarProgresoReto(id, incremento) {
     console.log('⚠️ No se encontró el reto');
     return null;
   }
+  if (!reto.activo) return reto;
 
   const nuevoProgreso = reto.progreso + incremento;
   await reto.update({ progreso: nuevoProgreso });
@@ -200,6 +201,11 @@ async function actualizarReto(id, datos) {
   console.log(filas > 0 ? '✅ Reto actualizado' : '⚠️ No se encontró el reto');
 }
 
+/** Cambia únicamente el estado de activación, conservando avance y recompensas. */
+async function cambiarEstadoReto(id, activo) {
+  return actualizarReto(id, { activo });
+}
+
 
 // ─────────────────────────────────────────
 // ELIMINAR
@@ -225,5 +231,6 @@ module.exports = {
   actualizarProgresoReto,
   completarReto,
   actualizarReto,
+  cambiarEstadoReto,
   eliminarReto
 };

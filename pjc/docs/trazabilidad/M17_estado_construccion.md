@@ -1,6 +1,6 @@
 # M17 — Estado funcional y pendientes de Construcción
 
-**Fecha de revisión:** 20 de septiembre de 2026  
+**Fecha de revisión:** 26 de octubre de 2026
 **Fuente:** hoja CONSTRUCCIÓN de `Ingenieria de Software 3.xlsx`  
 **Estado:** desarrollo funcional en avance; tenemos pendientes para cerrar el checklist y declarar Línea Base 1.
 
@@ -18,9 +18,9 @@ sus controles desarrollados en la interfaz.
 | Área | Qué tenemos funcionando | Qué nos falta o qué límite tenemos |
 |---|---|---|
 | Acceso | Registro con primera materia, login, logout, consulta y **edición del perfil** (nombre/correo) desde P13, y permisos por rol | Falta endurecer la protección de autenticación (revocación de sesiones, casos negativos) |
-| Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por estado/prioridad | Faltan filtros por materia/fecha y completar validaciones de negocio |
+| Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por materia, estado, prioridad y rango de fechas | Mantener cobertura de validaciones de negocio en nuevas variantes |
 | Sesiones | Cronómetro Pomodoro y guardado con recompensa; **historial visual de sesiones con edición y eliminación** desde P06 | Falta el flujo visual de sesión libre explícita y descansos |
-| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, metas, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 | Falta cerrar validación de condiciones y ajustes históricos |
+| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, meta semanal sugerida idempotente, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 | Falta cerrar validación de condiciones y ajustes históricos |
 | Recordatorios | Alta manual, consulta, activación/desactivación y eliminación | No equivale a programación automática ni a entrega de avisos vencidos; falta completar ese flujo |
 | Notificaciones | Consulta, marcado como leída y eliminación | No hay evidencia de entrega con navegador cerrado |
 | Preferencias | Tema y modo oscuro persistentes | Faltan avatar y restablecimiento previstos en el prototipo |
@@ -232,7 +232,7 @@ La actualización del Word la tenemos pendiente para una etapa posterior.
 - Probamos las transacciones de gamificación, la protección ante recompensas duplicadas y la reversión de operaciones cuando ocurre un error.
 - Corregimos la diferencia entre fecha UTC y local en `Punto.fecha`, conservando DATE de E7/E11 y sin modificar registros históricos. La API devuelve los 25 puntos esperados en el periodo del caso de prueba.
 - Agregamos `tests/schema/point-date.test.js` con instantes fijos alrededor de medianoche UTC; pasó con `TZ=America/Bogota`.
-- Ejecutamos `npm test` y `npm run test:browser` con resultado satisfactorio. En Chrome recorrimos los flujos de tarea/sesión, recompensas, indicadores, exportación y vistas por rol, incluyendo un ancho de 390 px.
+- Ejecutamos `npm test` y `npm run test:browser` con resultado satisfactorio. En Chrome recorrimos los flujos de tarea/sesión, recompensas, indicadores, exportación y vistas por rol, incluyendo un ancho de 390 px; el cleanup de perfiles temporales quedó tolerante al bloqueo EPERM de Windows.
 - Comprobamos que nuestra base local tiene 13 tablas, integridad `ok` y cero violaciones de claves foráneas.
 
 Estas pruebas nos permiten identificar qué flujos funcionan. Nos queda ampliar

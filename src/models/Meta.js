@@ -107,7 +107,8 @@ const Meta = sequelize.define('meta', {
    */
   valor_objetivo: {
     type: DataTypes.INTEGER, // Número entero: contadores de unidades discretas (tareas, horas, etc.)
-    allowNull: false         // Campo obligatorio: sin objetivo no hay meta cuantificable
+    allowNull: false,        // Campo obligatorio: sin objetivo no hay meta cuantificable
+    validate: { min: 1, max: 10080 }
   },
 
   /**

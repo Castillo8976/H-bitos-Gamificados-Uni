@@ -134,7 +134,8 @@ const Reto = sequelize.define('reto', {
    */
   puntos_recompensa: {
     type: DataTypes.INTEGER, // Número entero: los puntos de recompensa no tienen decimales
-    allowNull: false         // Campo obligatorio: todo reto debe tener un valor de recompensa definido
+    allowNull: false,        // Campo obligatorio: todo reto debe tener un valor de recompensa definido
+    validate: { min: 1, max: 10000 }
   },
 
   /**
@@ -181,6 +182,12 @@ const Reto = sequelize.define('reto', {
     type: DataTypes.BOOLEAN, // Se persiste como INTEGER 0/1 en SQLite
     allowNull: false,        // Campo obligatorio
     defaultValue: false      // Todo reto nuevo comienza como no completado
+  },
+
+  activo: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
   }
 
 }, {

@@ -16,12 +16,12 @@ pero no sustituye, la autorización obligatoria del servidor.
 | RF01/RF09 · HU16 · CU01 | P07 Materias | Crear, editar y eliminar | `/api/materias` | manejadores de materia | API |
 | RF02 · HU02/HU19 · CU02 | P04/P05 Tareas | Crear, editar y eliminar | `/api/tareas` | manejadores de tarea | API |
 | RF03 · HU03 · CU03 | P04 Tareas | Marcar como completada | `PATCH /api/tareas/:id/completar` | `manejarAccion()` | API |
-| RF09 · HU09 · CU07 | P04/P12 Tareas | Buscar y filtrar | Cálculo local sobre respuesta de `GET /api/tareas` | `renderizarTareas()` | Frontend estático |
+| RF09 · HU09 · CU07 | P04/P12 Tareas | Buscar y filtrar por materia, prioridad, estado y rango de fechas | Cálculo local sobre respuesta de `GET /api/tareas` | `renderizarTareas()` | Frontend estático |
 | RF10/RF11 · HU10/HU21 · CU04/CU12 | P06/P08 Sesiones | Crear, consultar, editar y eliminar sesiones propias | `GET/POST/PUT/DELETE /api/sesiones` | `guardarSesion()`, `renderizarSesiones()` y `manejarAccion()` | API + frontend estático |
 | RF12 · HU12 · CU04 | P06 Pomodoro | Activar modo de enfoque durante la sesión | estado visual `.enfoque` y avisos del navegador | `alternarTemporizador()` y `actualizarAvisos()` | Chrome + frontend estático |
 | RF05–RF07 · HU05–HU08 · CU06 | P08–P10 Gamificación | Consultar puntos, nivel, insignias, retos y metas | endpoints de lectura correspondientes | `renderizarGamificacion()` | API |
 | RF06 · HU18 · CU06 | P08 Reto semanal | Editar y eliminar reto propio | `PUT/DELETE /api/retos/:id` | acciones `editar-reto` y `eliminar-reto` | API + frontend estático |
-| RF15 · HU17 · CU05 | P08 Meta semanal | Editar y eliminar meta propia | `PUT/DELETE /api/metas/:id` | acciones `editar-meta` y `eliminar-meta` | API + frontend estático |
+| RF15 · HU15/HU17 · CU05 | P08 Meta semanal | Generar sugerencia idempotente, editar y eliminar meta propia | `POST /api/metas/sugerida`, `PUT/DELETE /api/metas/:id` | carga inicial y acciones `editar-meta` y `eliminar-meta` | API + frontend estático |
 | RF04 · HU04/HU25 · CU10 | P20 Recordatorios | Crear, activar, desactivar y eliminar | `/api/recordatorios` | manejador de recordatorios | API |
 | RF04 · HU24 · CU15 | P19 Notificaciones | Consultar, marcar leída y eliminar | `/api/notificaciones` | `renderizarNotificaciones()` y `manejarAccion()` | API |
 | RF13 · HU13 · CU08 | P13 Configuración | Cambiar tema y modo oscuro | `GET/PUT /api/preferencias` | `aplicarPreferencias()` | API + frontend estático |
@@ -41,6 +41,9 @@ pero no sustituye, la autorización obligatoria del servidor.
 - P14 descarga exclusivamente JSON y excluye `contrasena_hash`.
 - P15–P17 solo aparecen para Administrador; P18 aparece para Administrador y
   Revisor institucional. El backend vuelve a comprobar el rol.
+- La interfaz solicita la meta semanal sugerida al cargar el Estudiante; el
+  endpoint la crea como máximo una vez por cuenta y semana.
+- El backend rechaza dejar el sistema sin un Administrador activo.
 - La estructura toma como referencia los wireframes; falta la comparación
   exhaustiva de campos y acciones. Las correcciones administrativas ampliadas
   están descritas en CRF-003, pendiente de aprobación formal. Ver M17.

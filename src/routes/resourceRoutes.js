@@ -84,11 +84,13 @@ router.delete('/niveles/:id', admin, wrap(controllers.levels.remove));
 router.get('/retos', studentOrAdmin, wrap(controllers.challenges.list));
 router.get('/retos/:id', studentOrAdmin, wrap(controllers.challenges.get));
 router.post('/retos', studentOrAdmin, allowFields('id_cuenta','descripcion','condicion','puntos_recompensa','semana'), requireFields('descripcion','condicion','puntos_recompensa','semana'), positiveInteger('puntos_recompensa'), wrap(controllers.challenges.create));
-router.put('/retos/:id', studentOrAdmin, allowFields('descripcion','condicion','puntos_recompensa','semana','progreso'), positiveInteger('puntos_recompensa'), nonNegativeInteger('progreso'), wrap(controllers.challenges.update));
-router.patch('/retos/:id/completar', studentOrAdmin, wrap(controllers.challenges.complete));
-router.delete('/retos/:id', studentOrAdmin, wrap(controllers.challenges.remove));
+router.put('/retos/:id', authorize('Estudiante'), allowFields('descripcion','condicion','puntos_recompensa','semana','progreso'), positiveInteger('puntos_recompensa'), nonNegativeInteger('progreso'), wrap(controllers.challenges.update));
+router.patch('/retos/:id/estado', studentOrAdmin, allowFields('activo'), requireFields('activo'), booleanField('activo'), wrap(controllers.challenges.setActive));
+router.patch('/retos/:id/completar', authorize('Estudiante'), wrap(controllers.challenges.complete));
+router.delete('/retos/:id', authorize('Estudiante'), wrap(controllers.challenges.remove));
 
 router.get('/metas', studentOrAdmin, wrap(controllers.goals.list));
+router.post('/metas/sugerida', authorize('Estudiante'), allowFields('semana'), wrap(controllers.goals.suggest));
 router.get('/metas/:id', studentOrAdmin, wrap(controllers.goals.get));
 router.post('/metas', studentOrAdmin, allowFields('id_cuenta','semana','descripcion','valor_objetivo'), requireFields('semana','descripcion','valor_objetivo'), positiveInteger('valor_objetivo'), wrap(controllers.goals.create));
 router.put('/metas/:id', studentOrAdmin, allowFields('semana','descripcion','valor_objetivo'), positiveInteger('valor_objetivo'), wrap(controllers.goals.update));

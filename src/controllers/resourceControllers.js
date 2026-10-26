@@ -74,6 +74,13 @@ const accounts = {
     if (!isAdmin(req.user) && ['rol', 'activa'].some(key => Object.hasOwn(req.body, key))) {
       throw new HttpError(403, 'Solo el administrador puede cambiar rol o estado de una cuenta');
     }
+    const actual = await cuenta.obtenerCuenta(req.params.id);
+    if (!actual) throw new HttpError(404, 'Cuenta no encontrada');
+    const dejaDeSerAdministrador = actual.rol === 'Administrador' &&
+      actual.activa && (req.body.activa === false || req.body.rol === 'Estudiante' || req.body.rol === 'Revisor institucional');
+    if (dejaDeSerAdministrador && await cuenta.contarAdministradoresActivos() <= 1) {
+      throw new HttpError(409, 'No se puede desactivar o degradar al último Administrador activo');
+    }
     const allowed = isAdmin(req.user) ? ['nombre', 'correo', 'activa', 'rol'] : ['nombre', 'correo'];
     const data = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
     if (!Object.keys(data).length) throw new HttpError(400, 'No hay campos permitidos para actualizar');
@@ -82,6 +89,11 @@ const accounts = {
   /** RF01/HU20/HU27: Desactiva la cuenta sin borrarla físicamente (cuentas). */
   deactivate: async (req, res) => {
     if (!isAdmin(req.user) && req.params.id !== req.user.id) throw new HttpError(403, 'No puede desactivar otra cuenta');
+    const actual = await cuenta.obtenerCuenta(req.params.id);
+    if (!actual) throw new HttpError(404, 'Cuenta no encontrada');
+    if (actual.rol === 'Administrador' && actual.activa && await cuenta.contarAdministradoresActivos() <= 1) {
+      throw new HttpError(409, 'No se puede desactivar al último Administrador activo');
+    }
     await cuenta.actualizarCuenta(req.params.id, { activa: false });
     res.status(204).send();
   },
@@ -301,6 +313,12 @@ const challenges = {
     ensureOwned(await reto.obtenerReto(req.params.id), req.user);
     res.json({ dato: await updated(reto.obtenerReto, req.params.id, reto.actualizarReto, req.body) });
   },
+  /** RF06/HU06/HU18/HU31: el propietario y el Administrador solo cambian el estado del reto. */
+  setActive: async (req, res) => {
+    ensureOwned(await reto.obtenerReto(req.params.id), req.user);
+    const cambiarEstado = id => reto.cambiarEstadoReto(id, req.body.activo);
+    res.json({ dato: await updated(reto.obtenerReto, req.params.id, cambiarEstado) });
+  },
   /** RF06/HU06: Completa el registro (retos). */
   complete: async (req, res) => {
     ensureOwned(await reto.obtenerReto(req.params.id), req.user);
@@ -316,6 +334,8 @@ const challenges = {
 const goals = {
   /** RF15/HU15: Consulta la colección permitida (metas). */
   list: async (req, res) => res.json({ datos: await meta.listarMetas(req.user.id, req.query.semana || null) }),
+  /** RF15/HU15: genera o recupera la sugerencia de la semana sin duplicarla. */
+  suggest: async (req, res) => res.status(200).json({ dato: await meta.sugerirMetaSemanal(req.user.id, req.body.semana) }),
   /** RF15/HU15: Consulta un registro (metas). */
   get: async (req, res) => res.json({ dato: ensureOwned(await meta.obtenerMeta(req.params.id), req.user) }),
   /** RF15/HU15: Crea el registro mediante el servicio (metas). */

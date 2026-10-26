@@ -13,6 +13,7 @@
 
 const Meta = require('../models/Meta');
 const crypto = require('crypto');
+const { semanaIso } = require('../services/periodoService');
 
 
 // ─────────────────────────────────────────
@@ -52,6 +53,27 @@ async function crearMeta(id_cuenta, semana, descripcion, valor_objetivo) {
 
   console.log(`✅ Meta creada: "${meta.descripcion}" | Objetivo: ${meta.valor_objetivo} | Semana: ${meta.semana}`);
   return meta;
+}
+
+/**
+ * Crea de forma idempotente la meta semanal sugerida para una cuenta.
+ * La sugerencia usa un objetivo alcanzable de cinco unidades y solo se
+ * materializa una vez por cuenta y semana.
+ */
+async function sugerirMetaSemanal(id_cuenta, semana = semanaIso()) {
+  const existente = await Meta.findOne({ where: { id_cuenta, semana } });
+  if (existente) return existente;
+  try {
+    return await crearMeta(
+      id_cuenta,
+      semana,
+      'Completar 5 actividades de estudio esta semana',
+      5
+    );
+  } catch (error) {
+    if (error.name !== 'SequelizeUniqueConstraintError') throw error;
+    return Meta.findOne({ where: { id_cuenta, semana } });
+  }
 }
 
 
@@ -195,6 +217,7 @@ async function eliminarMeta(id) {
 
 module.exports = {
   crearMeta,
+  sugerirMetaSemanal,
   listarMetas,
   obtenerMeta,
   actualizarProgresoMeta,

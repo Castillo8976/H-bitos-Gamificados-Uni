@@ -149,6 +149,11 @@ async function actualizarCuenta(id, datos) {
   console.log(filas > 0 ? '✅ Cuenta actualizada' : '⚠️ No se encontró la cuenta');
 }
 
+/** RN27: impide dejar el sistema sin un Administrador activo. */
+async function contarAdministradoresActivos() {
+  return Cuenta.count({ where: { rol: 'Administrador', activa: true } });
+}
+
 
 // ─────────────────────────────────────────
 // ELIMINAR
@@ -192,5 +197,6 @@ module.exports = {
   listarCuentas,
   obtenerCuenta,
   actualizarCuenta,
+  contarAdministradoresActivos,
   eliminarCuenta
 };

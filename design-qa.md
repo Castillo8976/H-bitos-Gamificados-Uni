@@ -117,4 +117,35 @@ textos evaluados son legibles en las capturas originales a densidad 1.
 - P3: crear un menú “Más” si el equipo prefiere evitar el desplazamiento
   horizontal de los ocho módulos en pantallas pequeñas.
 
-final result: passed
+## Estado de esta revisión (26 de octubre de 2026)
+
+La validación de Chrome volvió a completar los recorridos de Estudiante,
+Administrador y Revisor institucional sin excepciones JavaScript y confirmó el
+ancho móvil de 390 px. Se corrigió además el cleanup del perfil temporal para
+que el resultado no falle por `EPERM` de Windows.
+
+Hallazgos funcionales cerrados en esta iteración:
+
+- HU15 ahora solicita y crea de forma idempotente la meta semanal sugerida al
+  cargar la aplicación.
+- P12 ahora filtra tareas por fecha de entrega desde/hasta, además de los
+  filtros existentes.
+- La API impide desactivar o degradar al último Administrador activo.
+- E12 y M9 reflejan `Reto.activo`, `cambiarEstadoReto`,
+  `contarAdministradoresActivos` y `sugerirMetaSemanal`.
+
+Limitaciones que siguen requiriendo evidencia o decisión externa:
+
+- No existe implementación de correo/MFA en este repositorio; la recepción de
+  códigos de Gmail, expiración, reenvío e intentos no puede certificarse desde
+  estas pruebas.
+- `CatalogoMateria` continúa marcado como planeado en E7/E12 y la interfaz
+  conserva la materia inicial como texto libre.
+- Las imágenes exportadas históricas no se regeneraron automáticamente desde
+  draw.io; la fuente editable vigente es la que debe usarse para una nueva
+  exportación antes de entregar.
+
+Las pruebas automatizadas no sustituyen la aprobación académica de CRF,
+trazabilidad o Línea Base 1.
+
+final result: passed with documented external/design follow-ups

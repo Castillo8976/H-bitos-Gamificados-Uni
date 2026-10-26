@@ -75,6 +75,54 @@ function avisar(mensaje, tipo = 'informacion') {
   window.setTimeout(() => aviso.remove(), 3200);
 }
 
+function configurarValidacionesCampos() {
+  $$('[data-validar-nombre-cuenta]').forEach(input => {
+    const validar = () => {
+      if (!input.value) {
+        input.setCustomValidity('');
+        return;
+      }
+      const nombre = input.value.trim();
+      const longitud = [...nombre].length;
+      const valido = longitud >= 2 && longitud <= 60 && /^[\p{L}\p{M} '-]+$/u.test(nombre);
+      input.setCustomValidity(valido ? '' : 'Usa entre 2 y 60 caracteres: letras, espacios, apóstrofos o guiones.');
+    };
+    input.addEventListener('input', validar);
+    input.addEventListener('blur', validar);
+  });
+  $$('[data-validar-contrasena]').forEach(input => {
+    input.addEventListener('input', () => {
+      const bytes = new TextEncoder().encode(input.value).length;
+      input.setCustomValidity(bytes <= 72 ? '' : 'La contraseña no puede superar 72 bytes UTF-8.');
+    });
+  });
+}
+
+function confirmarDesactivacionCuenta() {
+  const dialogo = $('#modal-desactivar-cuenta');
+  const confirmar = $('#confirmar-desactivar-cuenta');
+  const cancelar = $('#cancelar-desactivar-cuenta');
+  return new Promise(resolve => {
+    const finalizar = resultado => {
+      confirmar.removeEventListener('click', alConfirmar);
+      cancelar.removeEventListener('click', alCancelar);
+      dialogo.removeEventListener('cancel', alCancelarNativo);
+      if (dialogo.open) dialogo.close();
+      resolve(resultado);
+    };
+    const alConfirmar = () => finalizar(true);
+    const alCancelar = () => finalizar(false);
+    const alCancelarNativo = evento => {
+      evento.preventDefault();
+      finalizar(false);
+    };
+    confirmar.addEventListener('click', alConfirmar);
+    cancelar.addEventListener('click', alCancelar);
+    dialogo.addEventListener('cancel', alCancelarNativo);
+    dialogo.showModal();
+  });
+}
+
 /** Deshabilita temporalmente un formulario para evitar envíos duplicados. */
 /** RF02/HU02: deshabilita botones del formulario mientras termina su solicitud. */
 async function duranteEnvio(formulario, trabajo) {
@@ -176,12 +224,13 @@ async function cargarAplicacion() {
       renderizarUsuario(); renderizarAdministracion(); await cargarDetalleAdministrativo(); mostrarAplicacion(); prepararPeriodos();
       navegar('administracion'); return;
     }
-    const [materias, tareas, sesiones, puntos, niveles, insignias, cuentaInsignias, retos, metas, recordatorios, notificaciones, preferencias] = await Promise.all([
+    const [materias, tareas, sesiones, puntos, niveles, insignias, cuentaInsignias, retos, metasSugerida, metas, recordatorios, notificaciones, preferencias] = await Promise.all([
       cargarSeguro('/materias', { datos: [] }), cargarSeguro('/tareas', { datos: [] }),
       cargarSeguro('/sesiones', { datos: [] }), cargarSeguro('/puntos', { datos: [], total: 0 }),
       cargarSeguro('/niveles', { datos: [] }), cargarSeguro('/insignias', { datos: [] }),
       cargarSeguro('/cuenta-insignias', { datos: [] }), cargarSeguro('/retos', { datos: [] }),
-      cargarSeguro('/metas', { datos: [] }), cargarSeguro('/recordatorios', { datos: [] }),
+      cargarSeguro('/metas/sugerida', { dato: null }), cargarSeguro('/metas', { datos: [] }),
+      cargarSeguro('/recordatorios', { datos: [] }),
       cargarSeguro('/notificaciones', { datos: [] }), cargarSeguro('/preferencias', { dato: null })
     ]);
     Object.assign(estado, {
@@ -191,6 +240,9 @@ async function cargarAplicacion() {
       retos: retos.datos, metas: metas.datos, recordatorios: recordatorios.datos,
       notificaciones: notificaciones.datos, preferencias: preferencias.dato
     });
+    if (metasSugerida.dato && !estado.metas.some(item => item.id_meta === metasSugerida.dato.id_meta)) {
+      estado.metas = [...estado.metas, metasSugerida.dato];
+    }
     aplicarPreferencias();
     renderizarTodo();
     mostrarAplicacion();
@@ -276,6 +328,7 @@ function renderizarUsuario() {
   $('#form-perfil').elements.nombre.value = estado.cuenta.nombre;
   $('#form-perfil').elements.correo.value = estado.cuenta.correo;
   $('#perfil-rol').textContent = estado.cuenta.rol;
+  $('#desactivar-cuenta').hidden = estado.cuenta.rol !== 'Estudiante';
 }
 
 /** RF08/HU08: muestra contadores y próximos pendientes. */
@@ -327,8 +380,14 @@ function renderizarTareas() {
   const prioridad = $('#filtro-prioridad').value;
   const idMateria = $('#filtro-materia').value;
   const situacion = $('#filtro-estado').value;
+  const fechaDesde = $('#filtro-fecha-desde').value;
+  const fechaHasta = $('#filtro-fecha-hasta').value;
+  if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
+    $('#lista-tareas').innerHTML = estadoVacio('El rango de fechas no es válido: “desde” no puede ser posterior a “hasta”.');
+    return;
+  }
   const hoy = new Date().toISOString().slice(0, 10);
-  const filtradas = estado.tareas.filter(tarea => (!texto || tarea.nombre.toLowerCase().includes(texto)) && (!idMateria || tarea.id_materia === idMateria) && (!prioridad || tarea.prioridad === prioridad) && (!situacion || (situacion === 'Vencida' ? tarea.estado !== 'Completada' && tarea.fecha_entrega < hoy : tarea.estado === situacion)));
+  const filtradas = estado.tareas.filter(tarea => (!texto || tarea.nombre.toLowerCase().includes(texto)) && (!idMateria || tarea.id_materia === idMateria) && (!prioridad || tarea.prioridad === prioridad) && (!situacion || (situacion === 'Vencida' ? tarea.estado !== 'Completada' && tarea.fecha_entrega < hoy : tarea.estado === situacion)) && (!fechaDesde || tarea.fecha_entrega >= fechaDesde) && (!fechaHasta || tarea.fecha_entrega <= fechaHasta));
   $('#lista-tareas').innerHTML = filtradas.length ? filtradas.map(tarea => `
     <div class="item prioridad-${escapar(tarea.prioridad.toLowerCase())} ${tarea.estado === 'Completada' ? 'completada' : ''}">
       <div class="item-fila"><div><strong>${escapar(tarea.nombre)}</strong><br><small>${escapar(materiaDe(tarea.id_materia))} · vence ${escapar(fechaLegible(tarea.fecha_entrega))}</small></div><span class="chip">${escapar(tarea.prioridad)} · ${escapar(tarea.estado)}</span></div>
@@ -348,7 +407,7 @@ function renderizarGamificacion() {
     return `<div class="item insignia ${asignacion ? 'obtenida' : 'bloqueada'}" title="${escapar(insignia.descripcion)} · Condición: ${escapar(insignia.condicion)}"><strong>${asignacion ? '🏅' : '🔒'} ${escapar(insignia.nombre)}</strong><small>${asignacion ? `Obtenida ${escapar(fechaLegible(asignacion.fecha_obtenida))}` : `Condición: ${escapar(insignia.condicion)}`}</small></div>`;
   }).join('') : estadoVacio('El catálogo de insignias está vacío.');
   const avances = [
-    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button></div></div></div>`),
+    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · ${reto.activo ? 'Activo' : 'Inactivo'} · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="alternar-reto" data-id="${escapar(reto.id_reto)}" data-activo="${reto.activo}">${reto.activo ? 'Desactivar' : 'Reactivar'}</button><button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button></div></div></div>`),
     ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
   ];
   $('#lista-retos-metas').innerHTML = avances.length ? avances.join('') : estadoVacio('No tienes retos o metas registrados.');
@@ -427,7 +486,7 @@ function renderizarAdministracion() {
   $('#admin-correccion-cuenta').innerHTML = opcionesCuenta;
   $('#admin-insignia-correccion').innerHTML = estado.insignias
     .map(item => `<option value="${escapar(item.id_insignia)}">${escapar(item.nombre)}</option>`).join('');
-  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button></div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
+  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)} · ${reto.activo ? 'Activo' : 'Inactivo'}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="alternar-reto-admin" data-id="${escapar(reto.id_reto)}" data-activo="${reto.activo}">${reto.activo ? 'Desactivar' : 'Reactivar'}</button></div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
   const puntos = estado.puntosAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${item.cantidad} puntos</strong><br><small>${escapar(item.origen)} · ${escapar(fechaLegible(item.fecha))}</small></div><button class="boton peligro pequeno" data-accion="eliminar-punto-admin" data-id="${escapar(item.id_punto)}">Eliminar movimiento</button></div></div>`);
   const asignaciones = estado.insigniasCuentaAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${escapar(item.insignia?.nombre || 'Insignia')}</strong><br><small>Asignada ${escapar(fechaLegible(item.fecha_obtenida))}</small></div><button class="boton peligro pequeno" data-accion="revocar-insignia-admin" data-id="${escapar(item.id_insignia)}" data-cuenta="${escapar(item.id_cuenta)}">Revocar</button></div></div>`);
   $('#lista-correcciones-admin').innerHTML = [...puntos, ...asignaciones].join('') || estadoVacio('No hay movimientos o insignias para corregir.');
@@ -690,6 +749,7 @@ function detenerTemporizador(restablecer = true) {
 async function guardarSesion() {
   if (estado.temporizador.transcurrido < 1) return avisar('Inicia el cronómetro antes de guardar.', 'error');
   const duracion = Math.max(1, Math.ceil(estado.temporizador.transcurrido / 60));
+  if (duracion > 1440) return avisar('La duración máxima de una sesión es 1.440 minutos.', 'error');
   const respuesta = await api('/sesiones', { method: 'POST', body: JSON.stringify({
     id_tarea: $('#pomodoro-tarea').value || null, duracion_minutos: duracion, modo_enfoque: estado.temporizador.modo === 'pomodoro'
   }) });
@@ -754,9 +814,27 @@ async function manejarAccion(evento) {
       const reto = estado.retos.find(item => item.id_reto === id);
       const descripcion = prompt('Descripción del reto', reto.descripcion);
       if (descripcion === null || !descripcion.trim()) return;
+      if ([...descripcion.trim()].length > 200) return avisar('La descripción del reto admite máximo 200 caracteres.', 'error');
       const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion: descripcion.trim() }) });
       estado.retos = estado.retos.map(item => item.id_reto === id ? respuesta.dato : item);
       renderizarGamificacion(); avisar('Reto actualizado.', 'exito');
+    }
+    if (accion === 'alternar-reto' || accion === 'alternar-reto-admin') {
+      const activo = boton.dataset.activo !== 'true';
+      const respuesta = await api(`/retos/${id}/estado`, {
+        method: 'PATCH', body: JSON.stringify({ activo })
+      });
+      if (accion === 'alternar-reto') {
+        estado.retos = estado.retos.map(item => item.id_reto === id ? respuesta.dato : item);
+        renderizarGamificacion();
+      } else {
+        estado.retosAdmin = estado.retosAdmin.map(item => item.id_reto === id ? respuesta.dato : item);
+        renderizarAdministracion();
+      }
+      avisar(activo
+        ? 'Reto reactivado. Las recompensas ya otorgadas se conservan.'
+        : 'Reto desactivado. Se detuvo el progreso automático y las recompensas ya otorgadas se conservan.',
+      'exito');
     }
     if (accion === 'eliminar-reto' && confirm('¿Deseas eliminar este reto?')) {
       await api(`/retos/${id}`, { method: 'DELETE' });
@@ -779,7 +857,7 @@ async function manejarAccion(evento) {
     if (accion === 'editar-sesion') {
       const sesion = estado.sesiones.find(item => item.id_sesion === id);
       const duracion = Number(prompt('Duración en minutos', sesion.duracion_minutos));
-      if (!Number.isInteger(duracion) || duracion < 1) return avisar('La duración debe ser un entero positivo.', 'error');
+      if (!Number.isInteger(duracion) || duracion < 1 || duracion > 1440) return avisar('La duración debe ser un entero entre 1 y 1.440 minutos.', 'error');
       const respuesta = await api(`/sesiones/${id}`, { method: 'PUT', body: JSON.stringify({ duracion_minutos: duracion, modo_enfoque: Boolean(sesion.modo_enfoque) }) });
       estado.sesiones = estado.sesiones.map(item => item.id_sesion === id ? respuesta.dato : item);
       renderizarSesiones(); renderizarResumen(); avisar('Sesión actualizada.', 'exito');
@@ -806,11 +884,21 @@ async function manejarAccion(evento) {
       estado.notificaciones = estado.notificaciones.filter(item => item.id_notificacion !== id); renderizarNotificaciones();
     }
     if (accion === 'guardar-usuario') {
+      const cuentaActual = estado.cuentasAdmin.find(cuenta => cuenta.id_cuenta === id);
+      const activa = $(`#activa-${id}`).checked;
+      if (cuentaActual?.activa && !activa && !(await confirmarDesactivacionCuenta())) {
+        renderizarAdministracion();
+        return;
+      }
       const respuesta = await api(`/cuentas/${id}`, { method: 'PUT', body: JSON.stringify({
-        rol: $(`#rol-${id}`).value, activa: $(`#activa-${id}`).checked
+        rol: $(`#rol-${id}`).value, activa
       }) });
       estado.cuentasAdmin = estado.cuentasAdmin.map(item => item.id_cuenta === id ? respuesta.dato : item);
-      renderizarAdministracion(); avisar('Cuenta actualizada.', 'exito');
+      renderizarAdministracion();
+      const mensaje = cuentaActual?.activa !== respuesta.dato.activa
+        ? (respuesta.dato.activa ? 'Cuenta reactivada; el acceso vuelve a estar habilitado.' : 'Cuenta desactivada; sus datos se conservaron.')
+        : 'Cuenta actualizada.';
+      avisar(mensaje, 'exito');
     }
     if (accion === 'eliminar-insignia-admin' && confirm('¿Eliminar esta insignia?')) {
       await api(`/insignias/${id}`, { method: 'DELETE' });
@@ -838,19 +926,6 @@ async function manejarAccion(evento) {
       estado.niveles = estado.niveles.map(item => item.id_nivel === id ? respuesta.dato : item);
       renderizarAdministracion(); avisar('Nivel actualizado.', 'exito');
     }
-    if (accion === 'editar-reto-admin') {
-      const actual = estado.retosAdmin.find(item => item.id_reto === id);
-      const descripcion = prompt('Descripción del reto', actual.descripcion);
-      if (descripcion === null) return;
-      const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion }) });
-      estado.retosAdmin = estado.retosAdmin.map(item => item.id_reto === id ? respuesta.dato : item);
-      renderizarAdministracion(); avisar('Reto actualizado.', 'exito');
-    }
-    if (accion === 'eliminar-reto-admin' && confirm('¿Eliminar este reto?')) {
-      await api(`/retos/${id}`, { method: 'DELETE' });
-      estado.retosAdmin = estado.retosAdmin.filter(item => item.id_reto !== id);
-      renderizarAdministracion(); avisar('Reto eliminado.', 'exito');
-    }
     if (accion === 'eliminar-punto-admin' && confirm('Esta corrección elimina el movimiento. ¿Continuar?')) {
       const motivo = prompt('Motivo obligatorio de la corrección');
       if (!motivo?.trim()) return avisar('Debes indicar el motivo de la corrección.', 'error');
@@ -870,6 +945,7 @@ async function manejarAccion(evento) {
 
 /** RF01–RF15/HU01–HU28: conecta formularios y botones con sus acciones de M16. */
 function registrarEventos() {
+  configurarValidacionesCampos();
   $('#tab-login').addEventListener('click', () => seleccionarAcceso('login'));
   $('#tab-registro').addEventListener('click', () => seleccionarAcceso('registro'));
   $('.selector-acceso').addEventListener('keydown', evento => {
@@ -933,8 +1009,8 @@ function registrarEventos() {
       } catch (error) { avisar(error.message, 'error'); }
     });
   });
-  ['buscar-tarea', 'filtro-materia', 'filtro-prioridad', 'filtro-estado'].forEach(id => $(`#${id}`).addEventListener('input', renderizarTareas));
-  $('#limpiar-filtros').addEventListener('click', () => { $('#buscar-tarea').value = ''; $('#filtro-materia').value = ''; $('#filtro-prioridad').value = ''; $('#filtro-estado').value = ''; renderizarTareas(); });
+  ['buscar-tarea', 'filtro-materia', 'filtro-prioridad', 'filtro-estado', 'filtro-fecha-desde', 'filtro-fecha-hasta'].forEach(id => $(`#${id}`).addEventListener('input', renderizarTareas));
+  $('#limpiar-filtros').addEventListener('click', () => { $('#buscar-tarea').value = ''; $('#filtro-materia').value = ''; $('#filtro-prioridad').value = ''; $('#filtro-estado').value = ''; $('#filtro-fecha-desde').value = ''; $('#filtro-fecha-hasta').value = ''; renderizarTareas(); });
   $$('[data-panel-gamificacion]').forEach(tab => tab.addEventListener('click', () => {
     const historial = tab.dataset.panelGamificacion === 'historial';
     $('#panel-historial-gamificacion').hidden = !historial;
@@ -991,6 +1067,21 @@ function registrarEventos() {
   });
   $('#form-preferencias').elements.tema.addEventListener('change', evento => { document.documentElement.dataset.tema = evento.target.value; });
   $('#form-preferencias').elements.modo_oscuro.addEventListener('change', evento => { document.documentElement.classList.toggle('modo-oscuro', evento.target.checked); });
+  $('#desactivar-cuenta').addEventListener('click', async evento => {
+    const boton = evento.currentTarget;
+    if (!(await confirmarDesactivacionCuenta())) return;
+    boton.disabled = true;
+    try {
+      await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'DELETE' });
+      $('#modal-desactivar-cuenta').close();
+      await cerrarSesion();
+      avisar('Cuenta desactivada. Tus datos se conservaron.', 'exito');
+    } catch (error) {
+      avisar(error.message, 'error');
+    } finally {
+      boton.disabled = false;
+    }
+  });
   $('#eliminar-datos').addEventListener('click', async () => {
     if (!confirm('Esta acción eliminará permanentemente todos tus datos. Exporta primero si deseas conservar una copia. ¿Continuar?')) return;
     try { await api(`/cuentas/${estado.cuenta.id_cuenta}/datos`, { method: 'DELETE' }); await cerrarSesion(); }
