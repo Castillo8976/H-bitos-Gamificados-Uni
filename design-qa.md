@@ -126,8 +126,9 @@ que el resultado no falle por `EPERM` de Windows.
 
 Hallazgos funcionales cerrados en esta iteración:
 
-- HU15 ahora solicita y crea de forma idempotente la meta semanal sugerida al
-  cargar la aplicación.
+- HU15 ahora muestra la meta semanal sugerida sin guardarla
+  (`GET /api/metas/sugerida`); el Estudiante la acepta, la personaliza o crea
+  una meta propia mediante `POST /api/metas`.
 - P12 ahora filtra tareas por fecha de entrega desde/hasta, además de los
   filtros existentes.
 - La API impide desactivar o degradar al último Administrador activo.
@@ -136,11 +137,9 @@ Hallazgos funcionales cerrados en esta iteración:
 
 Limitaciones que siguen requiriendo evidencia o decisión externa:
 
-- No existe implementación de correo/MFA en este repositorio; la recepción de
-  códigos de Gmail, expiración, reenvío e intentos no puede certificarse desde
-  estas pruebas.
-- `CatalogoMateria` continúa marcado como planeado en E7/E12 y la interfaz
-  conserva la materia inicial como texto libre.
+- La verificación de correo y el MFA opcional están implementados y probados
+  con transporte en memoria; la entrega real por SMTP (Gmail) requiere una
+  prueba manual coordinada sin exponer códigos ni credenciales.
 - Las imágenes exportadas históricas no se regeneraron automáticamente desde
   draw.io; la fuente editable vigente es la que debe usarse para una nueva
   exportación antes de entregar.

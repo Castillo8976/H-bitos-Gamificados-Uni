@@ -12,6 +12,7 @@
 
 const Cuenta = require('../models/Cuenta'); // Modelo Sequelize de la entidad Cuenta
 const { Transaction } = require('sequelize');
+const HttpError = require('../middlewares/httpError');
 const crypto = require('crypto');            // Módulo nativo de Node.js para generar UUIDs
 const bcrypt = require('bcryptjs');          // Librería para hash seguro de contraseñas
 
@@ -141,20 +142,13 @@ async function obtenerCuenta(id) {
  */
 /** @implements RF01 @implements HU20 @implements HU27 @implements HU30 */
 async function actualizarCuenta(id, datos) {
-  // version_sesion nunca se edita directamente; activa = false solo se aplica mediante desactivarCuenta.
-  const { version_sesion: _ignorada, activa, ...resto } = datos;
-  if (activa !== false) {
-    if (activa !== undefined) resto.activa = activa;
-    if (!Object.keys(resto).length) return;
-    // Desestructura el primer elemento del arreglo que indica filas afectadas
-    const [filas] = await Cuenta.update(resto, { where: { id_cuenta: id } });
-    // Si filas === 0, ninguna fila coincidió con el WHERE (cuenta inexistente)
-    console.log(filas > 0 ? '✅ Cuenta actualizada' : '⚠️ No se encontró la cuenta');
-    return;
-  }
   await Cuenta.sequelize.transaction({ type: Transaction.TYPES.IMMEDIATE }, async transaction => {
+    await comprobarAdministrador(id, datos, transaction, 'No se puede desactivar o degradar al último Administrador activo');
+    // version_sesion nunca se edita directamente; la desactivación conserva su transición única.
+    const { version_sesion: _ignorada, activa, ...resto } = datos;
+    if (activa !== undefined && activa !== false) resto.activa = activa;
     if (Object.keys(resto).length) await Cuenta.update(resto, { where: { id_cuenta: id }, transaction });
-    await desactivarCuenta(id, transaction);
+    if (activa === false) await desactivarCuenta(id, transaction);
   });
 }
 
@@ -173,6 +167,12 @@ async function actualizarCuenta(id, datos) {
  * @returns {Promise<boolean>} `true` si esta llamada realizó la transición.
  */
 async function desactivarCuenta(id, transaction) {
+  if (!transaction) {
+    return Cuenta.sequelize.transaction({ type: Transaction.TYPES.IMMEDIATE }, async transaccion => {
+      await comprobarAdministrador(id, { activa: false }, transaccion, 'No se puede desactivar al último Administrador activo');
+      return desactivarCuenta(id, transaccion);
+    });
+  }
   const [filas] = await Cuenta.update(
     { activa: false, version_sesion: Cuenta.sequelize.literal('version_sesion + 1') },
     { where: { id_cuenta: id, activa: true }, transaction }
@@ -180,9 +180,21 @@ async function desactivarCuenta(id, transaction) {
   return filas > 0;
 }
 
+/** RN27: comprueba el último administrador bajo el mismo bloqueo de escritura. */
+async function comprobarAdministrador(id, datos, transaction, mensaje) {
+  const actual = await Cuenta.findByPk(id, { transaction });
+  if (!actual) throw new HttpError(404, 'Cuenta no encontrada');
+  const dejaDeSerAdministrador = datos.activa === false ||
+    (datos.rol !== undefined && datos.rol !== 'Administrador');
+  if (actual.rol === 'Administrador' && actual.activa && dejaDeSerAdministrador &&
+      await contarAdministradoresActivos(transaction) <= 1) {
+    throw new HttpError(409, mensaje);
+  }
+}
+
 /** RN27: impide dejar el sistema sin un Administrador activo. */
-async function contarAdministradoresActivos() {
-  return Cuenta.count({ where: { rol: 'Administrador', activa: true } });
+async function contarAdministradoresActivos(transaction) {
+  return Cuenta.count({ where: { rol: 'Administrador', activa: true }, transaction });
 }
 
 

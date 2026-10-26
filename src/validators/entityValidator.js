@@ -75,10 +75,6 @@ class EntityValidator {
           throw new HttpError(400, `${campo} debe contener texto${maximo ? ` de máximo ${maximo} caracteres` : ''}`);
         }
         resultado[campo] = texto;
-        if (recurso === 'cuentas' && campo === 'nombre' &&
-          ([...texto].length < 2 || !/^[\p{L}\p{M} '\u2019-]+$/u.test(texto))) {
-          throw new HttpError(400, 'nombre debe contener entre 2 y 60 caracteres y solo letras, espacios, apóstrofos o guiones');
-        }
         if (tipo === 'DATEONLY') this.fecha(texto, campo);
       }
       if (tipo === 'BOOLEAN' && typeof valor !== 'boolean') throw new HttpError(400, `${campo} debe ser booleano`);

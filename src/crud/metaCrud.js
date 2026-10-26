@@ -55,25 +55,11 @@ async function crearMeta(id_cuenta, semana, descripcion, valor_objetivo) {
   return meta;
 }
 
-/**
- * Crea de forma idempotente la meta semanal sugerida para una cuenta.
- * La sugerencia usa un objetivo alcanzable de cinco unidades y solo se
- * materializa una vez por cuenta y semana.
- */
+/** RF15/HU15/E12: propone una meta sin guardarla; la aceptación usa crearMeta. */
 async function sugerirMetaSemanal(id_cuenta, semana = semanaIso()) {
   const existente = await Meta.findOne({ where: { id_cuenta, semana } });
-  if (existente) return existente;
-  try {
-    return await crearMeta(
-      id_cuenta,
-      semana,
-      'Completar 5 actividades de estudio esta semana',
-      5
-    );
-  } catch (error) {
-    if (error.name !== 'SequelizeUniqueConstraintError') throw error;
-    return Meta.findOne({ where: { id_cuenta, semana } });
-  }
+  if (existente) return null;
+  return { semana, descripcion: 'Completar 5 actividades de estudio esta semana', valor_objetivo: 5 };
 }
 
 

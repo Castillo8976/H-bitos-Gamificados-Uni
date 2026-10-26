@@ -21,6 +21,8 @@ const { inicializarEsquema } = require('../../src/config/schema');
 const app = require('../../src/app');
 const Cuenta = require('../../src/models/Cuenta');
 const Reto = require('../../src/models/Reto');
+const Meta = require('../../src/models/Meta');
+const { semanaIso } = require('../../src/services/periodoService');
 
 let id_catalogo_materia;
 const auth = token => ({ Authorization: `Bearer ${token}` });
@@ -122,6 +124,54 @@ async function run() {
   const secondToken = (await login('dos@test.local')).body.token;
   const adminToken = (await login('admin@test.local')).body.token;
   const reviewerToken = (await login('revisor@test.local')).body.token;
+
+  const apostrofo = (await register({ nombre: 'D’Alembert', correo: 'apostrofo@test.local', contrasena: 'ClaveSegura123!' }).expect(201)).body.cuenta.id_cuenta;
+
+  // RN27: las tres transiciones protegen al último administrador y permiten otro activo.
+  const ultimoAdmin = adminRegistration.body.cuenta.id_cuenta;
+  for (const cambio of [{ activa: false }, { rol: 'Estudiante' }]) {
+    await request(app).put(`/api/cuentas/${ultimoAdmin}`).set(auth(adminToken)).send(cambio).expect(409)
+      .expect(({ body }) => assert.equal(body.error, 'No se puede desactivar o degradar al último Administrador activo'));
+  }
+  await request(app).delete(`/api/cuentas/${ultimoAdmin}`).set(auth(adminToken)).expect(409)
+    .expect(({ body }) => assert.equal(body.error, 'No se puede desactivar al último Administrador activo'));
+  assert.equal((await Cuenta.findByPk(ultimoAdmin)).activa, true);
+  assert.equal((await Cuenta.findByPk(ultimoAdmin)).rol, 'Administrador');
+  const otroAdmin = (await register({ nombre: 'Otro Administrador', correo: 'otro-admin@test.local', contrasena: 'ClaveSegura123!' }).expect(201)).body.cuenta.id_cuenta;
+  await request(app).put(`/api/cuentas/${otroAdmin}`).set(auth(adminToken)).send({ rol: 'Administrador' }).expect(200);
+  await request(app).put(`/api/cuentas/${otroAdmin}`).set(auth(adminToken)).send({ activa: false }).expect(200);
+  assert.equal((await Cuenta.findByPk(otroAdmin)).version_sesion, 1);
+  await request(app).put(`/api/cuentas/${otroAdmin}`).set(auth(adminToken)).send({ activa: true }).expect(200);
+  await request(app).delete(`/api/cuentas/${otroAdmin}`).set(auth(adminToken)).expect(204);
+  assert.equal((await Cuenta.findByPk(otroAdmin)).version_sesion, 2);
+  await request(app).put(`/api/cuentas/${otroAdmin}`).set(auth(adminToken)).send({ activa: true }).expect(200);
+  await request(app).put(`/api/cuentas/${otroAdmin}`).set(auth(adminToken)).send({ rol: 'Estudiante' }).expect(200);
+  assert.equal((await Cuenta.findByPk(otroAdmin)).rol, 'Estudiante');
+  // Las cuentas auxiliares no deben alterar las estadísticas institucionales posteriores.
+  for (const id of [apostrofo, otroAdmin]) await request(app).delete(`/api/cuentas/${id}`).set(auth(adminToken)).expect(204);
+
+  // RF15/HU15: consultar no materializa una meta ni ocupa su semana.
+  const antesSugerencia = await Meta.count();
+  const sugerencia = (await request(app).get('/api/metas/sugerida').set(auth(studentToken)).expect(200)).body.dato;
+  assert.deepEqual(sugerencia, { semana: semanaIso(), descripcion: 'Completar 5 actividades de estudio esta semana', valor_objetivo: 5 });
+  await request(app).get('/api/metas/sugerida?semana=2026-W40').set(auth(studentToken)).expect(200)
+    .expect(({ body }) => assert.equal(body.dato.semana, '2026-W40'));
+  assert.equal(await Meta.count(), antesSugerencia);
+  for (const semana of ['2026-W60', 'x']) {
+    await request(app).get('/api/metas/sugerida').query({ semana }).set(auth(studentToken)).expect(400);
+  }
+  await request(app).get('/api/metas/sugerida').set(auth(adminToken)).expect(403);
+  const aceptada = (await request(app).post('/api/metas').set(auth(studentToken)).send(sugerencia).expect(201)).body.dato;
+  await request(app).post('/api/metas').set(auth(studentToken)).send(sugerencia).expect(409);
+  await request(app).get('/api/metas/sugerida').query({ semana: sugerencia.semana }).set(auth(studentToken)).expect(200)
+    .expect(({ body }) => assert.equal(body.dato, null));
+  assert.equal(await Meta.count(), antesSugerencia + 1);
+  await request(app).delete(`/api/metas/${aceptada.id_meta}`).set(auth(studentToken)).expect(204);
+  const propiaMeta = (await request(app).post('/api/metas').set(auth(studentToken))
+    .send({ semana: sugerencia.semana, descripcion: 'Repasar mis apuntes', valor_objetivo: 3 }).expect(201)).body.dato;
+  assert.equal(propiaMeta.descripcion, 'Repasar mis apuntes');
+  assert.equal(propiaMeta.valor_objetivo, 3);
+  await request(app).delete(`/api/metas/${propiaMeta.id_meta}`).set(auth(studentToken)).expect(204);
 
   // RF01/RN26/HU29, Decisión #10: catálogo global y permisos administrativos.
   const catalogoUrl = '/api/catalogo-materias';
@@ -434,6 +484,12 @@ async function run() {
   await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(adminToken)).send({ activo: true }).expect(200)
     .expect(({ body }) => { assert.equal(body.dato.activo, true); assert.equal(body.dato.progreso, 1); assert.equal(body.dato.completado, false); });
   await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(secondToken)).expect(403);
+  // H1: Administrador y Revisor no completan retos ajenos ni generan su recompensa.
+  for (const token of [adminToken, reviewerToken]) {
+    await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(token)).expect(403);
+  }
+  assert.equal((await Reto.findByPk(challengeId)).completado, false);
+  assert.equal((await puntosReto(challengeId)).n, 0);
   await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200)
     .expect(({ body }) => assert.equal(body.dato.completado, true));
   await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200);

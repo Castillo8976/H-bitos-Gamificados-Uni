@@ -106,6 +106,42 @@ async function inicializarEsquema() {
   if (!columnasReto.some(columna => columna.name === 'activo')) {
     await sequelize.query('ALTER TABLE reto ADD COLUMN activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1))');
   }
+
+  const restriccionesCompatibilidad = [
+    `CREATE TRIGGER IF NOT EXISTS validar_cuenta_nombre_insert
+      BEFORE INSERT ON cuenta
+      WHEN length(trim(NEW.nombre)) NOT BETWEEN 2 AND 60
+      BEGIN SELECT RAISE(ABORT, 'cuenta.nombre debe contener entre 2 y 60 caracteres'); END`,
+    `CREATE TRIGGER IF NOT EXISTS validar_cuenta_nombre_update
+      BEFORE UPDATE OF nombre ON cuenta
+      WHEN length(trim(NEW.nombre)) NOT BETWEEN 2 AND 60
+      BEGIN SELECT RAISE(ABORT, 'cuenta.nombre debe contener entre 2 y 60 caracteres'); END`,
+    `CREATE TRIGGER IF NOT EXISTS validar_reto_recompensa_insert
+      BEFORE INSERT ON reto
+      WHEN NEW.puntos_recompensa NOT BETWEEN 1 AND 10000
+      BEGIN SELECT RAISE(ABORT, 'reto.puntos_recompensa debe estar entre 1 y 10000'); END`,
+    `CREATE TRIGGER IF NOT EXISTS validar_reto_recompensa_update
+      BEFORE UPDATE OF puntos_recompensa ON reto
+      WHEN NEW.puntos_recompensa NOT BETWEEN 1 AND 10000
+      BEGIN SELECT RAISE(ABORT, 'reto.puntos_recompensa debe estar entre 1 y 10000'); END`,
+    `CREATE TRIGGER IF NOT EXISTS validar_meta_objetivo_insert
+      BEFORE INSERT ON meta
+      WHEN NEW.valor_objetivo NOT BETWEEN 1 AND 10080
+      BEGIN SELECT RAISE(ABORT, 'meta.valor_objetivo debe estar entre 1 y 10080'); END`,
+    `CREATE TRIGGER IF NOT EXISTS validar_meta_objetivo_update
+      BEFORE UPDATE OF valor_objetivo ON meta
+      WHEN NEW.valor_objetivo NOT BETWEEN 1 AND 10080
+      BEGIN SELECT RAISE(ABORT, 'meta.valor_objetivo debe estar entre 1 y 10080'); END`,
+    `CREATE TRIGGER IF NOT EXISTS validar_sesion_duracion_insert
+      BEFORE INSERT ON sesion_estudio
+      WHEN NEW.duracion_minutos NOT BETWEEN 1 AND 1440
+      BEGIN SELECT RAISE(ABORT, 'sesion_estudio.duracion_minutos debe estar entre 1 y 1440'); END`,
+    `CREATE TRIGGER IF NOT EXISTS validar_sesion_duracion_update
+      BEFORE UPDATE OF duracion_minutos ON sesion_estudio
+      WHEN NEW.duracion_minutos NOT BETWEEN 1 AND 1440
+      BEGIN SELECT RAISE(ABORT, 'sesion_estudio.duracion_minutos debe estar entre 1 y 1440'); END`
+  ];
+  for (const restriccion of restriccionesCompatibilidad) await sequelize.query(restriccion);
 }
 
 /** Columnas añadidas por migraciones aditivas posteriores a E11 (CRF-005, Decisiones #08–#10 y Bloque D). */

@@ -1,6 +1,8 @@
 'use strict';
 
 const HttpError = require('../middlewares/httpError');
+const { EntityValidator } = require('../validators/entityValidator');
+const entityValidator = new EntityValidator();
 const authService = require('../services/authService');
 const cuenta = require('../services/cuentaService');
 const catalogo = require('../services/catalogoMateriaService');
@@ -78,13 +80,6 @@ const accounts = {
     if (req.user.rol === 'Estudiante' && Object.hasOwn(req.body, 'correo') && require('../config/authEmail').configuration().verificacion_correo) {
       throw new HttpError(400, 'Para cambiar el correo usa el flujo /api/auth/correo/cambio y confirma el código');
     }
-    const actual = await cuenta.obtenerCuenta(req.params.id);
-    if (!actual) throw new HttpError(404, 'Cuenta no encontrada');
-    const dejaDeSerAdministrador = actual.rol === 'Administrador' && actual.activa &&
-      (req.body.activa === false || req.body.rol === 'Estudiante' || req.body.rol === 'Revisor institucional');
-    if (dejaDeSerAdministrador && await cuenta.contarAdministradoresActivos() <= 1) {
-      throw new HttpError(409, 'No se puede desactivar o degradar al último Administrador activo');
-    }
     const allowed = isAdmin(req.user) ? ['nombre', 'correo', 'activa', 'rol'] : ['nombre', 'correo'];
     const data = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
     if (!Object.keys(data).length) throw new HttpError(400, 'No hay campos permitidos para actualizar');
@@ -93,11 +88,6 @@ const accounts = {
   /** RF01/HU27/HU30: Desactiva la cuenta sin borrarla físicamente (cuentas). */
   deactivate: async (req, res) => {
     if (!isAdmin(req.user) && req.params.id !== req.user.id) throw new HttpError(403, 'No puede desactivar otra cuenta');
-    const actual = await cuenta.obtenerCuenta(req.params.id);
-    if (!actual) throw new HttpError(404, 'Cuenta no encontrada');
-    if (actual.rol === 'Administrador' && actual.activa && await cuenta.contarAdministradoresActivos() <= 1) {
-      throw new HttpError(409, 'No se puede desactivar al último Administrador activo');
-    }
     // RN27/Decisión #08: la transición incrementa version_sesion e invalida todos los JWT anteriores.
     await cuenta.desactivarCuenta(req.params.id);
     res.status(204).send();
@@ -356,7 +346,10 @@ const challenges = {
 const goals = {
   /** RF15/HU15: Consulta la colección permitida (metas). */
   list: async (req, res) => res.json({ datos: await meta.listarMetas(req.user.id, req.query.semana || null) }),
-  suggest: async (req, res) => res.json({ dato: await meta.sugerirMetaSemanal(req.user.id, req.body.semana) }),
+  suggest: async (req, res) => {
+    if (req.query.semana !== undefined) entityValidator.semana(req.query.semana);
+    res.json({ dato: await meta.sugerirMetaSemanal(req.user.id, req.query.semana) });
+  },
   /** RF15/HU15: Consulta un registro (metas). */
   get: async (req, res) => res.json({ dato: ensureOwned(await meta.obtenerMeta(req.params.id), req.user) }),
   /** RF15/HU15: Crea el registro mediante el servicio (metas). */

@@ -1,8 +1,8 @@
 'use strict';
 const fs = require('node:fs/promises');
 const { test, expect } = require('@playwright/test');
-const { fechaFutura, semanaActual, ADMIN } = require('./datos');
-const { registrar, vista, aviso, tokenPagina, api, item, dialogo, crearTarea, sinSecretos, loginAPI } = require('./ayudas');
+const { fechaFutura, semanaActual, ADMIN, CONTRASENA } = require('./datos');
+const { registrar, vista, aviso, tokenPagina, api, item, dialogo, crearTarea, sinSecretos, loginAPI, salir, iniciarSesion } = require('./ayudas');
 
 test.beforeEach(async ({ page }) => { await registrar(page); });
 
@@ -114,8 +114,48 @@ test('retos: crear, editar, desactivar, reactivar y recompensa única', async ({
   expect(puntos.datos.filter(p => p.id_origen === id)).toHaveLength(1);
 });
 
+test('la sugerencia solo se guarda al aceptarla', async ({ page, request }) => {
+  const correo = await page.locator('#usuario-correo').textContent();
+  await salir(page);
+  await iniciarSesion(page, { correo, contrasena: CONTRASENA });
+  const token = await tokenPagina(page);
+  await vista(page, 'gamificacion');
+  await expect(page.locator('#meta-sugerida')).toBeVisible();
+  await expect(page.locator('#descripcion-meta-sugerida')).toHaveText('Completar 5 actividades de estudio esta semana');
+  expect((await api(request, token, 'get', '/metas')).datos).toHaveLength(0);
+  await page.reload();
+  await expect(page.locator('#aplicacion')).toBeVisible();
+  await vista(page, 'gamificacion');
+  await expect(page.locator('#meta-sugerida')).toBeVisible();
+  expect((await api(request, token, 'get', '/metas')).datos).toHaveLength(0);
+  await page.getByRole('button', { name: 'Aceptar sugerencia', exact: true }).click();
+  await aviso(page, 'Meta creada.');
+  await expect(item(page, '#lista-retos-metas', 'Completar 5 actividades de estudio esta semana')).toBeVisible();
+  await expect(page.locator('#meta-sugerida')).toBeHidden();
+  await expect(page.locator('#form-meta')).toBeHidden();
+  expect((await api(request, token, 'get', '/metas')).datos).toHaveLength(1);
+});
+
+test('personalizar la sugerencia permite crear una meta propia', async ({ page, request }) => {
+  await vista(page, 'gamificacion');
+  await page.getByRole('button', { name: 'Personalizar', exact: true }).click();
+  const form = page.locator('#form-meta');
+  await expect(form.getByLabel('Descripción', { exact: true })).toHaveValue('Completar 5 actividades de estudio esta semana');
+  await expect(form.getByLabel('Objetivo', { exact: true })).toHaveValue('5');
+  const token = await tokenPagina(page);
+  expect((await api(request, token, 'get', '/metas')).datos).toHaveLength(0);
+  await form.getByLabel('Descripción', { exact: true }).fill('Repasar álgebra');
+  await form.getByLabel('Objetivo', { exact: true }).fill('3');
+  await form.getByRole('button', { name: 'Crear meta propia', exact: true }).click();
+  await aviso(page, 'Meta creada.');
+  await expect(item(page, '#lista-retos-metas', 'Repasar álgebra')).toContainText('0/3');
+  await expect(form).toBeHidden();
+  const metas = (await api(request, token, 'get', '/metas')).datos;
+  expect(metas).toHaveLength(1);
+  expect(metas[0]).toMatchObject({ descripcion: 'Repasar álgebra', valor_objetivo: 3 });
+});
+
 test('metas existentes se editan y eliminan por UI', async ({ page, request }) => {
-  // La SPA no ofrece un formulario de creación de metas.
   const token = await tokenPagina(page);
   await api(request, token, 'post', '/metas', { descripcion: 'Meta inicial', semana: semanaActual(), valor_objetivo: 180 }, 201);
   await page.reload();

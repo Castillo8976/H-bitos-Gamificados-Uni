@@ -1,6 +1,6 @@
 # M17 — Estado funcional y pendientes de Construcción
 
-**Fecha de revisión:** 20 de septiembre de 2026
+**Fecha de revisión:** 26 de octubre de 2026
 **Fuente:** hoja CONSTRUCCIÓN de `Ingenieria de Software 3.xlsx`  
 **Estado:** desarrollo funcional en avance; tenemos pendientes para cerrar el checklist y declarar Línea Base 1.
 
@@ -18,9 +18,9 @@ sus controles desarrollados en la interfaz.
 | Área | Qué tenemos funcionando | Qué nos falta o qué límite tenemos |
 |---|---|---|
 | Acceso | Registro con primera materia, login, logout, consulta y **edición del perfil** (nombre/correo) desde P13, y permisos por rol | Falta endurecer la protección de autenticación (casos negativos). La desactivación invalida de forma persistente los JWT anteriores mediante `version_sesion` (Decisión #08); el logout individual sigue revocando solo en memoria |
-| Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por estado/prioridad. Catálogo de asignaturas (`catalogo_materia`, tabla 14) administrado en P17 y FK opcional en `materia` (Decisión #10, etapa D-1) | Faltan filtros por materia/fecha; la selección desde el catálogo en el registro y en «Nueva materia» (D-2) y las correspondencias de materias anteriores (M2) siguen pendientes |
+| Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por materia, estado, prioridad y rango de fechas de entrega. Catálogo de asignaturas (`catalogo_materia`, tabla 14) administrado en P17 y FK opcional en `materia` (Decisión #10, etapa D-1) | La selección desde el catálogo en el registro y en «Nueva materia» (D-2) y las correspondencias de materias anteriores (M2) siguen pendientes |
 | Sesiones | Cronómetro Pomodoro y guardado con recompensa; **historial visual de sesiones con edición y eliminación** desde P06 | Falta el flujo visual de sesión libre explícita y descansos |
-| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, metas, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 | Estado activo/inactivo de retos (`PATCH /api/retos/:id/estado`), completado manual transaccional con crédito único, bloqueo de edición de recompensa/progreso y de eliminación en retos completados, límites RNF-16 en API y formato RN24 para condiciones nuevas (Decisión #09). Falta: los límites RNF-16 no son CHECK en SQLite y el completado manual no prueba actividad académica real |
+| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, metas, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 y aceptar, personalizar o crear la meta semanal a partir de una sugerencia que no se guarda automáticamente | Estado activo/inactivo de retos (`PATCH /api/retos/:id/estado`), completado manual transaccional con crédito único, bloqueo de edición de recompensa/progreso y de eliminación en retos completados, límites RNF-16 en API y formato RN24 para condiciones nuevas (Decisión #09). Los límites RNF-16 son CHECK en E11 y triggers de compatibilidad en bases existentes. Completar un reto es exclusivo del Estudiante propietario (Administrador y Revisor: 403). Falta: la sugerencia de meta de HU15 es fija (5 actividades) y aún no se basa en el historial; el completado manual no prueba actividad académica real |
 | Recordatorios | Alta manual, consulta, activación/desactivación y eliminación | No equivale a programación automática ni a entrega de avisos vencidos; falta completar ese flujo |
 | Notificaciones | Consulta, marcado como leída y eliminación | No hay evidencia de entrega con navegador cerrado |
 | Preferencias | Tema y modo oscuro persistentes | Faltan avatar y restablecimiento previstos en el prototipo |

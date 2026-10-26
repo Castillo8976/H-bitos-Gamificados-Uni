@@ -29,6 +29,7 @@ async function run() {
   assert.match(pagina.text, /name="notificaciones_recordatorios"/);
   assert.match(pagina.text, /name="notificaciones_retos"/);
   assert.match(pagina.text, /id="form-registro"/);
+  for (const id of ['form-meta', 'filtro-fecha-desde', 'filtro-fecha-hasta']) assert.ok(pagina.text.includes(`id="${id}"`));
   assert.match(pagina.text, /Materia inicial<select name="id_catalogo_materia"[^>]*required/);
   assert.doesNotMatch(pagina.text, /<input name="materia"/);
   assert.match(pagina.text, /id="aviso-catalogo-registro"[^>]*role="status"/);

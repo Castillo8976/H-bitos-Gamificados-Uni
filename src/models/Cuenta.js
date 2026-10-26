@@ -60,7 +60,7 @@ const Cuenta = sequelize.define('cuenta', {
     validate: {
       nombreValido(valor) {
         const nombre = valor.trim();
-        if ([...nombre].length < 2 || [...nombre].length > 60 || !/^[\p{L}\p{M} '-]+$/u.test(nombre)) {
+        if ([...nombre].length < 2 || [...nombre].length > 60 || !/^[\p{L}\p{M} '’-]+$/u.test(nombre)) {
           throw new Error('nombre debe contener entre 2 y 60 caracteres y solo letras, espacios, apóstrofos o guiones');
         }
       }

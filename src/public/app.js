@@ -28,7 +28,7 @@ const estado = {
   token: sessionStorage.getItem(CLAVE_TOKEN),
   cuenta: null,
   materias: [], tareas: [], sesiones: [], puntos: [], niveles: [],
-  insignias: [], cuentaInsignias: [], retos: [], metas: [],
+  insignias: [], cuentaInsignias: [], retos: [], metas: [], metaSugerida: null,
   recordatorios: [], notificaciones: [], preferencias: null,
   estadisticas: null, institucionales: null, cuentasAdmin: [], retosAdmin: [],
   puntosAdmin: [], insigniasCuentaAdmin: [],
@@ -213,9 +213,7 @@ async function cargarAplicacion() {
       retos: retos.datos, metas: metas.datos, recordatorios: recordatorios.datos,
       notificaciones: notificaciones.datos, preferencias: preferencias.dato
     });
-    if (metaSugerida.dato && !estado.metas.some(item => item.id_meta === metaSugerida.dato.id_meta)) {
-      estado.metas = [...estado.metas, metaSugerida.dato];
-    }
+    estado.metaSugerida = metaSugerida.dato;
     aplicarPreferencias();
     renderizarTodo();
     mostrarAplicacion();
@@ -455,6 +453,13 @@ function renderizarGamificacion() {
     ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small>${progresoVisual(meta.valor_actual, meta.valor_objetivo, 'Progreso de la meta')}</div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
   ];
   $('#lista-retos-metas').innerHTML = avances.length ? avances.join('') : estadoVacio('No tienes retos o metas registrados.');
+  const semana = estado.metaSugerida?.semana || semanaActualReto();
+  const tieneMeta = estado.metas.some(meta => meta.semana === semana);
+  $('#panel-meta').hidden = tieneMeta;
+  $('#form-meta').hidden = tieneMeta;
+  $('#form-meta').elements.semana.value = semana;
+  $('#meta-sugerida').hidden = tieneMeta || !estado.metaSugerida;
+  $('#descripcion-meta-sugerida').textContent = estado.metaSugerida?.descripcion || '';
   const movimientos = [...estado.puntos].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
   $('#lista-historial-gamificacion').innerHTML = movimientos.length ? movimientos.map(item => `<div class="item"><strong>${escapar(item.cantidad)} puntos · ${escapar(item.origen)}</strong><small>${escapar(fechaLegible(item.fecha))}</small></div>`).join('') : estadoVacio('Aún no tienes movimientos de puntos.');
   renderizarSesiones();
@@ -562,13 +567,28 @@ async function cargarDetalleAdministrativo(idCuenta = $('#admin-reto-cuenta').va
 
 /** RF03/HU03: refresca progreso y avisos después de registrar un evento. */
 async function recargarGamificacion() {
-  const [puntos, insigniasCuenta, retos, metas, notificaciones] = await Promise.all([
-    api('/puntos'), api('/cuenta-insignias'), api('/retos'), api('/metas'), api('/notificaciones')
+  const [puntos, insigniasCuenta, retos, metas, notificaciones, sugerencia] = await Promise.all([
+    api('/puntos'), api('/cuenta-insignias'), api('/retos'), api('/metas'), api('/notificaciones'), api('/metas/sugerida')
   ]);
   estado.puntos = puntos.datos; estado.totalPuntos = puntos.total;
   estado.cuentaInsignias = insigniasCuenta.datos; estado.retos = retos.datos;
+  estado.metaSugerida = sugerencia.dato;
   estado.metas = metas.datos; estado.notificaciones = notificaciones.datos;
   renderizarGamificacion(); renderizarNotificaciones(); renderizarResumen();
+}
+
+/** RF15/HU15: guarda solo por aceptación o envío explícito del estudiante. */
+async function crearMeta(datos) {
+  const panel = $('#panel-meta');
+  await duranteEnvio(panel, async () => {
+    try {
+      await api('/metas', { method: 'POST', body: JSON.stringify(datos) });
+      estado.metaSugerida = null;
+      $('#form-meta').reset();
+      await recargarGamificacion();
+      avisar('Meta creada.', 'exito');
+    } catch (error) { avisar(error.message, 'error'); }
+  });
 }
 
 /** RF03/HU03: muestra la recompensa confirmada por el backend. */
@@ -1118,6 +1138,19 @@ function registrarEventos() {
     });
   });
   $('#cancelar-materia').addEventListener('click', limpiarMateria);
+  $('#aceptar-meta-sugerida').addEventListener('click', () => {
+    if (estado.metaSugerida) crearMeta({ ...estado.metaSugerida });
+  });
+  $('#personalizar-meta').addEventListener('click', () => {
+    const f = $('#form-meta');
+    if (!estado.metaSugerida) return;
+    for (const campo of ['semana', 'descripcion', 'valor_objetivo']) f.elements[campo].value = estado.metaSugerida[campo];
+    f.elements.descripcion.focus();
+  });
+  $('#form-meta').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    crearMeta({ semana: f.elements.semana.value, descripcion: f.elements.descripcion.value, valor_objetivo: Number(f.elements.valor_objetivo.value) });
+  });
   $('#mostrar-form-reto').addEventListener('click', () => abrirReto());
   $('#cerrar-form-reto').addEventListener('click', cerrarReto);
   $('#cancelar-reto').addEventListener('click', cerrarReto);

@@ -93,13 +93,14 @@ router.get('/retos', studentOrAdmin, wrap(controllers.challenges.list));
 router.get('/retos/:id', studentOrAdmin, wrap(controllers.challenges.get));
 router.post('/retos', studentOrAdmin, allowFields('id_cuenta','descripcion','condicion','puntos_recompensa','semana'), requireFields('descripcion','condicion','puntos_recompensa','semana'), integerRange('puntos_recompensa', 1, 10000), challengeCondition, wrap(controllers.challenges.create));
 router.put('/retos/:id', studentOrAdmin, allowFields('descripcion','condicion','puntos_recompensa','semana','progreso'), integerRange('puntos_recompensa', 1, 10000), nonNegativeInteger('progreso'), challengeCondition, wrap(controllers.challenges.update));
-router.patch('/retos/:id/completar', studentOrAdmin, wrap(controllers.challenges.complete));
+// RF06/HU18 (CU06-A2): solo el Estudiante propietario completa y acredita su reto; el Administrador gestiona su estado.
+router.patch('/retos/:id/completar', authorize('Estudiante'), wrap(controllers.challenges.complete));
 // RF06/HU18/HU31/RN28: único punto para activar o desactivar un reto; el PUT general no acepta `activo`.
 router.patch('/retos/:id/estado', studentOrAdmin, allowFields('activo'), requireFields('activo'), booleanField('activo'), wrap(controllers.challenges.setState));
 router.delete('/retos/:id', studentOrAdmin, wrap(controllers.challenges.remove));
 
 router.get('/metas', studentOrAdmin, wrap(controllers.goals.list));
-router.post('/metas/sugerida', authorize('Estudiante'), allowFields('semana'), wrap(controllers.goals.suggest));
+router.get('/metas/sugerida', authorize('Estudiante'), wrap(controllers.goals.suggest));
 router.get('/metas/:id', studentOrAdmin, wrap(controllers.goals.get));
 router.post('/metas', studentOrAdmin, allowFields('id_cuenta','semana','descripcion','valor_objetivo'), requireFields('semana','descripcion','valor_objetivo'), integerRange('valor_objetivo', 1, 10080), wrap(controllers.goals.create));
 router.put('/metas/:id', studentOrAdmin, allowFields('semana','descripcion','valor_objetivo'), integerRange('valor_objetivo', 1, 10080), wrap(controllers.goals.update));

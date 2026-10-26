@@ -165,7 +165,7 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 | Campo | Descripción |
 |---|---|
 | **Actores** | Estudiante (retos propios y consulta de insignias), Administrador (catálogo de insignias, asignación de retos, corrección de asignaciones y estado de los retos), Sistema (evaluación automática desde CU03 y CU04). |
-| **Permisos** | Requiere sesión activa (CU00). El Estudiante crea, consulta, edita, completa y elimina solo retos propios (RN21). El Administrador puede operar retos de cualquier cuenta y crear un reto para un estudiante indicando `id_cuenta`. El catálogo de insignias y la asignación o revocación manual son exclusivos del Administrador. |
+| **Permisos** | Requiere sesión activa (CU00). El Estudiante crea, consulta, edita, completa y elimina solo retos propios (RN21). El Administrador puede operar retos de cualquier cuenta (asignar, corregir, eliminar uno no completado y cambiar su estado) y crear un reto para un estudiante indicando `id_cuenta`; completar y acreditar la recompensa corresponde solo al Estudiante propietario (A2). El catálogo de insignias y la asignación o revocación manual son exclusivos del Administrador. |
 | **Disparador** | El actor abre Gamificación (P08) o el panel administrativo (P17), o el Sistema recibe un evento de CU03 o CU04. |
 | **Precondición** | Para operar un reto, este pertenece a la cuenta autenticada o el actor es Administrador. |
 | **Flujo normal** | 1. El Estudiante crea un reto para una semana con `descripcion`, `condicion` (`metrica:objetivo`, RN24), `puntos_recompensa` y `semana`; no existe generación semanal automática. 2. El sistema lo guarda sin progreso y sin completar. 3. Cuando CU03 o CU04 generan un evento, el Sistema suma progreso a los retos no completados de esa semana según su métrica y, al alcanzar el objetivo, completa el reto y acredita la recompensa una sola vez (RN23). 4. El Sistema evalúa las insignias y desbloquea las que cumplan su condición, sin duplicarlas (RN11). 5. El Estudiante consulta sus retos, insignias, puntos y nivel en P08. |
@@ -295,7 +295,7 @@ Las funciones internas citadas pertenecen a `src/services/gamificacionService.js
 | Revertir ante fallo | HU03 · RN23 | todas las anteriores | mismo endpoint | transacción `IMMEDIATE` | — | TC-O6-ROLLBACK | Implementado |
 | Excluir retos inactivos del progreso | HU06 · RN28 | `reto` | interno | filtro `activo: true` en `actualizarRetos` | — | `tests/integration/reto-estado.test.js` | Implementado (`b113445`) |
 
-**Pruebas faltantes:** completar con rol Administrador o Revisor (403) mediante la API. El progreso de retos inactivos está cubierto en `reto-estado.test.js`.
+**Pruebas:** completar con rol Administrador o Revisor responde 403 sin acreditar puntos (`tests/api/api.test.js`). El progreso de retos inactivos está cubierto en `reto-estado.test.js`.
 
 **Diferencia con E12/M9 (pendiente deliberado):** la versión anterior de esta tabla citaba `Punto.otorgarPuntos`, `CuentaInsignia.evaluarInsignias` y `NivelCuenta.evaluarNivelCuenta`. Esas funciones existen en `src/crud/`, pero CU03 no las invoca; usa las funciones internas de `gamificacionService.js` indicadas arriba. Si E12 o M9 conservan los nombres anteriores, la diferencia queda registrada para su revisión; no se modificaron.
 

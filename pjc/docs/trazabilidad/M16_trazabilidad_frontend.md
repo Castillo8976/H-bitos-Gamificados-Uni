@@ -19,12 +19,13 @@ pero no sustituye, la autorización obligatoria del servidor.
 | RF01 · HU16/HU29 · CU01 | P07 Materias | Nueva materia y cambio de asignatura con desplegable del catálogo | `GET /api/catalogo-materias`, `POST/PUT /api/materias` | manejador de `form-materia` | `tests/api/api.test.js`, `tests/frontend/browser.test.js` |
 | RF02 · HU02/HU19 · CU02 | P04/P05 Tareas | Crear, editar y eliminar | `/api/tareas` | manejadores de tarea | API |
 | RF03 · HU03 · CU03 | P04 Tareas | Marcar como completada | `PATCH /api/tareas/:id/completar` | `manejarAccion()` | API |
-| RF09 · HU09 · CU07 | P04/P12 Tareas | Buscar y filtrar | Cálculo local sobre respuesta de `GET /api/tareas` | `renderizarTareas()` | Frontend estático |
+| RF09 · HU09 · CU07 | P04/P12 Tareas | Buscar y filtrar por materia, prioridad, estado y rango de fechas de entrega | Cálculo local sobre respuesta de `GET /api/tareas` | `renderizarTareas()` | Frontend estático |
 | RF10/RF11 · HU10/HU21 · CU04/CU12 | P06/P08 Sesiones | Crear, consultar, editar y eliminar sesiones propias | `GET/POST/PUT/DELETE /api/sesiones` | `guardarSesion()`, `renderizarSesiones()` y `manejarAccion()` | API + frontend estático |
 | RF12 · HU12 · CU04 | P06 Pomodoro | Activar modo de enfoque durante la sesión | estado visual `.enfoque` y avisos del navegador | `alternarTemporizador()` y `actualizarAvisos()` | Chrome + frontend estático |
 | RF05–RF07 · HU05–HU08 · CU06 | P08–P10 Gamificación | Consultar puntos, nivel, insignias, retos y metas | endpoints de lectura correspondientes | `renderizarGamificacion()` | API |
 | RF06 · HU18 · CU06 | P08 Reto semanal | Editar y eliminar reto propio | `PUT/DELETE /api/retos/:id` | acciones `editar-reto` y `eliminar-reto` | API + frontend estático |
 | RF06 · HU18/HU31 · CU06/CU13 | P08 y P17 | Desactivar o reactivar reto | `PATCH /api/retos/:id/estado` | acción `estado-reto` | `tests/api/api.test.js`, `tests/frontend/static.test.js` |
+| RF15 · HU15 · CU05 | P08 Meta semanal | Consultar la sugerencia sin guardarla; aceptarla, personalizarla o crear una meta propia | `GET /api/metas/sugerida`, `POST /api/metas` | `#form-meta`, `#aceptar-meta-sugerida`, `#personalizar-meta` | `tests/api/api.test.js`, `tests/e2e/estudiante.spec.js` |
 | RF15 · HU17 · CU05 | P08 Meta semanal | Editar y eliminar meta propia | `PUT/DELETE /api/metas/:id` | acciones `editar-meta` y `eliminar-meta` | API + frontend estático |
 | RF04 · HU04/HU25 · CU10 | P20 Recordatorios | Crear, activar, desactivar y eliminar | `/api/recordatorios` | manejador de recordatorios | API |
 | RF04 · HU24 · CU15 | P19 Notificaciones | Consultar, marcar leída y eliminar | `/api/notificaciones` | `renderizarNotificaciones()` y `manejarAccion()` | API |
