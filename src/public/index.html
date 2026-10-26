@@ -58,7 +58,7 @@
           <label>Contraseña<input name="contrasena" type="password" autocomplete="new-password" minlength="8" aria-describedby="ayuda-contrasena" required>
             <small id="ayuda-contrasena" class="opcional">Mínimo 8 caracteres y máximo 72 bytes (las tildes y la ñ ocupan 2).</small></label>
           <label>Materia inicial<select name="id_catalogo_materia" required aria-describedby="aviso-catalogo-registro" disabled aria-label="Materia inicial"><option value="">Cargando asignaturas…</option></select></label>
-          <label>Horario <span class="opcional">opcional</span><input name="horario" placeholder="Sábado 8:00 a. m." maxlength="100"></label>
+          <div data-selector-horario></div>
           <p id="aviso-catalogo-registro" role="status" aria-live="polite"></p>
           <button class="boton primario ancho" type="submit" disabled>Registrarme</button>
         </form>
@@ -144,7 +144,7 @@
         <section id="vista-materias" class="vista" data-seccion="materias" hidden>
           <div class="encabezado-vista"><div><p class="eyebrow">Agenda académica</p><h2>Materias</h2></div><button id="mostrar-form-materia" class="boton primario" type="button" aria-controls="panel-form-materia" aria-expanded="false">Nueva materia</button></div>
           <div class="rejilla">
-            <article id="panel-form-materia" class="tarjeta bloque panel-form" hidden><h3 id="titulo-form-materia">Nueva materia</h3><form id="form-materia" class="formulario"><input name="id" type="hidden"><label>Asignatura<select name="id_catalogo_materia" required aria-describedby="aviso-catalogo-materia" disabled aria-label="Asignatura"><option value="">Cargando asignaturas…</option></select></label><p id="aviso-catalogo-materia" role="status" aria-live="polite"></p><label>Horario <span class="opcional">opcional</span><input name="horario" maxlength="100" placeholder="Viernes 6:00 p. m."></label><div class="acciones-form"><button class="boton primario" type="submit">Guardar materia</button><button id="cancelar-materia" class="boton secundario" type="button">Cancelar</button></div></form></article>
+            <article id="panel-form-materia" class="tarjeta bloque panel-form" hidden><h3 id="titulo-form-materia">Nueva materia</h3><form id="form-materia" class="formulario"><input name="id" type="hidden"><label>Asignatura<select name="id_catalogo_materia" required aria-describedby="aviso-catalogo-materia" disabled aria-label="Asignatura"><option value="">Cargando asignaturas…</option></select></label><p id="aviso-catalogo-materia" role="status" aria-live="polite"></p><div data-selector-horario></div><div class="acciones-form"><button class="boton primario" type="submit">Guardar materia</button><button id="cancelar-materia" class="boton secundario" type="button">Cancelar</button></div></form></article>
             <article class="tarjeta bloque"><div class="titulo-bloque"><h3>Materias registradas</h3><span id="total-materias" class="chip">0</span></div><div id="herramientas-materias" hidden></div><div id="lista-materias" class="lista"></div></article>
           </div>
         </section>

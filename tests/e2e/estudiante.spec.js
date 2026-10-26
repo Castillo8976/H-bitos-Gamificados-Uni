@@ -2,7 +2,7 @@
 const fs = require('node:fs/promises');
 const { test, expect } = require('@playwright/test');
 const { fechaFutura, semanaActual, ADMIN, CONTRASENA } = require('./datos');
-const { registrar, vista, aviso, tokenPagina, api, item, dialogo, crearTarea, sinSecretos, loginAPI, salir, iniciarSesion } = require('./ayudas');
+const { elegirHorario, registrar, vista, aviso, tokenPagina, api, item, dialogo, crearTarea, sinSecretos, loginAPI, salir, iniciarSesion } = require('./ayudas');
 
 test.beforeEach(async ({ page }) => { await registrar(page); });
 
@@ -22,18 +22,58 @@ test('Materias permite seleccionar del catálogo, editar y eliminar', async ({ p
   // La primera asignatura ya pertenece al estudiante por el registro.
   await select.selectOption({ index: 2 });
   const nombre = await select.locator('option:checked').textContent();
-  await form.getByLabel(/Horario/).fill('Lunes 10:00');
+  await elegirHorario(form, [['Lunes', 600, 660]]);
   await form.getByRole('button', { name: 'Guardar materia' }).click();
   await aviso(page, 'Materia creada.');
   const fila = item(page, '#lista-materias', nombre);
-  await expect(fila).toContainText('Lunes 10:00');
+  await expect(fila).toContainText('Lunes 10:00 a. m. – 11:00 a. m.');
   await fila.getByRole('button', { name: 'Editar', exact: true }).click();
-  await page.locator('#modal-accion').getByLabel(/Horario/).fill('Martes 14:00');
-  await page.locator('#modal-accion').getByRole('button', { name: 'Guardar materia' }).click();
+  await expect(page.locator('#titulo-form-materia')).toHaveText(`Editar materia: ${nombre}`);
+  // La franja guardada se vuelve a cargar en los selectores.
+  const horario = form.locator('[data-selector-horario-control]');
+  await expect(horario.locator('[data-horario-dia]')).toHaveValue('Lunes');
+  await expect(horario.locator('[data-horario-inicio]')).toHaveValue('600');
+  await elegirHorario(form, [['Martes', 840, 900]]);
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
   await aviso(page, 'Materia actualizada.');
-  await expect(fila).toContainText('Martes 14:00');
+  await expect(fila).toContainText('Martes 2:00 p. m. – 3:00 p. m.');
   await dialogo(page, () => fila.getByRole('button', { name: 'Eliminar', exact: true }).click());
   await expect(fila).toHaveCount(0);
+});
+
+test('Horario: varias franjas, fin inválido, días repetidos y texto histórico conservado', async ({ page, request }) => {
+  await vista(page, 'materias');
+  await page.locator('#mostrar-form-materia').click();
+  const form = page.locator('#form-materia');
+  await form.getByLabel('Asignatura').selectOption({ index: 2 });
+  const nombre = await form.locator('select[name=id_catalogo_materia] option:checked').textContent();
+  const horario = await elegirHorario(form, [['Lunes', 600, 570]]);
+  const escrituras = [];
+  page.on('request', r => { if (r.url().includes('/api/materias') && ['POST', 'PUT'].includes(r.method())) escrituras.push(r); });
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await expect(horario.locator('[data-error-horario-general]')).toContainText('posterior');
+  await elegirHorario(form, [['Lunes', 600, 660], ['Lunes', 720, 780]]);
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await expect(horario.locator('[data-error-horario-general]')).toContainText('repetir');
+  expect(escrituras).toHaveLength(0);
+  await elegirHorario(form, [['Lunes', 600, 660], ['Miércoles', 720, 780]]);
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await aviso(page, 'Materia creada.');
+  await expect(item(page, '#lista-materias', nombre)).toContainText('Lunes 10:00 a. m. – 11:00 a. m.; Miércoles 12:00 p. m. – 1:00 p. m.');
+  // Horario histórico no interpretable: se muestra y se conserva aunque se toque y revierta un selector.
+  const token = await tokenPagina(page);
+  const catalogo = (await api(request, token, 'get', '/catalogo-materias')).datos[3];
+  const creada = await api(request, token, 'post', '/materias', { id_catalogo_materia: catalogo.id_catalogo_materia, horario: 'Viernes 6:00 p. m.' }, 201);
+  await page.reload(); await vista(page, 'materias');
+  const historica = item(page, '#lista-materias', creada.dato.nombre);
+  await historica.getByRole('button', { name: 'Editar', exact: true }).click();
+  await expect(horario.locator('[data-horario-legado]')).toContainText('Viernes 6:00 p. m.');
+  await horario.locator('[data-horario-dia]').selectOption('Jueves');
+  await horario.locator('[data-horario-dia]').selectOption('');
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await aviso(page, 'Materia actualizada.');
+  const guardada = (await api(request, token, 'get', '/materias')).datos.find(m => m.id_materia === creada.dato.id_materia);
+  expect(guardada.horario).toBe('Viernes 6:00 p. m.');
 });
 
 test('CRUD de tareas, filtros independientes y completar acredita puntos', async ({ page, request }) => {

@@ -1,7 +1,7 @@
 'use strict';
 const { test, expect } = require('@playwright/test');
 const { fechaFutura, semanaActual } = require('./datos');
-const { registrar, vista, aviso, tokenPagina, api, item, crearTarea } = require('./ayudas');
+const { elegirHorario, registrar, vista, aviso, tokenPagina, api, item, crearTarea } = require('./ayudas');
 
 test.beforeEach(async ({ page }) => { await registrar(page); });
 
@@ -43,28 +43,27 @@ test('tareas: búsqueda, rango inclusivo y eliminación cancelada/confirmada', a
   expect((await api(request, token, 'get', '/tareas')).datos).toHaveLength(3);
 });
 
-test('materias: alta contextual y edición en el diálogo compartido', async ({ page, request }) => {
+test('materias: alta y edición en el formulario contextual con horario estructurado', async ({ page, request }) => {
   await vista(page, 'materias');
   const form = page.locator('#form-materia');
   await expect(form).toBeHidden();
   await page.locator('#mostrar-form-materia').click();
   await expect(form).toBeVisible();
   await form.getByLabel('Asignatura').selectOption({ index: 2 });
-  const nombre = await form.locator('option:checked').textContent();
-  await form.getByLabel(/Horario/).fill('Viernes 09:00');
+  const nombre = await form.locator('select[name=id_catalogo_materia] option:checked').textContent();
+  await elegirHorario(form, [['Viernes', 540, 600]]);
   await form.getByRole('button', { name: 'Guardar materia' }).click();
   await aviso(page, 'Materia creada.');
   await expect(form).toBeHidden();
   const fila = item(page, '#lista-materias', nombre);
-  await expect(fila).toContainText('Viernes 09:00');
-  expect((await api(request, await tokenPagina(page), 'get', '/materias')).datos).toEqual(expect.arrayContaining([expect.objectContaining({ nombre, horario: 'Viernes 09:00' })]));
+  await expect(fila).toContainText('Viernes 9:00 a. m. – 10:00 a. m.');
+  expect((await api(request, await tokenPagina(page), 'get', '/materias')).datos).toEqual(expect.arrayContaining([expect.objectContaining({ nombre, horario: 'Viernes 9:00 a. m. – 10:00 a. m.' })]));
   await fila.getByRole('button', { name: 'Editar', exact: true }).click();
-  const modal = page.locator('#modal-accion');
-  await expect(modal).toBeVisible();
-  await modal.getByLabel(/Horario/).fill('Sábado 11:00');
-  await modal.getByRole('button', { name: 'Guardar materia' }).click();
+  await expect(form).toBeVisible();
+  await elegirHorario(form, [['Sábado', 660, 720]]);
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
   await aviso(page, 'Materia actualizada.');
-  await expect(fila).toContainText('Sábado 11:00');
+  await expect(fila).toContainText('Sábado 11:00 a. m. – 12:00 p. m.');
 });
 
 test('sugerencia estándar: consultarla no guarda; aceptar guarda una sola meta', async ({ page, request }) => {

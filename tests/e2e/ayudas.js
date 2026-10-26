@@ -15,7 +15,7 @@ async function prepararRegistro(page, datos = estudiante(), { seleccionarMateria
   await page.goto('/');
   await page.getByRole('tab', { name: 'Crear cuenta' }).click();
   const form = page.locator('#form-registro');
-  await expect(form.locator('select')).toBeEnabled();
+  await expect(form.locator('select[name=id_catalogo_materia]')).toBeEnabled();
   await form.getByLabel('Nombre completo').fill(datos.nombre);
   await form.getByLabel('Correo', { exact: true }).fill(datos.correo);
   await form.getByLabel(/^Contraseña/).fill(datos.contrasena);
@@ -82,6 +82,19 @@ async function dialogo(page, accion, respuesta) {
   if (respuesta !== undefined) await dialog.locator('input').fill(respuesta);
   await dialog.locator('button[type=submit]').click();
 }
+/** Rellena las franjas del selector de horario: [[día, inicioMin, finMin], ...]. */
+async function elegirHorario(form, franjas) {
+  const control = form.locator('[data-selector-horario-control]');
+  for (const [i, [dia, inicio, fin]] of franjas.entries()) {
+    if (i >= await control.locator('[data-franja-horario]').count()) await control.locator('[data-agregar-horario]').click();
+    const fila = control.locator('[data-franja-horario]').nth(i);
+    await fila.locator('[data-horario-dia]').selectOption(dia);
+    await fila.locator('[data-horario-inicio]').selectOption(String(inicio));
+    await fila.locator('[data-horario-fin]').selectOption(String(fin));
+  }
+  return control;
+}
+
 async function crearTarea(page, nombre = 'Lectura de prueba', opciones = {}) {
   await vista(page, 'tareas');
   await page.getByRole('button', { name: 'Nueva tarea', exact: true }).click();
@@ -101,4 +114,4 @@ async function sinSecretos(valor) {
   const texto = JSON.stringify(valor);
   expect(texto).not.toMatch(/contrasena_hash|codigo_hash|version_sesion|JWT_SECRET|AUTH_CODE_SECRET|solo-pruebas-e2e/);
 }
-module.exports = { aviso, vista, prepararRegistro, registrar, enviarLogin, iniciarSesion, salir, tokenPagina, autorizacion, api, registrarAPI, loginAPI, item, dialogo, crearTarea, sinSecretos };
+module.exports = { elegirHorario, aviso, vista, prepararRegistro, registrar, enviarLogin, iniciarSesion, salir, tokenPagina, autorizacion, api, registrarAPI, loginAPI, item, dialogo, crearTarea, sinSecretos };

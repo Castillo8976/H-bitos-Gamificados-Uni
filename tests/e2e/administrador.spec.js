@@ -87,7 +87,8 @@ test('insignias y niveles: crear, editar y eliminar por UI', async ({ page, requ
   await nivelForm.getByLabel('Nombre', { exact: true }).fill(nivel);
   await nivelForm.getByLabel('Descripción', { exact: true }).fill('Nivel de prueba');
   await nivelForm.getByLabel('Puntos mínimos').fill(String(orden * 10000));
-  await nivelForm.getByLabel('Orden', { exact: true }).fill(String(orden));
+  // El alta propone el siguiente orden libre.
+  await expect(nivelForm.getByLabel('Orden', { exact: true })).toHaveValue(String(orden));
   await nivelForm.getByRole('button', { name: 'Crear nivel' }).click();
   await aviso(page, 'Nivel creado.');
   for (const [nombre, recurso, idCampo] of [[insignia, 'insignias', 'id_insignia'], [nivel, 'niveles', 'id_nivel']]) {

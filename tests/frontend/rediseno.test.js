@@ -42,7 +42,7 @@ test('duranteEnvio bloquea envíos simultáneos y restaura controles después de
   assert.equal(formulario.getAttribute('aria-busy'), undefined);
 });
 
-test('nivel usa el umbral real y oculta la barra si no hay siguiente nivel', () => {
+test('nivel mide el tramo actual, llena la barra en el máximo y la oculta sin niveles', () => {
   const c = cliente(), nodos = new Map();
   c.document = { querySelector: selector => {
     if (!nodos.has(selector)) nodos.set(selector, { setAttribute(k, v) { this[k] = String(v); } });
@@ -55,6 +55,15 @@ test('nivel usa el umbral real y oculta la barra si no hay siguiente nivel', () 
   assert.equal(barra.value, 40);
   assert.equal(barra['aria-valuenow'], '40');
   assert.match(nodos.get('#detalle-progreso-nivel').textContent, /40 \/ 200 puntos/);
+  // Tramo del nivel actual: 600 pts entre 500 y 1000 es un 20 %, no un 60 %.
+  vm.runInContext(`estado.totalPuntos = 600; estado.niveles = [{ nombre: 'Inicial', puntos_minimos: 0 }, { nombre: 'Medio', puntos_minimos: 500 }, { nombre: 'Alto', puntos_minimos: 1000 }]; renderizarResumen();`, c);
+  assert.equal(barra.value, 100);
+  assert.equal(barra.max, 500);
+  assert.match(nodos.get('#detalle-progreso-nivel').textContent, /600 \/ 1000 puntos · 20 % del nivel actual · Siguiente: Alto/);
+  vm.runInContext('estado.totalPuntos = 1200; renderizarResumen();', c);
+  assert.equal(barra.hidden, false);
+  assert.equal(barra.value, barra.max);
+  assert.equal(nodos.get('#detalle-progreso-nivel').textContent, '1200 puntos · Nivel máximo alcanzado.');
   vm.runInContext('estado.niveles = []; renderizarResumen();', c);
   assert.equal(barra.hidden, true);
   assert.equal(nodos.get('#detalle-progreso-nivel').textContent, 'Sin siguiente nivel disponible.');

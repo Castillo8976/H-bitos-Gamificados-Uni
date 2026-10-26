@@ -1,7 +1,7 @@
 'use strict';
 const { test, expect } = require('@playwright/test');
 const { estudiante } = require('./datos');
-const { registrar, prepararRegistro, aviso, enviarLogin, iniciarSesion, salir, vista, tokenPagina, autorizacion } = require('./ayudas');
+const { elegirHorario, registrar, prepararRegistro, aviso, enviarLogin, iniciarSesion, salir, vista, tokenPagina, autorizacion } = require('./ayudas');
 
 test('registro válido usa una asignatura del catálogo y abre sesión', async ({ page, request }) => {
   const usuario = await registrar(page);
@@ -21,20 +21,37 @@ for (const caso of [
     await prepararRegistro(page);
     await page.locator(`#form-registro [name=${caso.campo}]`).fill(caso.valor);
     await page.locator('#form-registro button[type=submit]').click();
-    if (caso.nativo) await expect(page.locator('#form-registro .error-campo')).toContainText(caso.mensaje);
+    if (caso.nativo) await expect(page.locator('#form-registro .error-campo:visible')).toContainText(caso.mensaje);
     else await aviso(page, caso.mensaje);
     await expect(page.locator('#acceso')).toBeVisible();
     expect(await tokenPagina(page)).toBeNull();
   });
 }
 
+test('registro guarda el horario estructurado y bloquea uno inválido', async ({ page, request }) => {
+  await prepararRegistro(page);
+  const form = page.locator('#form-registro');
+  const registros = [];
+  page.on('request', r => { if (r.url().endsWith('/api/auth/registro')) registros.push(r); });
+  const horario = await elegirHorario(form, [['Martes', 480, 450]]);
+  await form.getByRole('button', { name: 'Registrarme' }).click();
+  await expect(horario.locator('[data-error-horario-general]')).toContainText('posterior');
+  expect(registros).toHaveLength(0);
+  await elegirHorario(form, [['Martes', 480, 600], ['Jueves', 480, 600]]);
+  await form.getByRole('button', { name: 'Registrarme' }).click();
+  await expect(page.locator('#aplicacion')).toBeVisible();
+  const token = await tokenPagina(page);
+  const materias = (await (await request.get('/api/materias', { headers: autorizacion(token) })).json()).datos;
+  expect(materias.map(m => m.horario)).toEqual(['Martes 8:00 a. m. – 10:00 a. m.; Jueves 8:00 a. m. – 10:00 a. m.']);
+});
+
 test('registro sin asignatura se impide antes de enviar', async ({ page }) => {
   await prepararRegistro(page, estudiante(), { seleccionarMateria: false });
   const envios = [];
   page.on('request', r => { if (r.url().endsWith('/api/auth/registro')) envios.push(r); });
   await page.locator('#form-registro button[type=submit]').click();
-  await expect(page.locator('#form-registro select')).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.locator('#form-registro .error-campo')).toBeVisible();
+  await expect(page.locator('#form-registro select[name=id_catalogo_materia]')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('#form-registro .error-campo:visible')).toBeVisible();
   expect(envios).toHaveLength(0);
 });
 

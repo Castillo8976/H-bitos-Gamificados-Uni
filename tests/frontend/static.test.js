@@ -59,6 +59,9 @@ async function run() {
   const cliente = await request(app).get('/app.js').expect(200).expect('Content-Type', /javascript/);
   assert.match(cliente.text, /sessionStorage/);
   assert.match(cliente.text, /async function api/);
+  // Horarios estructurados (76fdc57): registro y materias usan el mismo selector.
+  assert.equal((pagina.text.match(/<div data-selector-horario><\/div>/g) || []).length, 2);
+  for (const marca of ['function inicializarSelectoresHorario', 'data-horario-dia', 'data-horario-inicio', 'data-horario-fin', 'data-agregar-horario', 'data-horario-legado']) assert.ok(cliente.text.includes(marca), marca);
   assert.match(cliente.text, /\/estadisticas\/semanales/);
   assert.match(cliente.text, /\/estadisticas\/institucionales/);
   assert.match(cliente.text, /\/exportacion\/datos/);

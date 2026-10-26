@@ -401,3 +401,15 @@ progress::-moz-progress-bar{border-radius:var(--radio-pill);background:var(--pro
   .tabla-admin .acciones .boton{flex:1 1 auto}
   .editor-admin{padding:var(--esp-4)}
 }
+
+/* Horarios estructurados: franjas día + inicio + fin. */
+fieldset.selector-horario{min-width:0;margin:0;padding:var(--esp-3);border:1px solid var(--borde);border-radius:var(--radio-md)}
+fieldset.selector-horario legend{padding:0 var(--esp-2);color:var(--texto);font-size:var(--fs-sm);font-weight:650}
+.selector-horario [data-franjas-horario]{display:grid;gap:var(--esp-3)}
+.franja-horario{display:grid;gap:var(--esp-2)}
+.selector-horario-campos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--esp-3)}
+.selector-horario [data-agregar-horario]{margin-top:var(--esp-3)}
+.selector-horario [data-quitar-horario]{justify-self:start}
+.selector-horario [data-horario-legado]{margin:var(--esp-3) 0 0;overflow-wrap:anywhere}
+.selector-horario [data-error-horario-general]{margin-top:var(--esp-2)}
+@media(max-width:719px){.selector-horario-campos{grid-template-columns:minmax(0,1fr)}}
