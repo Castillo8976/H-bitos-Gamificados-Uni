@@ -7,6 +7,7 @@ async function aviso(page, texto) {
   await expect(page.locator('#avisos .aviso')).toBeVisible();
 }
 async function vista(page, nombre) {
+  if (await page.locator('#abrir-menu').isVisible()) await page.locator('#abrir-menu').click();
   await page.locator(`nav [data-vista="${nombre}"]`).click();
   await expect(page.locator(`#vista-${nombre}`)).toBeVisible();
 }
@@ -72,14 +73,14 @@ async function loginAPI(request, datos) {
   return resultado;
 }
 function item(page, lista, texto) {
-  return page.locator(`${lista} > .item`).filter({ has: page.locator('strong').filter({ hasText: texto }) });
+  return page.locator(`${lista} .item`).filter({ has: page.locator('strong').filter({ hasText: texto }) });
 }
 async function dialogo(page, accion, respuesta) {
-  const pendiente = page.waitForEvent('dialog');
-  const click = accion();
-  const dialog = await pendiente;
-  await dialog.accept(respuesta);
-  await click;
+  await accion();
+  const dialog = page.locator('#modal-accion');
+  await expect(dialog).toBeVisible();
+  if (respuesta !== undefined) await dialog.locator('input').fill(respuesta);
+  await dialog.locator('button[type=submit]').click();
 }
 async function crearTarea(page, nombre = 'Lectura de prueba', opciones = {}) {
   await vista(page, 'tareas');

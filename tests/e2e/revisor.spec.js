@@ -26,6 +26,8 @@ test('Revisor solo ve Indicadores y no puede administrar ni escribir por API', a
     const respuesta = await request[metodo](`/api${ruta}`, { headers, ...(data ? { data } : {}) });
     expect(respuesta.status(), `${metodo} ${ruta}`).toBe(403);
   }
+  const pendiente = page.waitForResponse(r => r.url().includes('/api/estadisticas/institucionales'));
   await page.getByRole('button', { name: 'Consultar indicadores' }).click();
-  await expect(page.locator('#metricas-institucionales')).toContainText('Estudiantes activos');
+  const datos = await (await pendiente).json();
+  await expect(page.locator('#metricas-institucionales')).toContainText(datos.dato.estudiantes_activos === 0 ? 'Sin datos en el periodo' : 'Estudiantes activos');
 });

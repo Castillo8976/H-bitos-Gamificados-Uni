@@ -147,4 +147,26 @@ Limitaciones que siguen requiriendo evidencia o decisión externa:
 Las pruebas automatizadas no sustituyen la aprobación académica de CRF,
 trazabilidad o Línea Base 1.
 
+### Iteración 4 — rediseño integral (rama `rediseno/sistema-visual`)
+
+- **Referencia:** `design-system/studyquest/MASTER.md` y `pages/` (estudiante,
+  administracion, revisor, autenticacion, gamificacion). Tipografía Plus
+  Jakarta Sans con respaldo Inter/system-ui; violeta como tema por defecto.
+- **Navegación:** sidebar contraíble (≥1024 px) y drawer con foco atrapado,
+  Escape, fondo atenuado y retorno de foco (<1024 px). Sin barras flotantes.
+- **Contraste:** auditoría por script sobre los tokens de `styles.css`,
+  6 temas × modo claro/oscuro × 19 pares de uso (texto, botones, estados,
+  bordes de control): 0 combinaciones por debajo de 4.5:1 (texto) o 3:1
+  (bordes). No sustituye una revisión manual con lector de pantalla.
+- **Responsive:** capturas Playwright en 390, 768, 1024 y 1440 px de los tres
+  roles, tema claro, oscuro y teal oscuro: `scrollWidth − innerWidth = 0` en
+  todas. Capturas temporales fuera del repositorio (no versionadas).
+- **Confirmaciones:** diálogo único `#modal-accion`; acciones críticas en dos
+  pasos (contexto + escribir el correo exacto). Es una salvaguarda contra
+  errores, **no** reautenticación: el backend no expone ese control.
+- **Pruebas:** `npm test`, `npm run test:browser` y `npm run test:e2e`
+  (95 casos) aprobados con bases SQLite temporales.
+- **Pendiente:** reautenticación real en backend para desactivar cuentas y
+  borrar datos; revisión con lector de pantalla.
+
 final result: passed with documented external/design follow-ups

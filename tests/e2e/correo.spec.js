@@ -107,6 +107,7 @@ test('reenviar verificación por correo permite confirmar escribiendo solo el c�
   await page.clock.install();
   const usuario = await registrar(page, undefined, { correo: true });
   await page.reload();
+  await page.locator('#mostrar-reenvio-verificacion').click();
   const form = page.locator('#form-reenviar-verificacion');
   await form.locator('[name=correo]').fill(usuario.correo);
   await form.locator('button').click();
@@ -129,6 +130,7 @@ test('reenviar verificación por correo permite confirmar escribiendo solo el c�
 
 test('envío y reenvío muestran progreso y errores 503 y 429 del API', async ({ page }) => {
   await page.goto('/');
+  await page.locator('#mostrar-reenvio-verificacion').click();
   const form = page.locator('#form-reenviar-verificacion');
   await expect(form).toBeVisible();
   await form.locator('[name=correo]').fill('pendiente@test.local');

@@ -62,6 +62,7 @@ for (const viewport of [{ width: 375, height: 812 }, { width: 768, height: 1024 
       expect(await page.locator('html').evaluate(e => ({ tema: e.dataset.tema, oscuro: e.classList.contains('modo-oscuro') }))).toEqual(estiloInicial);
       await salir(page);
       await iniciarSesion(page, ADMIN);
+      await vista(page, 'asignaturas');
       await expect(page.locator('#panel-catalogo-materias')).toBeVisible();
       await comprobarVista(page, testInfo, 'p17-admin');
     });

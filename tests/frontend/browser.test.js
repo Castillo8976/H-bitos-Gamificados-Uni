@@ -148,6 +148,7 @@ async function run() {
     await esperarCondicion(cdp, "document.querySelector('#aplicacion').hidden === false");
     assert.equal(await Cuenta.count({ where: { correo: 'registro-browser@test.local' } }), 1);
     await cdp.evaluar("document.querySelector('[data-vista=materias]').click()");
+    await cdp.evaluar("document.querySelector('#mostrar-form-materia').click()");
     await esperarCondicion(cdp, "document.querySelector('#form-materia select').options.length === 2");
     await cdp.evaluar(`(()=>{const f=document.querySelector('#form-materia');f.elements.id_catalogo_materia.value=${JSON.stringify(id_catalogo_materia)};f.elements.horario.value='Lunes';f.requestSubmit()})()`);
     await esperarCondicion(cdp, "document.querySelector('#lista-materias').textContent.includes('Lunes')");
@@ -185,11 +186,13 @@ async function run() {
     await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=estado-reto]').click()");
     await esperarCondicion(cdp, 'estado.retos[0].activo === true');
     const puntosAntesReto = await cdp.evaluar('estado.totalPuntos');
-    await cdp.evaluar('window.confirmOriginal=window.confirm;window.confirm=()=>false');
-    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]').click()");
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=eliminar-reto]').click()");
+    await esperarCondicion(cdp, "document.querySelector('#modal-accion').open");
+    await cdp.evaluar("document.querySelector('#cancelar-accion').click()");
     assert.equal(await cdp.evaluar('estado.retos[0].completado'), false);
-    await cdp.evaluar('window.confirm=()=>true');
     await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]').click()");
+    await esperarCondicion(cdp, "document.querySelector('#modal-accion').open");
+    await cdp.evaluar("document.querySelector('#confirmar-accion').click()");
     await esperarCondicion(cdp, 'estado.retos[0].completado && estado.totalPuntos === '+(puntosAntesReto + 23));
     assert.equal(await cdp.evaluar("document.querySelector('#gamificacion-puntos').textContent"), String(puntosAntesReto + 23));
     assert.equal(await cdp.evaluar("document.querySelectorAll('#lista-retos-metas [data-accion=completar-reto],#lista-retos-metas [data-accion=editar-reto],#lista-retos-metas [data-accion=eliminar-reto]').length"), 0);
@@ -197,7 +200,6 @@ async function run() {
     await cdp.evaluar(`api('/retos/${retoBrowserId}/completar',{method:'PATCH'}).then(()=>recargarGamificacion())`);
     assert.equal(await cdp.evaluar('estado.totalPuntos'), puntosAntesReto + 23);
     assert.deepEqual(await sequelize.query("SELECT COUNT(*) AS n, SUM(cantidad) AS total FROM punto WHERE origen = 'Reto' AND id_origen = :id", { replacements: { id: retoBrowserId }, plain: true }), { n: 1, total: 23 });
-    await cdp.evaluar('window.confirm=window.confirmOriginal');
 
     // P04/P05 y objetivo 6: la acción real crea y completa una tarea y abre la recompensa.
     await cdp.evaluar("document.querySelector('[data-vista=tareas]').click();document.querySelector('#mostrar-form-tarea').click()");
@@ -278,13 +280,16 @@ async function run() {
     await cdp.evaluar("document.querySelector('[data-vista=configuracion]').click()");
     await cdp.evaluar("window.desactivaciones=0;const f=window.fetch;window.fetch=(u,o)=>{if(o?.method==='DELETE'&&/\\/cuentas\\/[^/]+$/.test(String(u)))window.desactivaciones++;return f(u,o)}");
     await cdp.evaluar("document.querySelector('#desactivar-cuenta').click()");
-    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').open"), true);
-    assert.equal(await cdp.evaluar("document.activeElement.id"), 'cancelar-desactivar-cuenta');
-    await cdp.evaluar("document.querySelector('#cancelar-desactivar-cuenta').click()");
-    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').open"), false);
+    assert.equal(await cdp.evaluar("document.querySelector('#modal-accion').open"), true);
+    assert.equal(await cdp.evaluar("document.activeElement.id"), 'cancelar-accion');
+    await cdp.evaluar("document.querySelector('#cancelar-accion').click()");
+    assert.equal(await cdp.evaluar("document.querySelector('#modal-accion').open"), false);
     assert.equal(await cdp.evaluar('window.desactivaciones'), 0);
     assert.equal(await estudianteActiva(), true);
-    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click();const c=document.querySelector('#confirmar-desactivar-cuenta');c.click();c.click()");
+    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click();document.querySelector('#confirmar-accion').click()");
+    assert.equal(await cdp.evaluar("document.querySelector('#confirmar-accion').disabled"), true);
+    assert.equal(await cdp.evaluar('window.desactivaciones'), 0);
+    await cdp.evaluar("(()=>{const input=document.querySelector('#modal-accion [name=verificacion]');input.value='estudiante-browser@test.local';input.dispatchEvent(new Event('input',{bubbles:true}));const c=document.querySelector('#confirmar-accion');c.click();c.click()})()");
     await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
     assert.equal(await cdp.evaluar('window.desactivaciones'), 1);
     assert.equal(await cdp.evaluar("sessionStorage.getItem('studyquest_token')"), null);
@@ -299,7 +304,7 @@ async function run() {
 
     await cdp.evaluar("sessionStorage.clear();location.reload()"); await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
     await autenticar(cdp, 'revisor-browser@test.local');
-    assert.equal(await cdp.evaluar("document.querySelector('#usuario-rol').textContent"), 'Revisor institucional');
+    assert.equal(await cdp.evaluar("document.querySelector('#usuario-rol').textContent"), 'Revisor institucional · Solo lectura');
     await esperarCondicion(cdp, "document.querySelector('#metricas-institucionales').children.length >= 4");
     assert.equal(await cdp.evaluar("document.querySelector('[data-vista=administracion]').hidden"), true);
 

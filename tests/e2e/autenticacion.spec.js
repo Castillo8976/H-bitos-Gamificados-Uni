@@ -73,6 +73,8 @@ test('desactivar desde Perfil permite cancelar y confirmar; revoca tokens', asyn
   expect((await request.get('/api/auth/perfil', { headers: autorizacion(anterior) })).status()).toBe(200);
   await page.getByRole('button', { name: 'Desactivar mi cuenta' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirmar', exact: true }).click();
+  await page.getByRole('dialog').getByLabel(`Escribe ${usuario.correo} para confirmar`).fill(usuario.correo);
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar', exact: true }).click();
   await expect(page.locator('#form-login')).toBeVisible();
   expect((await request.get('/api/auth/perfil', { headers: autorizacion(anterior) })).status()).toBe(401);
   expect((await enviarLogin(page, usuario)).status()).toBe(403);

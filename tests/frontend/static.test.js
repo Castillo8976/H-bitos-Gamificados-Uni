@@ -35,10 +35,10 @@ async function run() {
   assert.match(pagina.text, /id="aviso-catalogo-registro"[^>]*role="status"/);
   // RF01/HU30: la desactivación propia exige confirmación explícita con Cancelar y Confirmar.
   assert.match(pagina.text, /id="desactivar-cuenta"/);
-  assert.match(pagina.text, /<dialog id="modal-desactivar-cuenta"[^>]*aria-labelledby="titulo-desactivar-cuenta"/);
+  assert.match(pagina.text, /<dialog id="modal-accion"[^>]*aria-labelledby="titulo-accion"/);
   assert.match(pagina.text, /¿Estás seguro de que deseas desactivar tu cuenta\?/);
-  assert.match(pagina.text, /id="cancelar-desactivar-cuenta"[^>]*>Cancelar</);
-  assert.match(pagina.text, /id="confirmar-desactivar-cuenta"[^>]*>Confirmar</);
+  assert.match(pagina.text, /id="cancelar-accion"[^>]*>Cancelar</);
+  assert.match(pagina.text, /id="confirmar-accion"[^>]*>Confirmar</);
   assert.match(pagina.text, /data-seccion="dashboard"/);
   assert.match(pagina.text, /data-seccion="tareas"/);
   assert.match(pagina.text, /data-seccion="pomodoro"/);
@@ -83,7 +83,26 @@ async function run() {
   assert.match(cliente.text, /mostrarRecompensa/);
   assert.match(cliente.text, /catalogo-materias\?todas=true/);
   for (const accion of ['editar-catalogo', 'estado-catalogo', 'eliminar-catalogo']) assert.ok(cliente.text.includes(accion));
-  assert.doesNotMatch(cliente.text, /localStorage/);
+  assert.match(cliente.text, /localStorage.getItem\('studyquest_sidebar_contraida'\)/);
+  assert.doesNotMatch(cliente.text, /(?:window\.)?\b(?:confirm|prompt)\(/);
+  for (const id of ['abrir-menu', 'cerrar-menu', 'contraer-menu', 'navegacion-principal', 'titulo-vista-actual', 'contador-notificaciones-encabezado', 'modal-accion', 'herramientas-usuarios']) assert.ok(pagina.text.includes(`id="${id}"`));
+  assert.match(pagina.text, /family=Plus\+Jakarta\+Sans:wght@400;500;600;700&display=swap/);
+  assert.match(estilos.text, /"Plus Jakarta Sans", Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif/);
+  assert.doesNotMatch(pagina.text, />P\d+ · /);
+  for (const nombre of ['confirmarAccion', 'pedirDatos', 'crearListaCliente', 'duranteEnvio']) assert.ok(cliente.text.includes(`function ${nombre}(`));
+
+  // Fases 2–3: paneles contextuales y preferencias conservan sus contratos.
+  for (const id of ['mostrar-reenvio-verificacion', 'panel-form-materia', 'mostrar-form-materia', 'herramientas-materias', 'filtros-tareas', 'total-tareas', 'detalle-progreso-nivel', 'dashboard-progreso', 'zona-peligro']) {
+    assert.ok(pagina.text.includes(`id="${id}"`));
+  }
+  assert.match(pagina.text, /id="panel-form-materia"[^>]*hidden/);
+  assert.match(pagina.text, /id="estado-temporizador"[^>]*aria-live="polite"/);
+  assert.match(pagina.text, /id="reenviar-codigo-correo" class="enlace-boton"/);
+  assert.match(pagina.text, /Sugerencia estándar/);
+  assert.match(pagina.text, /form="form-preferencias" name="notificaciones_recordatorios"/);
+  assert.match(pagina.text, /form="form-preferencias" name="notificaciones_retos"/);
+  assert.match(estilos.text, /\.zona-peligro\{border-color:var\(--error\)\}/);
+  assert.match(cliente.text, /Completar reto y acreditar recompensa/);
 
   console.log('✅ Frontend: acceso, pantallas, estilos responsive y cliente API publicados');
 }

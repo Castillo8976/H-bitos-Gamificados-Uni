@@ -14,6 +14,7 @@ test('dashboard muestra métricas y estados de una cuenta nueva', async ({ page 
 
 test('Materias permite seleccionar del catálogo, editar y eliminar', async ({ page }) => {
   await vista(page, 'materias');
+  await page.locator('#mostrar-form-materia').click();
   const form = page.locator('#form-materia');
   const select = form.getByLabel('Asignatura');
   await expect(select).toBeEnabled();
@@ -27,8 +28,8 @@ test('Materias permite seleccionar del catálogo, editar y eliminar', async ({ p
   const fila = item(page, '#lista-materias', nombre);
   await expect(fila).toContainText('Lunes 10:00');
   await fila.getByRole('button', { name: 'Editar', exact: true }).click();
-  await form.getByLabel(/Horario/).fill('Martes 14:00');
-  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await page.locator('#modal-accion').getByLabel(/Horario/).fill('Martes 14:00');
+  await page.locator('#modal-accion').getByRole('button', { name: 'Guardar materia' }).click();
   await aviso(page, 'Materia actualizada.');
   await expect(fila).toContainText('Martes 14:00');
   await dialogo(page, () => fila.getByRole('button', { name: 'Eliminar', exact: true }).click());
