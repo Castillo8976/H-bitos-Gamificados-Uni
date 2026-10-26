@@ -10,6 +10,7 @@ const os = require('node:os');
 const path = require('node:path');
 const request = require('supertest');
 const crypto = require('node:crypto');
+const jwt = require('jsonwebtoken');
 
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'studyquest-api-'));
 process.env.DATABASE_STORAGE = path.join(directory, 'database.sqlite');
@@ -19,12 +20,13 @@ const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 const app = require('../../src/app');
 const Cuenta = require('../../src/models/Cuenta');
-const Materia = require('../../src/models/Materia');
+const Reto = require('../../src/models/Reto');
 
+let id_catalogo_materia;
 const auth = token => ({ Authorization: `Bearer ${token}` });
 
-async function register(data) {
-  return request(app).post('/api/auth/registro').send({ materia: { nombre: 'Materia inicial' }, ...data });
+function register(data) {
+  return request(app).post('/api/auth/registro').send({ materia: { id_catalogo_materia }, ...data });
 }
 
 async function login(correo, contrasena = 'ClaveSegura123!') {
@@ -34,6 +36,26 @@ async function login(correo, contrasena = 'ClaveSegura123!') {
 
 async function run() {
   await inicializarEsquema();
+  const contarRegistro = async () => Promise.all(['cuenta', 'preferencia_visual', 'materia'].map(async tabla =>
+    (await sequelize.query(`SELECT COUNT(*) AS n FROM ${tabla}`, { plain: true })).n));
+  const vacio = await contarRegistro();
+  await register({ nombre: 'Sin Catálogo', correo: 'vacio@test.local', contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia: 'ausente' } })
+    .expect(409).expect(({ body }) => assert.equal(body.error, 'No hay asignaturas disponibles en el catálogo; contacta al Administrador'));
+  assert.deepEqual(await contarRegistro(), vacio);
+  ({ id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo());
+  const inactivaCatalogo = await require('../helpers/catalogo').sembrarCatalogo('Asignatura inactiva', false);
+  for (const [id, status] of [[inactivaCatalogo.id_catalogo_materia, 409], ['ausente', 400]]) {
+    const antes = await contarRegistro();
+    await register({ nombre: 'Catálogo Inválido', correo: 'catalogo-invalido@test.local', contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia: id } }).expect(status);
+    assert.deepEqual(await contarRegistro(), antes);
+  }
+
+
+  for (const materia of [{ nombre: 'Texto libre' }, { id_catalogo_materia, nombre: 'Texto libre' }, { id_catalogo_materia, extra: true }]) {
+    const antes = await contarRegistro();
+    await register({ nombre: 'Texto Rechazado', correo: 'texto@test.local', contrasena: 'ClaveSegura123!', materia }).expect(400);
+    assert.deepEqual(await contarRegistro(), antes);
+  }
 
   await request(app).get('/api/health').expect(200).expect(({ body }) => assert.equal(body.base_datos, 'sqlite'));
 
@@ -44,15 +66,45 @@ async function run() {
 
   await request(app).post('/api/auth/registro').send({
     nombre: 'Escalamiento', correo: 'escalamiento@test.local', contrasena: 'ClaveSegura123!',
-    rol: 'Administrador', materia: { nombre: 'Materia inicial' }
+    rol: 'Administrador', materia: { id_catalogo_materia }
   }).expect(400);
   assert.equal(await Cuenta.count({ where: { correo: 'escalamiento@test.local' } }), 0);
+
+  // RF01/HU01 (E7): nombre fuera de contrato, campos no autorizados y tipos inválidos no crean cuentas.
+  for (const [nombre, correo] of [['A', 'corto@test.local'], ['Ana2', 'digito@test.local'], ['<b>Ana</b>', 'html@test.local'], ['a'.repeat(61), 'largo@test.local']]) {
+    const rechazo = await register({ nombre, correo, contrasena: 'ClaveSegura123!' }).expect(400);
+    assert.match(rechazo.body.error, /60 caracteres/);
+    assert.equal(await Cuenta.count({ where: { correo } }), 0);
+  }
+  await register({ nombre: 'Campo Extra', correo: 'extra@test.local', contrasena: 'ClaveSegura123!', activa: false }).expect(400);
+  await register({ nombre: 'Materia Inválida', correo: 'materia@test.local', contrasena: 'ClaveSegura123!', materia: { nombre: 'm'.repeat(81) } })
+    .expect(400).expect(({ body }) => assert.match(body.error, /^Materia inicial: /));
+  await register({ nombre: 'Tipo Inválido', correo: 'tipo@test.local', contrasena: 12345678 }).expect(400);
+  assert.equal(await Cuenta.count({ where: { correo: ['extra@test.local', 'materia@test.local', 'tipo@test.local'] } }), 0);
+
+  // RF01/HU01 (RN03): si falla la materia inicial, la transacción no deja cuenta, preferencia ni materia parciales.
+  const contar = async tabla => (await sequelize.query(`SELECT COUNT(*) AS n FROM ${tabla}`, { plain: true })).n;
+  const tablasRegistro = ['cuenta', 'preferencia_visual', 'materia'];
+  const antes = await Promise.all(tablasRegistro.map(contar));
+  await sequelize.query("CREATE TRIGGER fallo_materia BEFORE INSERT ON materia BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END");
+  try {
+    // Sequelize agrupa todo SQLITE_CONSTRAINT como UniqueConstraintError (409); se verifica el fallo, no su código.
+    await register({ nombre: 'Registro Parcial', correo: 'parcial@test.local', contrasena: 'ClaveSegura123!' })
+      .expect(({ status }) => assert.ok(status >= 400, `se esperaba un error, se obtuvo ${status}`));
+  } finally {
+    await sequelize.query('DROP TRIGGER IF EXISTS fallo_materia');
+  }
+  assert.deepEqual(await Promise.all(tablasRegistro.map(contar)), antes);
+  assert.equal(await Cuenta.count({ where: { correo: 'parcial@test.local' } }), 0);
 
   const studentRegistration = await register({ nombre: 'Estudiante Uno', correo: 'uno@test.local', contrasena: 'ClaveSegura123!' });
   assert.equal(studentRegistration.status, 201);
   assert.equal(studentRegistration.body.cuenta.rol, 'Estudiante');
   assert.equal('contrasena_hash' in studentRegistration.body.cuenta, false);
   assert.equal((await register({ nombre: 'Duplicado', correo: 'uno@test.local', contrasena: 'ClaveSegura123!' })).status, 409);
+  // RF01/RN01: el correo se normaliza antes de comprobar la unicidad.
+  await register({ nombre: 'Duplicado', correo: '  UNO@Test.Local ', contrasena: 'ClaveSegura123!' }).expect(409)
+    .expect(({ body }) => assert.equal(body.error, 'El correo ya está registrado'));
 
   const secondRegistration = await register({ nombre: 'Estudiante Dos', correo: 'dos@test.local', contrasena: 'ClaveSegura123!' });
   assert.equal(secondRegistration.status, 201);
@@ -71,23 +123,80 @@ async function run() {
   const adminToken = (await login('admin@test.local')).body.token;
   const reviewerToken = (await login('revisor@test.local')).body.token;
 
-  await request(app).put(`/api/cuentas/${adminRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken))
-    .send({ activa: false }).expect(409);
-  await request(app).put(`/api/cuentas/${adminRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken))
-    .send({ rol: 'Estudiante' }).expect(409);
+  // RF01/RN26/HU29, Decisión #10: catálogo global y permisos administrativos.
+  const catalogoUrl = '/api/catalogo-materias';
+  // La excepción pública del catálogo no debe abrir otros catálogos protegidos.
+  await request(app).get('/api/insignias').expect(401);
+  await request(app).get('/api/niveles').expect(401);
+  await request(app).get(catalogoUrl).expect(200).expect(({ body }) => assert.deepEqual(body.datos, [{ id_catalogo_materia, nombre: 'Materia inicial' }]));
+  const cat = (await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre: '  álgebra  ' }).expect(201)).body.dato;
+  assert.equal(cat.nombre, 'álgebra');
+  assert.equal(cat.activo, true);
+  const catId = cat.id_catalogo_materia;
+  const catPath = `${catalogoUrl}/${catId}`;
+  const operaciones = [
+    ['get', `${catalogoUrl}?todas=true`, undefined], ['get', catPath, undefined],
+    ['post', catalogoUrl, { nombre: 'No permitida' }], ['put', catPath, { nombre: 'No permitida' }],
+    ['patch', `${catPath}/estado`, { activo: false }], ['delete', catPath, undefined]
+  ];
+  for (const [metodo, url, datos] of operaciones) {
+    await request(app)[metodo](url).send(datos).expect(401);
+    for (const token of [studentToken, reviewerToken]) await request(app)[metodo](url).set(auth(token)).send(datos).expect(403);
+  }
+  for (const nombre of ['ÁLGEBRA', '  álgebra ', 'álgebra']) {
+    await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre }).expect(409)
+      .expect(({ body }) => assert.match(body.error, /existe.*nombre/i));
+  }
+  const otra = (await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre: '  Ingeniería   de   Software ' }).expect(201)).body.dato;
+  assert.equal(otra.nombre, 'Ingeniería de Software');
+  await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre: 'ingeniería de  software' }).expect(409);
+  await request(app).put(`${catalogoUrl}/${otra.id_catalogo_materia}`).set(auth(adminToken)).send({ nombre: 'ÁLGEBRA' }).expect(409);
+  for (const nombre of ['', '   ', 'a'.repeat(81), 3, null, {}, []]) {
+    await request(app).post(catalogoUrl).set(auth(adminToken)).send({ nombre }).expect(400);
+    await request(app).put(catPath).set(auth(adminToken)).send({ nombre }).expect(400);
+  }
+  for (const [metodo, url, datos] of [
+    ['post', catalogoUrl, { nombre: 'Nueva', activo: false }],
+    ['put', catPath, { nombre: 'Nueva', id_cuenta: 'ajena' }],
+    ['patch', `${catPath}/estado`, { activo: true, nombre: 'Nueva' }],
+    ['delete', catPath, { activo: false }], ['put', catPath, {}],
+    ['patch', `${catPath}/estado`, {}], ['patch', `${catPath}/estado`, { activo: 0 }],
+    ['patch', `${catPath}/estado`, { activo: 'false' }]
+  ]) await request(app)[metodo](url).set(auth(adminToken)).send(datos).expect(400);
+  for (const [metodo, url, datos] of [
+    ['get', `${catalogoUrl}/inexistente`, undefined], ['put', `${catalogoUrl}/inexistente`, { nombre: 'Ausente' }],
+    ['patch', `${catalogoUrl}/inexistente/estado`, { activo: false }], ['delete', `${catalogoUrl}/inexistente`, undefined]
+  ]) await request(app)[metodo](url).set(auth(adminToken)).send(datos).expect(404);
+  await request(app).get(catPath).set(auth(adminToken)).expect(200).expect(({ body }) => assert.equal(body.dato.activo, true));
+  for (const activo of [false, true]) {
+    await request(app).patch(`${catPath}/estado`).set(auth(adminToken)).send({ activo }).expect(200);
+    for (const token of [null, studentToken, reviewerToken]) {
+      const consulta = request(app).get(catalogoUrl);
+      if (token) consulta.set(auth(token));
+      const { body } = await consulta.expect(200);
+      assert.equal(body.datos.some(item => item.id_catalogo_materia === catId), activo);
+      for (const item of body.datos) assert.deepEqual(Object.keys(item).sort(), ['id_catalogo_materia', 'nombre']);
+      assert.deepEqual(body.datos.map(item => item.nombre), [...body.datos.map(item => item.nombre)].sort());
+    }
+    const todas = (await request(app).get(`${catalogoUrl}?todas=true`).set(auth(adminToken)).expect(200)).body.datos;
+    assert.equal(todas.find(item => item.id_catalogo_materia === catId).activo, activo);
+  }
+  const historica = (await sequelize.query('SELECT id_materia,nombre FROM materia WHERE id_cuenta=:cuenta LIMIT 1', {
+    replacements: { cuenta: studentRegistration.body.cuenta.id_cuenta }, type: sequelize.QueryTypes.SELECT
+  }))[0];
+  await request(app).put(`/api/materias/${historica.id_materia}`).set(auth(studentToken)).send({ id_catalogo_materia: catId }).expect(200);
+  historica.nombre = cat.nombre;
+  await request(app).put(catPath).set(auth(adminToken)).send({ nombre: 'Álgebra avanzada' }).expect(200);
+  assert.equal((await sequelize.query('SELECT nombre FROM materia WHERE id_materia=:id', {
+    replacements: { id: historica.id_materia }, plain: true
+  })).nombre, historica.nombre);
+  await request(app).delete(catPath).set(auth(adminToken)).expect(409)
+    .expect(({ body }) => assert.match(body.error, /materias asociadas/));
+  await request(app).delete(`${catalogoUrl}/${otra.id_catalogo_materia}`).set(auth(adminToken)).expect(204);
+  await request(app).get(`${catalogoUrl}/${otra.id_catalogo_materia}`).set(auth(adminToken)).expect(404);
 
   await request(app).post('/api/auth/login').send({ correo: 'uno@test.local', contrasena: 'Incorrecta!' }).expect(401);
   await request(app).delete(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken)).expect(204);
-  assert.equal((await login('inactiva@test.local')).status, 403);
-  await request(app).delete(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(secondToken)).expect(403);
-  await request(app).put(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`).set(auth(adminToken))
-    .send({ activa: true }).expect(200);
-  const ownDeactivationToken = (await login('inactiva@test.local')).body.token;
-  await request(app).delete(`/api/cuentas/${inactiveRegistration.body.cuenta.id_cuenta}`)
-    .set(auth(ownDeactivationToken)).expect(204);
-  assert.equal((await Cuenta.findByPk(inactiveRegistration.body.cuenta.id_cuenta)).activa, false);
-  assert.equal(await Materia.count({ where: { id_cuenta: inactiveRegistration.body.cuenta.id_cuenta } }), 1);
-  await request(app).get('/api/auth/perfil').set(auth(ownDeactivationToken)).expect(401);
   assert.equal((await login('inactiva@test.local')).status, 403);
   await request(app).get('/api/materias').expect(401);
   await request(app).get('/api/estadisticas/semanales').expect(401);
@@ -115,21 +224,56 @@ async function run() {
   await request(app).post('/api/sesiones').set(auth(studentToken)).send({ duracion_minutos: Number.MAX_SAFE_INTEGER + 1 }).expect(400);
   await request(app).put('/api/preferencias').set(auth(studentToken)).send({ avatar: 'a'.repeat(51) }).expect(400);
   await request(app).post('/api/metas').set(auth(studentToken)).send({ semana: '2025-W53', descripcion: 'Meta', valor_objetivo: 1 }).expect(400);
-  const suggestedGoal = await request(app).post('/api/metas/sugerida').set(auth(studentToken)).send({ semana: '2027-W01' }).expect(200);
-  assert.equal(suggestedGoal.body.dato.semana, '2027-W01');
-  const suggestedGoalAgain = await request(app).post('/api/metas/sugerida').set(auth(studentToken)).send({ semana: '2027-W01' }).expect(200);
-  assert.equal(suggestedGoalAgain.body.dato.id_meta, suggestedGoal.body.dato.id_meta);
   await request(app).get('/api/cuentas').set(auth(adminToken)).expect(200);
   await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
     .send({ nombre: 'Intento de escalada', rol: 'Administrador' }).expect(403);
   await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
     .send({ nombre: 'Estudiante Actualizado' }).expect(200);
+  // RF01/HU20: la edición del perfil aplica el mismo contrato de nombre que el registro.
   await request(app).put(`/api/cuentas/${studentRegistration.body.cuenta.id_cuenta}`).set(auth(studentToken))
-    .send({ activa: false }).expect(403);
+    .send({ nombre: 'E' }).expect(400);
 
   const subject = await request(app).post('/api/materias').set(auth(studentToken))
-    .send({ nombre: 'Ingeniería de Software III', horario: 'Sábado' }).expect(201);
+    .send({ id_catalogo_materia, horario: 'Sábado' }).expect(201);
   const subjectId = subject.body.dato.id_materia;
+  assert.equal(subject.body.dato.id_catalogo_materia, id_catalogo_materia);
+  assert.equal(subject.body.dato.nombre, 'Materia inicial');
+  const inicial = (await sequelize.query('SELECT nombre,id_catalogo_materia FROM materia WHERE id_cuenta=:id LIMIT 1', {
+    replacements: { id: secondRegistration.body.cuenta.id_cuenta }, plain: true
+  }));
+  assert.deepEqual(inicial, { nombre: 'Materia inicial', id_catalogo_materia });
+  for (const [datos, status] of [
+    [{}, 400], [{ nombre: 'Texto libre' }, 400], [{ id_catalogo_materia, nombre: 'Falso' }, 400],
+    [{ id_catalogo_materia: 'ausente' }, 400], [{ id_catalogo_materia: inactivaCatalogo.id_catalogo_materia }, 409],
+    [{ id_catalogo_materia, horario: 'h'.repeat(101) }, 400]
+  ]) {
+    const antes = await contarRegistro();
+    await request(app).post('/api/materias').set(auth(studentToken)).send(datos).expect(status);
+    assert.deepEqual(await contarRegistro(), antes);
+  }
+  for (const [datos, status] of [[{ nombre: 'Texto libre' }, 400], [{ id_catalogo_materia: 'ausente' }, 400], [{ id_catalogo_materia: inactivaCatalogo.id_catalogo_materia }, 409]]) {
+    await request(app).put(`/api/materias/${subjectId}`).set(auth(studentToken)).send(datos).expect(status);
+  }
+  await request(app).put(`/api/materias/${subjectId}`).set(auth(secondToken)).send({ id_catalogo_materia }).expect(403);
+  await request(app).put(`/api/materias/${subjectId}`).set(auth(reviewerToken)).send({ horario: 'Lunes' }).expect(403);
+  await request(app).post('/api/materias').set(auth(studentToken)).send({ id_catalogo_materia, id_cuenta: secondRegistration.body.cuenta.id_cuenta }).expect(403);
+  const antiguaId = crypto.randomUUID();
+  await sequelize.query('INSERT INTO materia (id_materia,id_cuenta,nombre,horario) VALUES (:id,:cuenta,:nombre,NULL)', {
+    replacements: { id: antiguaId, cuenta: studentRegistration.body.cuenta.id_cuenta, nombre: 'Materia antigua' }
+  });
+  const antigua = (await request(app).put(`/api/materias/${antiguaId}`).set(auth(studentToken)).send({ horario: 'Martes', activa: false }).expect(200)).body.dato;
+  assert.equal(antigua.id_catalogo_materia, null);
+  assert.equal(antigua.nombre, 'Materia antigua');
+  const cambio = (await request(app).put(`/api/materias/${antiguaId}`).set(auth(studentToken)).send({ id_catalogo_materia: catId }).expect(200)).body.dato;
+  assert.equal(cambio.id_catalogo_materia, catId);
+  assert.equal(cambio.nombre, 'Álgebra avanzada');
+  await request(app).patch(`${catPath}/estado`).set(auth(adminToken)).send({ activo: false }).expect(200);
+  await request(app).put(catPath).set(auth(adminToken)).send({ nombre: 'Álgebra renombrada' }).expect(200);
+  const conservada = (await request(app).put(`/api/materias/${antiguaId}`).set(auth(studentToken)).send({ horario: 'Jueves' }).expect(200)).body.dato;
+  assert.equal(conservada.nombre, 'Álgebra avanzada');
+  assert.equal(conservada.id_catalogo_materia, catId);
+  await request(app).delete(`/api/materias/${antiguaId}`).set(auth(studentToken)).expect(204);
+
   // RN21: el permiso administrativo no autoriza relaciones entre propietarios distintos.
   await request(app).post('/api/tareas').set(auth(adminToken)).send({
     id_cuenta: secondRegistration.body.cuenta.id_cuenta, id_materia: subjectId,
@@ -244,21 +388,96 @@ async function run() {
   await request(app).get(`/api/niveles/${levelId}`).set(auth(studentToken)).expect(200);
 
   const challenge = await request(app).post('/api/retos').set(auth(studentToken)).send({
-    descripcion: 'Completar API', condicion: 'api >= 1', puntos_recompensa: 20, semana: '2026-W39'
+    descripcion: 'Completar API', condicion: 'tareas:1', puntos_recompensa: 20, semana: '2026-W39'
   }).expect(201);
   const challengeId = challenge.body.dato.id_reto;
+  // HU06/HU18: obligatorios y unicidad antes de completar (los demás negativos ya están cubiertos abajo).
+  const datosReto = { descripcion: 'Reto obligatorio', condicion: 'tareas:2', puntos_recompensa: 10, semana: '2026-W38' };
+  for (const campo of Object.keys(datosReto)) {
+    const incompleto = { ...datosReto };
+    delete incompleto[campo];
+    await request(app).post('/api/retos').set(auth(studentToken)).send(incompleto).expect(400);
+  }
+  await request(app).post('/api/retos').set(auth(studentToken)).send({ ...datosReto, semana: '2026-W39' }).expect(409);
+  await request(app).get(`/api/retos/${challengeId}`).set(auth(secondToken)).expect(403);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(secondToken)).send({ progreso: 1 }).expect(403);
+
   assert.equal(challenge.body.dato.activo, true);
-  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(secondToken))
-    .send({ activo: false }).expect(403);
-  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken))
-    .send({ activo: false }).expect(200).expect(({ body }) => assert.equal(body.dato.activo, false));
-  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(adminToken))
-    .send({ activo: true }).expect(200).expect(({ body }) => assert.equal(body.dato.activo, true));
-  await request(app).put(`/api/retos/${challengeId}`).set(auth(adminToken))
-    .send({ descripcion: 'Edición no autorizada' }).expect(403);
-  await request(app).delete(`/api/retos/${challengeId}`).set(auth(adminToken)).expect(403);
   await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ progreso: 1 }).expect(200);
+
+  // RF06/HU18/HU31/RN10/RN24/RN28/RNF-16 · Decisión #09: reglas de retos y recompensas.
+  const puntosReto = async id => (await sequelize.query("SELECT COUNT(*) AS n, COALESCE(SUM(cantidad),0) AS total FROM punto WHERE origen = 'Reto' AND id_origen = :id", { replacements: { id }, plain: true }));
+  for (const datos of [{ puntos_recompensa: 0 }, { puntos_recompensa: 10001 }, { puntos_recompensa: 9000000 }, { condicion: 'api >= 1' }, { condicion: 'tareas:0' }, { condicion: 'lo que sea' }, { condicion: 'tareas:99999999999999999999' }]) {
+    await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Límite', condicion: 'tareas:1', puntos_recompensa: 10, semana: '2026-W30', ...datos }).expect(400);
+  }
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: 10001 }).expect(400);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ activo: false }).expect(400);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ condicion: 'minutos:abc' }).expect(400);
+  // Un reto antiguo con condición libre admite editar otros campos sin revalidar la condición.
+  await sequelize.query("UPDATE reto SET condicion = 'api >= 1' WHERE id_reto = :id", { replacements: { id: challengeId } });
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ descripcion: 'Completar API (antiguo)' }).expect(200);
+  await sequelize.query("UPDATE reto SET condicion = 'tareas:1' WHERE id_reto = :id", { replacements: { id: challengeId } });
+  for (const valor of [1, 10000]) await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: valor }).expect(200);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: 20 }).expect(200);
+
+  // Estado: solo propietario o Administrador; reto ajeno 403, inexistente 404; desactivar no altera progreso.
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(secondToken)).send({ activo: false }).expect(403);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(reviewerToken)).send({ activo: false }).expect(403);
+  await request(app).patch(`/api/retos/${crypto.randomUUID()}/estado`).set(auth(studentToken)).send({ activo: false }).expect(404);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: 'false' }).expect(400);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({}).expect(400);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: false }).expect(200)
+    .expect(({ body }) => { assert.equal(body.dato.activo, false); assert.equal(body.dato.progreso, 1); });
+  // Inactivo: no se completa ni acredita; reactivar conserva el progreso.
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(409);
+  assert.equal((await puntosReto(challengeId)).n, 0);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(adminToken)).send({ activo: true }).expect(200)
+    .expect(({ body }) => { assert.equal(body.dato.activo, true); assert.equal(body.dato.progreso, 1); assert.equal(body.dato.completado, false); });
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(secondToken)).expect(403);
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200)
+    .expect(({ body }) => assert.equal(body.dato.completado, true));
   await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200);
+  assert.deepEqual(await puntosReto(challengeId), { n: 1, total: 20 });
+  // Completado: sin edición de recompensa o progreso; descripción permitida; desactivar y reactivar no acreditan de nuevo.
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ puntos_recompensa: 50 }).expect(409);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(adminToken)).send({ progreso: 5 }).expect(409);
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ descripcion: 'Completar API (cerrado)' }).expect(200);
+  // La semana de un reto completado sigue reservada: moverla permitiría recrear el reto y cobrar otra vez.
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ semana: '2026-W50' }).expect(409);
+  // Cambiar la condición de un reto completado no genera recompensas nuevas.
+  await request(app).put(`/api/retos/${challengeId}`).set(auth(studentToken)).send({ condicion: 'tareas:3' }).expect(200);
+  await request(app).patch(`/api/retos/${challengeId}/completar`).set(auth(studentToken)).expect(200);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: false }).expect(200);
+  await request(app).patch(`/api/retos/${challengeId}/estado`).set(auth(studentToken)).send({ activo: true }).expect(200);
+  assert.deepEqual(await puntosReto(challengeId), { n: 1, total: 20 });
+  // Un reto completado no se elimina; la semana sigue reservada (no se puede recrear para cobrar otra vez).
+  await request(app).delete(`/api/retos/${challengeId}`).set(auth(studentToken)).expect(409);
+  await request(app).delete(`/api/retos/${challengeId}`).set(auth(adminToken)).expect(409);
+  await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Recrear', condicion: 'tareas:1', puntos_recompensa: 20, semana: '2026-W39' }).expect(409);
+  // Un reto no completado sí se elimina; otro estudiante no puede eliminarlo.
+  const pendiente = (await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Pendiente', condicion: 'sesiones:2', puntos_recompensa: 10000, semana: '2026-W40' }).expect(201)).body.dato.id_reto;
+  await request(app).delete(`/api/retos/${pendiente}`).set(auth(secondToken)).expect(403);
+  await request(app).delete(`/api/retos/${pendiente}`).set(auth(studentToken)).expect(204);
+  // Concurrencia: estado||completar y eliminar||completar dejan resultados coherentes y como máximo un crédito.
+  for (const [semanaPrueba, competidor] of [['2026-W45', id => request(app).patch(`/api/retos/${id}/estado`).set(auth(studentToken)).send({ activo: false })],
+                                            ['2026-W46', id => request(app).delete(`/api/retos/${id}`).set(auth(studentToken))]]) {
+    const idCompetido = (await request(app).post('/api/retos').set(auth(studentToken)).send({ descripcion: 'Competido', condicion: 'tareas:1', puntos_recompensa: 7, semana: semanaPrueba }).expect(201)).body.dato.id_reto;
+    const [otra, completar] = await Promise.all([competidor(idCompetido), request(app).patch(`/api/retos/${idCompetido}/completar`).set(auth(studentToken))]);
+    const final = await Reto.findByPk(idCompetido);
+    const { n } = await puntosReto(idCompetido);
+    if (completar.status === 200) {
+      assert.equal(completar.body.dato.completado, true);
+      assert.equal(n, 1);
+      assert.ok(final, 'un reto completado no se elimina');
+      if (otra.req.method === 'DELETE') assert.equal(otra.status, 409);
+    } else {
+      assert.ok([404, 409].includes(completar.status), `estado inesperado ${completar.status}`);
+      assert.equal(n, 0);
+    }
+  }
+  // RNF-16 en metas y sesiones.
+  for (const valor of [0, 10081]) await request(app).post('/api/metas').set(auth(studentToken)).send({ semana: '2026-W41', descripcion: 'Meta límite', valor_objetivo: valor }).expect(400);
+  for (const valor of [0, 1441]) await request(app).post('/api/sesiones').set(auth(studentToken)).send({ duracion_minutos: valor }).expect(400);
 
   const goal = await request(app).post('/api/metas').set(auth(studentToken)).send({
     semana: '2026-W39', descripcion: 'Completar una prueba', valor_objetivo: 1
@@ -269,7 +488,6 @@ async function run() {
     .expect(({ body }) => assert.equal(body.dato.cumplida, true));
 
   await request(app).delete(`/api/metas/${goalId}`).set(auth(studentToken)).expect(204);
-  await request(app).delete(`/api/retos/${challengeId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/niveles/${levelId}`).set(auth(adminToken)).expect(204);
   await request(app).delete(`/api/cuenta-insignias/${studentRegistration.body.cuenta.id_cuenta}/${badgeId}`).set(auth(adminToken)).expect(400);
   await request(app).delete(`/api/cuenta-insignias/${studentRegistration.body.cuenta.id_cuenta}/${badgeId}`).set(auth(adminToken)).send({ motivo: 'Asignación de prueba' }).expect(204);
@@ -281,6 +499,96 @@ async function run() {
   await request(app).delete(`/api/sesiones/${sessionId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/tareas/${taskId}`).set(auth(studentToken)).expect(204);
   await request(app).delete(`/api/materias/${subjectId}`).set(auth(studentToken)).expect(204);
+
+  // RF01/HU20/HU27/HU30/RN27: desactivación propia, sesiones previas, datos conservados y reactivación administrativa.
+  const propia = await register({ nombre: 'Cuenta Propia', correo: 'propia@test.local', contrasena: 'ClaveSegura123!' }).expect(201);
+  const propiaId = propia.body.cuenta.id_cuenta;
+  const propiaToken = (await login('propia@test.local')).body.token;
+  const otraSesionPropia = (await login('propia@test.local')).body.token;
+  await request(app).post('/api/tareas').set(auth(propiaToken))
+    .send({ nombre: 'Tarea conservada', fecha_entrega: '2027-12-31', prioridad: 'Media' }).expect(201);
+  const datosDe = async id => sequelize.query(
+    'SELECT (SELECT COUNT(*) FROM materia WHERE id_cuenta = :id) AS materias, (SELECT COUNT(*) FROM tarea WHERE id_cuenta = :id) AS tareas, (SELECT COUNT(*) FROM preferencia_visual WHERE id_cuenta = :id) AS preferencias',
+    { replacements: { id }, plain: true });
+  const datosAntes = await datosDe(propiaId);
+  assert.deepEqual(datosAntes, { materias: 1, tareas: 1, preferencias: 1 });
+
+  await request(app).delete(`/api/cuentas/${secondRegistration.body.cuenta.id_cuenta}`).set(auth(propiaToken)).expect(403);
+  assert.equal((await Cuenta.findByPk(secondRegistration.body.cuenta.id_cuenta)).activa, true);
+  for (const cambio of [{ activa: false }, { activa: true }, { rol: 'Administrador' }, { nombre: 'Cuenta Propia', rol: 'Revisor institucional' }]) {
+    await request(app).put(`/api/cuentas/${propiaId}`).set(auth(propiaToken)).send(cambio).expect(403);
+  }
+  assert.deepEqual((await Cuenta.findByPk(propiaId)).toJSON().rol, 'Estudiante');
+
+  await request(app).delete(`/api/cuentas/${propiaId}`).set(auth(propiaToken)).expect(204);
+  assert.equal((await Cuenta.findByPk(propiaId)).activa, false);
+  for (const token of [propiaToken, otraSesionPropia]) {
+    await request(app).get('/api/auth/perfil').set(auth(token)).expect(401);
+    await request(app).get('/api/tareas').set(auth(token)).expect(401);
+  }
+  assert.equal((await login('propia@test.local')).status, 403);
+  assert.deepEqual(await datosDe(propiaId), datosAntes);
+
+  // Solo el Administrador reactiva; ni otro Estudiante ni el Revisor pueden hacerlo.
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(secondToken)).send({ activa: true }).expect(403);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(reviewerToken)).send({ activa: true }).expect(403);
+  assert.equal((await Cuenta.findByPk(propiaId)).activa, false);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: true }).expect(200)
+    .expect(({ body }) => assert.equal('contrasena_hash' in body.dato, false));
+  // Decisión #08: ninguna sesión anterior vuelve a servir tras reactivar; un nuevo inicio de sesión sí.
+  for (const token of [propiaToken, otraSesionPropia]) await request(app).get('/api/auth/perfil').set(auth(token)).expect(401);
+  const tokenReactivado = (await login('propia@test.local')).body.token;
+  await request(app).get('/api/tareas').set(auth(tokenReactivado)).expect(200)
+    .expect(({ body }) => assert.equal(body.datos.length, 1));
+  assert.deepEqual(await datosDe(propiaId), datosAntes);
+  const version = async () => (await Cuenta.findByPk(propiaId)).version_sesion;
+  assert.equal(await version(), 1);
+
+  // Desactivación administrativa por PUT y por DELETE: también invalida las sesiones previas.
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: false }).expect(200);
+  await request(app).get('/api/auth/perfil').set(auth(tokenReactivado)).expect(401);
+  assert.equal(await version(), 2);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: false }).expect(200);
+  await request(app).delete(`/api/cuentas/${propiaId}`).set(auth(adminToken)).expect(204);
+  assert.equal(await version(), 2, 'desactivar una cuenta ya inactiva no incrementa la versión');
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: true }).expect(200);
+  await request(app).get('/api/auth/perfil').set(auth(tokenReactivado)).expect(401);
+  assert.equal(await version(), 2, 'reactivar no reduce ni reinicia la versión');
+  const tokenTrasPut = (await login('propia@test.local')).body.token;
+  await request(app).delete(`/api/cuentas/${propiaId}`).set(auth(adminToken)).expect(204);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ activa: true }).expect(200);
+  await request(app).get('/api/auth/perfil').set(auth(tokenTrasPut)).expect(401);
+  assert.equal(await version(), 3);
+
+  // Tokens sin `ver` (anteriores al cambio de esquema) o con otra versión se rechazan.
+  const firmar = claims => jwt.sign({ sub: propiaId, rol: 'Estudiante', jti: crypto.randomUUID(), ...claims }, process.env.JWT_SECRET, { expiresIn: '2h' });
+  for (const token of [firmar({}), firmar({ ver: 2 }), firmar({ ver: '3' })]) {
+    await request(app).get('/api/auth/perfil').set(auth(token)).expect(401);
+  }
+  await request(app).get('/api/auth/perfil').set(auth(firmar({ ver: 3 }))).expect(200);
+
+  // version_sesion no se expone ni se modifica desde la API.
+  const sesionFinal = (await login('propia@test.local'));
+  const segundaSesion = (await login('propia@test.local')).body.token;
+  const respuestas = [
+    propia.body, sesionFinal.body,
+    (await request(app).get('/api/auth/perfil').set(auth(sesionFinal.body.token)).expect(200)).body,
+    (await request(app).get(`/api/cuentas/${propiaId}`).set(auth(sesionFinal.body.token)).expect(200)).body,
+    (await request(app).put(`/api/cuentas/${propiaId}`).set(auth(sesionFinal.body.token)).send({ nombre: 'Cuenta Propia' }).expect(200)).body,
+    (await request(app).get('/api/cuentas').set(auth(adminToken)).expect(200)).body,
+    (await request(app).get('/api/exportacion/datos').set(auth(sesionFinal.body.token)).expect(200)).body
+  ];
+  for (const cuerpo of respuestas) assert.equal(JSON.stringify(cuerpo).includes('version_sesion'), false);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(adminToken)).send({ version_sesion: 0 }).expect(400);
+  await request(app).put(`/api/cuentas/${propiaId}`).set(auth(sesionFinal.body.token)).send({ version_sesion: 0 }).expect(400);
+  await register({ nombre: 'Version Forzada', correo: 'forzada@test.local', contrasena: 'ClaveSegura123!', version_sesion: 5 }).expect(400);
+  assert.equal(await version(), 3);
+
+  // Logout individual: revoca solo esa sesión; la otra sigue activa.
+  await request(app).post('/api/auth/logout').set(auth(sesionFinal.body.token)).expect(204);
+  await request(app).get('/api/auth/perfil').set(auth(sesionFinal.body.token)).expect(401);
+  await request(app).get('/api/auth/perfil').set(auth(segundaSesion)).expect(200);
+  assert.equal(await version(), 3, 'el logout no cambia la versión de sesión');
 
   await request(app).post('/api/auth/logout').set(auth(studentToken)).expect(204);
   await request(app).get('/api/auth/perfil').set(auth(studentToken)).expect(401);

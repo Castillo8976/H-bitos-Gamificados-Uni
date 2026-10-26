@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS cuenta (
   activa INTEGER NOT NULL DEFAULT 1 CHECK (activa IN (0,1)),
   rol VARCHAR(30) NOT NULL DEFAULT 'Estudiante'
     CHECK (rol IN ('Estudiante','Administrador','Revisor institucional')),
+  version_sesion INTEGER NOT NULL DEFAULT 0 CHECK (version_sesion >= 0),
   CONSTRAINT pk_cuenta PRIMARY KEY (id_cuenta),
   CONSTRAINT uq_cuenta_correo UNIQUE (correo)
 );
@@ -44,13 +45,22 @@ CREATE TABLE IF NOT EXISTS preferencia_visual (
     REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS catalogo_materia (
+  id_catalogo_materia VARCHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(80) NOT NULL UNIQUE COLLATE NOCASE,
+  activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0,1))
+);
+
 CREATE TABLE IF NOT EXISTS materia (
   id_materia VARCHAR(36) NOT NULL,
+  id_catalogo_materia VARCHAR(36),
   id_cuenta VARCHAR(36) NOT NULL,
   nombre VARCHAR(80) NOT NULL,
   horario VARCHAR(100),
   activa INTEGER NOT NULL DEFAULT 1 CHECK (activa IN (0,1)),
   CONSTRAINT pk_materia PRIMARY KEY (id_materia),
+  CONSTRAINT fk_materia_catalogo FOREIGN KEY (id_catalogo_materia)
+    REFERENCES catalogo_materia(id_catalogo_materia) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT fk_materia_cuenta FOREIGN KEY (id_cuenta)
     REFERENCES cuenta(id_cuenta) ON DELETE CASCADE ON UPDATE CASCADE
 );

@@ -34,6 +34,11 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+// RF01/RN26/HU29: solo la colección activa es pública; todas=true sigue la autenticación habitual.
+app.get('/api/catalogo-materias', (req, res, next) => {
+  if (req.query.todas === 'true') return next();
+  return require('./controllers/resourceControllers').subjectCatalog.list(req, res).catch(next);
+});
 app.use('/api', progressRoutes);
 app.use('/api', resourceRoutes);
 

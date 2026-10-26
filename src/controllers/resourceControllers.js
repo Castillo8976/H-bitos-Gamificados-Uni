@@ -3,6 +3,7 @@
 const HttpError = require('../middlewares/httpError');
 const authService = require('../services/authService');
 const cuenta = require('../services/cuentaService');
+const catalogo = require('../services/catalogoMateriaService');
 const materia = require('../services/materiaService');
 const tarea = require('../services/tareaService');
 const preferencia = require('../services/preferenciaVisualService');
@@ -74,10 +75,13 @@ const accounts = {
     if (!isAdmin(req.user) && ['rol', 'activa'].some(key => Object.hasOwn(req.body, key))) {
       throw new HttpError(403, 'Solo el administrador puede cambiar rol o estado de una cuenta');
     }
+    if (req.user.rol === 'Estudiante' && Object.hasOwn(req.body, 'correo') && require('../config/authEmail').configuration().verificacion_correo) {
+      throw new HttpError(400, 'Para cambiar el correo usa el flujo /api/auth/correo/cambio y confirma el código');
+    }
     const actual = await cuenta.obtenerCuenta(req.params.id);
     if (!actual) throw new HttpError(404, 'Cuenta no encontrada');
-    const dejaDeSerAdministrador = actual.rol === 'Administrador' &&
-      actual.activa && (req.body.activa === false || req.body.rol === 'Estudiante' || req.body.rol === 'Revisor institucional');
+    const dejaDeSerAdministrador = actual.rol === 'Administrador' && actual.activa &&
+      (req.body.activa === false || req.body.rol === 'Estudiante' || req.body.rol === 'Revisor institucional');
     if (dejaDeSerAdministrador && await cuenta.contarAdministradoresActivos() <= 1) {
       throw new HttpError(409, 'No se puede desactivar o degradar al último Administrador activo');
     }
@@ -86,7 +90,7 @@ const accounts = {
     if (!Object.keys(data).length) throw new HttpError(400, 'No hay campos permitidos para actualizar');
     res.json({ dato: authService.safeAccount(await updated(cuenta.obtenerCuenta, req.params.id, cuenta.actualizarCuenta, data)) });
   },
-  /** RF01/HU20/HU27: Desactiva la cuenta sin borrarla físicamente (cuentas). */
+  /** RF01/HU27/HU30: Desactiva la cuenta sin borrarla físicamente (cuentas). */
   deactivate: async (req, res) => {
     if (!isAdmin(req.user) && req.params.id !== req.user.id) throw new HttpError(403, 'No puede desactivar otra cuenta');
     const actual = await cuenta.obtenerCuenta(req.params.id);
@@ -94,7 +98,8 @@ const accounts = {
     if (actual.rol === 'Administrador' && actual.activa && await cuenta.contarAdministradoresActivos() <= 1) {
       throw new HttpError(409, 'No se puede desactivar al último Administrador activo');
     }
-    await cuenta.actualizarCuenta(req.params.id, { activa: false });
+    // RN27/Decisión #08: la transición incrementa version_sesion e invalida todos los JWT anteriores.
+    await cuenta.desactivarCuenta(req.params.id);
     res.status(204).send();
   },
   /** RF01/HU20: elimina únicamente los datos de la cuenta autenticada. */
@@ -111,11 +116,11 @@ const subjects = {
   /** RF09/HU16: Consulta un registro (materias). */
   get: async (req, res) => res.json({ dato: ensureOwned(await materia.obtenerMateria(req.params.id), req.user) }),
   /** RF09/HU16: Crea el registro mediante el servicio (materias). */
-  create: async (req, res) => res.status(201).json({ dato: await materia.crearMateria(accountId(req), req.body.nombre, req.body.horario) }),
+  create: async (req, res) => res.status(201).json({ dato: await materia.crearDesdeCatalogo(accountId(req), req.body.id_catalogo_materia, req.body.horario) }),
   /** RF09/HU16: Actualiza los campos permitidos por la ruta (materias). */
   update: async (req, res) => {
     ensureOwned(await materia.obtenerMateria(req.params.id), req.user);
-    res.json({ dato: await updated(materia.obtenerMateria, req.params.id, materia.actualizarMateria, req.body) });
+    res.json({ dato: await updated(materia.obtenerMateria, req.params.id, materia.actualizarDesdeCatalogo, req.body) });
   },
   /** RF09/HU16: Elimina el registro mediante el servicio (materias). */
   remove: async (req, res) => {
@@ -308,25 +313,42 @@ const challenges = {
   get: async (req, res) => res.json({ dato: ensureOwned(await reto.obtenerReto(req.params.id), req.user) }),
   /** RF06/HU06: Crea el registro mediante el servicio (retos). */
   create: async (req, res) => res.status(201).json({ dato: await reto.crearReto(accountId(req), req.body.descripcion, req.body.condicion, req.body.puntos_recompensa, req.body.semana) }),
-  /** RF06/HU06: Actualiza los campos permitidos por la ruta (retos). */
+  /** RF06/HU06/HU18: Actualiza los campos permitidos por la ruta (retos). */
   update: async (req, res) => {
-    ensureOwned(await reto.obtenerReto(req.params.id), req.user);
-    res.json({ dato: await updated(reto.obtenerReto, req.params.id, reto.actualizarReto, req.body) });
+    const actual = ensureOwned(await reto.obtenerReto(req.params.id), req.user);
+    // Decisión #09: la recompensa, el progreso y la semana de un reto completado quedan como se acreditaron;
+    // el CRUD repite la condición en el UPDATE para que un completado simultáneo no se sobrescriba.
+    const protegido = reto.CAMPOS_PROTEGIDOS.some(campo => Object.hasOwn(req.body, campo));
+    if (protegido && (actual.completado || !(await reto.actualizarReto(req.params.id, req.body)))) {
+      if (!await reto.obtenerReto(req.params.id)) throw new HttpError(404, 'Registro no encontrado');
+      throw new HttpError(409, 'El reto ya está completado; no se pueden modificar su recompensa, su progreso ni su semana');
+    }
+    const record = protegido ? await reto.obtenerReto(req.params.id) : await updated(reto.obtenerReto, req.params.id, reto.actualizarReto, req.body);
+    if (!record) throw new HttpError(404, 'Registro no encontrado');
+    res.json({ dato: record });
   },
-  /** RF06/HU06/HU18/HU31: el propietario y el Administrador solo cambian el estado del reto. */
-  setActive: async (req, res) => {
-    ensureOwned(await reto.obtenerReto(req.params.id), req.user);
-    const cambiarEstado = id => reto.cambiarEstadoReto(id, req.body.activo);
-    res.json({ dato: await updated(reto.obtenerReto, req.params.id, cambiarEstado) });
-  },
-  /** RF06/HU06: Completa el registro (retos). */
+  /** RF06/HU18: Completa el reto en una transacción y acredita una sola vez (retos). */
   complete: async (req, res) => {
     ensureOwned(await reto.obtenerReto(req.params.id), req.user);
-    await reto.completarReto(req.params.id); res.json({ dato: await reto.obtenerReto(req.params.id) });
+    // RN28/Decisión #09: el resultado del UPDATE condicionado decide la respuesta, también con solicitudes simultáneas.
+    if (!await reto.completarReto(req.params.id)) {
+      const actual = await reto.obtenerReto(req.params.id);
+      if (!actual) throw new HttpError(404, 'Registro no encontrado');
+      if (!actual.completado) throw new HttpError(409, 'El reto está inactivo; reactívalo para completarlo');
+    }
+    res.json({ dato: await reto.obtenerReto(req.params.id) });
   },
-  /** RF06/HU06: Elimina el registro mediante el servicio (retos). */
-  remove: async (req, res) => {
+  /** RF06/HU18/HU31/RN28: Activa o desactiva el reto sin alterar progreso ni puntos (retos). */
+  setState: async (req, res) => {
     ensureOwned(await reto.obtenerReto(req.params.id), req.user);
+    await (req.body.activo ? reto.activarReto(req.params.id) : reto.desactivarReto(req.params.id));
+    res.json({ dato: await reto.obtenerReto(req.params.id) });
+  },
+  /** RF06/HU18: Elimina un reto no completado (retos). */
+  remove: async (req, res) => {
+    const actual = ensureOwned(await reto.obtenerReto(req.params.id), req.user);
+    // Decisión #09: un reto completado conserva la trazabilidad de su recompensa.
+    if (actual.completado) throw new HttpError(409, 'Un reto completado forma parte del historial y no se puede eliminar; puedes desactivarlo');
     await reto.eliminarReto(req.params.id); res.status(204).send();
   }
 };
@@ -334,8 +356,7 @@ const challenges = {
 const goals = {
   /** RF15/HU15: Consulta la colección permitida (metas). */
   list: async (req, res) => res.json({ datos: await meta.listarMetas(req.user.id, req.query.semana || null) }),
-  /** RF15/HU15: genera o recupera la sugerencia de la semana sin duplicarla. */
-  suggest: async (req, res) => res.status(200).json({ dato: await meta.sugerirMetaSemanal(req.user.id, req.body.semana) }),
+  suggest: async (req, res) => res.json({ dato: await meta.sugerirMetaSemanal(req.user.id, req.body.semana) }),
   /** RF15/HU15: Consulta un registro (metas). */
   get: async (req, res) => res.json({ dato: ensureOwned(await meta.obtenerMeta(req.params.id), req.user) }),
   /** RF15/HU15: Crea el registro mediante el servicio (metas). */
@@ -357,4 +378,14 @@ const goals = {
   }
 };
 
-module.exports = { accounts, subjects, tasks, preferences, sessions, reminders, notifications, points, badges, accountBadges, levels, challenges, goals };
+/** RF01/RN26/HU29: administración del catálogo; lectura pública con proyección mínima. */
+const subjectCatalog = {
+  list: async (req, res) => res.json({ datos: await catalogo.listar(req.query.todas === 'true') }),
+  get: async (req, res) => res.json({ dato: await catalogo.obtener(req.params.id) }),
+  create: async (req, res) => res.status(201).json({ dato: await catalogo.guardar(null, req.body.nombre) }),
+  update: async (req, res) => res.json({ dato: await catalogo.guardar(req.params.id, req.body.nombre) }),
+  setState: async (req, res) => res.json({ dato: await catalogo.cambiarEstado(req.params.id, req.body.activo) }),
+  remove: async (req, res) => { await catalogo.eliminar(req.params.id); res.status(204).send(); }
+};
+
+module.exports = { subjectCatalog, accounts, subjects, tasks, preferences, sessions, reminders, notifications, points, badges, accountBadges, levels, challenges, goals };

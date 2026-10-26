@@ -22,6 +22,7 @@ Esta matriz conecta cada relación del MER Conceptual (E8) con su cardinalidad, 
 | **cuenta** | registra | materia | **1 : N** | id_cuenta FK en materia | ON DELETE CASCADE | Un estudiante puede tener muchas materias; cada materia pertenece a una cuenta. Mínimo 1 al registrarse. RF01. |
 | **cuenta** | crea | tarea | **1 : N** | id_cuenta FK en tarea | ON DELETE CASCADE | Un estudiante puede crear muchas tareas. Cada tarea pertenece a una sola cuenta. RF02. |
 | **materia** | agrupa | tarea | **1 : N (opt)** | id_materia FK nullable en tarea | ON DELETE SET NULL | Una materia puede agrupar muchas tareas. Una tarea puede no tener materia. RF09. |
+| **catalogo_materia** | clasifica | materia | **1 : N (opt)** | id_catalogo_materia FK nullable en materia | ON DELETE RESTRICT | Una asignatura del catálogo puede asociarse a muchas materias; las materias anteriores conservan la FK en NULL y su nombre histórico. RF01, RN26 (Decisión #10). E8 aún no dibuja esta relación. |
 | **cuenta** | realiza | sesion_estudio | **1 : N** | id_cuenta FK en sesion_estudio | ON DELETE CASCADE | Un estudiante puede registrar muchas sesiones. RF10. |
 | **tarea** | se asocia a | sesion_estudio | **1 : N (opt)** | id_tarea FK nullable en sesion_estudio | ON DELETE SET NULL | Una tarea puede tener múltiples sesiones. La sesión puede existir sin tarea. RF10. |
 | **cuenta** | acumula | punto | **1 : N** | id_cuenta FK en punto | ON DELETE CASCADE | Un estudiante tiene muchos registros de puntos. El total es la suma. RF03, RF07. |

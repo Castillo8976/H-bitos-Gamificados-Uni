@@ -76,7 +76,7 @@ class EntityValidator {
         }
         resultado[campo] = texto;
         if (recurso === 'cuentas' && campo === 'nombre' &&
-          ([...texto].length < 2 || !/^[\p{L}\p{M} '-]+$/u.test(texto))) {
+          ([...texto].length < 2 || !/^[\p{L}\p{M} '\u2019-]+$/u.test(texto))) {
           throw new HttpError(400, 'nombre debe contener entre 2 y 60 caracteres y solo letras, espacios, apóstrofos o guiones');
         }
         if (tipo === 'DATEONLY') this.fecha(texto, campo);
@@ -87,6 +87,10 @@ class EntityValidator {
       if (tipo === 'INTEGER' && rango && (valor < rango[0] || valor > rango[1])) {
         throw new HttpError(400, `${campo} debe ser un entero entre ${rango[0]} y ${rango[1]}`);
       }
+    }
+    // RF01/HU01/HU20 (E7): nombre de cuenta de 2 a 60 caracteres; letras Unicode, espacios, apóstrofo y guion.
+    if (recurso === 'cuentas' && resultado.nombre !== undefined && !/^[\p{L}\p{M} '’-]{2,60}$/u.test(resultado.nombre)) {
+      throw new HttpError(400, 'El nombre debe tener entre 2 y 60 caracteres y solo puede contener letras, espacios, apóstrofo o guion');
     }
     if (resultado.correo !== undefined) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resultado.correo)) throw new HttpError(400, 'correo no es válido');

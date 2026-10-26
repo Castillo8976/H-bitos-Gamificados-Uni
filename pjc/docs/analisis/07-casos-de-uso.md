@@ -21,26 +21,31 @@ Se identificaron **16 casos de uso específicos** derivados de las historias de 
 | **Alcance** | Comprende CU00 (Iniciar sesión, compartido) y CU01–CU16. El Estudiante se registra, inicia sesión y utiliza los módulos de agenda, tareas, Pomodoro, gamificación, tablero, recordatorios, notificaciones, configuración y exportación. El Administrador mantiene cuentas y catálogos globales autorizados, y puede cambiar el estado de los retos. El Revisor institucional únicamente consulta indicadores agregados. |
 | **Precondición general** | El sistema está desplegado y accesible por URL; existe al menos una cuenta con rol Administrador para operar los catálogos. |
 | **Postcondición general** | Cada sesión de uso deja persistidos en SQLite únicamente los cambios que el rol del actor autoriza; no existen escrituras fuera del alcance de su rol. |
-| **Relaciones internas** | CU02–CU16 **incluyen** (`<<include>>`) a CU00, porque todos requieren una sesión activa como precondición común. CU06 **extiende** (`<<extend>>`) a CU03 y CU04 (evaluación de insignias/retos, condicional al resultado de completar una tarea o una sesión). CU10 **extiende** a CU02 (el recordatorio automático es un efecto opcional de crear una tarea con fecha de entrega). Ver detalle en la tabla siguiente. |
+| **Relaciones internas** | CU02–CU16 **incluyen** (`<<include>>`) a CU00 por su subflujo S1 «Validar sesión activa», que todos ejecutan obligatoriamente; el ingreso de credenciales de CU00 ocurre una sola vez y su resultado (el JWT) es precondición, no comportamiento incluido. CU06 **extiende** (`<<extend>>`) a CU03 y CU04: desbloquear insignias o acreditar retos se inserta solo si el evento cumple una condición. Programar el recordatorio al crear una tarea es un paso obligatorio de CU02 (RN05); CU10 **extiende** a CU02 solo cuando, al editar una tarea no completada, cambian su nombre o fecha de entrega. Notifications API se relaciona con CU10 y CU15 mediante **asociación**, no mediante `<<include>>`. Ver detalle en la tabla siguiente. |
 
 ### Relaciones `<<include>>` / `<<extend>>` del sistema
 
-| Relación | Origen → Destino | Tipo | Justificación |
-|---|---|---|---|
-| 1 | CU02–CU16 → **CU00 Iniciar sesión** | `<<include>>` | Los 15 casos de uso restantes del Estudiante, Administrador y Revisor comparten la misma precondición obligatoria: "el usuario tiene una sesión activa" (ver columna Precondición de cada ficha). En vez de repetir ese flujo en cada uno, se factoriza en CU00 y se incluye. |
-| 2 | CU06 → CU03 | `<<extend>>` | "Gestionar insignias y retos" solo se ejecuta **si** completar la tarea cumple la condición de una insignia o del reto activo (flujo alternativo A2 de CU03); es un comportamiento opcional, no obligatorio. |
-| 3 | CU06 → CU04 | `<<extend>>` | La misma evaluación de gamificación también puede dispararse al guardar una sesión Pomodoro (`GamificacionService.registrarSesionConGamificacion`), de forma igualmente condicional. |
-| 4 | CU10 → CU02 | `<<extend>>` | Programar el recordatorio automático de 24 horas antes es un efecto opcional de crear/editar una tarea **solo cuando** esta tiene fecha de entrega futura; no ocurre siempre que se ejecuta CU02. |
-| 5 | Notifications API → CU10, CU15 | `<<include>>` (ya existente) | El disparo de la notificación nativa del navegador es un paso obligatorio dentro de esos dos flujos cuando el permiso está concedido. |
+**Convención UML aplicada.** En `<<include>>` la flecha va del caso base al caso incluido: el comportamiento incluido se ejecuta **siempre** que se ejecuta el caso base, y este no está completo sin él. En `<<extend>>` la flecha va del caso extensor al caso base: el comportamiento extensor se inserta en un **punto de extensión** del caso base **solo si** se cumple su condición, y el caso base está completo sin la extensión. Ambas relaciones unen exclusivamente casos de uso; la relación entre un actor —humano o sistema externo— y un caso de uso es una **asociación**.
+
+| # | Origen → Destino | Tipo | Punto de extensión / momento | Condición | Justificación verificada en el código |
+|---|---|---|---|---|---|
+| 1 | CU02–CU16 → **CU00**, subflujo S1 «Validar sesión activa» | `<<include>>` | Inicio de cada operación protegida | Siempre | Cada petición protegida pasa por `authenticateRequest` (`src/middlewares/authentication.js`), que valida el JWT y vuelve a consultar que la cuenta exista y esté activa. Lo incluido es esa validación, no el ingreso de correo y contraseña. CU01 no incluye CU00 porque el registro es público. |
+| 2 | CU06 → CU03 | `<<extend>>` | «Evaluación de gamificación» (CU03, paso 7) | [el evento cumple la condición de una insignia no obtenida o alcanza el objetivo de un reto de la semana] | `GamificacionService.completarTareaConGamificacion` siempre evalúa metas, retos, insignias y nivel dentro de la transacción; lo que se inserta de forma condicional es el comportamiento de CU06: desbloquear la insignia o acreditar la recompensa del reto. CU03 termina correctamente aunque no se desbloquee nada. |
+| 3 | CU06 → CU04 | `<<extend>>` | «Evaluación de gamificación», después de guardar la sesión | [la sesión cumple la condición de una insignia o alcanza el objetivo de un reto por `sesiones`, `pomodoros` o `minutos` (RN24)] | `GamificacionService.registrarSesionConGamificacion` aplica la misma evaluación condicional. |
+| 4 | CU10 → CU02 | `<<extend>>` | «Reprogramación de recordatorio», al guardar la edición de una tarea (CU02, A3) | [la tarea no está completada y cambian su nombre o su fecha de entrega] | Al crear, `TareaService.crearTarea` invoca siempre `PlanificadorRecordatoriosService.sincronizarAutomatico`: es el paso 5 obligatorio de CU02 (RN05), no una extensión. Al editar, `TareaService.actualizarTarea` solo lo invoca bajo la condición indicada; editar únicamente la prioridad no reprograma el recordatorio. |
+| 5 | Notifications API — CU10, CU15 | Asociación (no `<<include>>`) | — | Permiso del navegador concedido | La Notifications API es un sistema externo que participa como actor secundario. Si el permiso está denegado, el aviso se conserva dentro de la aplicación (CU10 A1, CU15 A2). |
+
+> **Pendientes deliberados (diagramas fuera del alcance de esta corrección).** P1: `02_Diagrama_de_Casos_de_Uso_General.drawio` dibuja como `<<include>>` las líneas entre Notifications API y CU10/CU15; en este documento se describen como asociación. P2: el diagrama muestra una única relación `<<extend>>` CU10 → CU02; en este documento se precisa que la programación al crear es obligatoria y que solo la reprogramación al editar es extensión. Ambos puntos quedan para revisión del diagrama; no se modificó ningún diagrama.
 
 ## CU00 — Iniciar sesión
 
 | Campo | Descripción |
 |---|---|
 | **Actor principal** | Estudiante, Administrador, Revisor institucional |
-| **Precondición** | El actor ya tiene una cuenta activa (creada mediante CU01 o mediante CU13 para roles administrativos). |
+| **Precondición** | El actor ya tiene una cuenta activa, creada mediante CU01; los roles Administrador y Revisor institucional se asignan sobre una cuenta existente mediante CU13. |
 | **Flujo normal** | 1. El actor ingresa correo y contraseña. 2. El sistema valida las credenciales contra `contrasena_hash` (bcrypt). 3. El sistema emite un token JWT con el rol de la cuenta. 4. El sistema redirige al Dashboard correspondiente al rol. |
-| **Flujos alternativos** | A1: Credenciales inválidas → "Correo o contraseña incorrectos". A2: Cuenta desactivada (`activa = false`) → deniega el acceso. |
+| **Flujos alternativos** | A1: Credenciales inválidas → 401 «Credenciales inválidas», sin indicar si el correo existe. A2: Cuenta desactivada (`activa = false`) → 403 «La cuenta está inactiva». |
+| **Subflujo S1 — Validar sesión activa** | Lo incluyen CU02–CU16 y se ejecuta en cada petición protegida (`authenticateRequest`): 1. Lee el token enviado por el cliente. 2. Verifica su firma, su vigencia y que la sesión no se haya cerrado. 3. Consulta la cuenta, comprueba que exista y esté activa y toma su rol vigente. 4. Si alguna comprobación falla, responde 401 y el caso base no continúa. |
 | **Postcondición** | El actor cuenta con una sesión activa (token JWT vigente) y puede ejecutar los casos de uso incluidos según su rol. |
 | **Trazabilidad** | HU01 · RF01 · RN01, RN02 |
 
@@ -64,7 +69,7 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 | CU00 | Iniciar sesión | RF01 |
 | CU01 | Registrar cuenta y materias | RF01 |
 | CU02 | Gestionar tareas académicas | RF02, RF04, RF09 |
-| CU03 | Completar tarea y recibir recompensa | RF03, RF05, RF06, RF07, RF11 |
+| CU03 | Completar tarea y recibir recompensa | RF03, RF05, RF06, RF07, RF15 |
 | CU04 | Realizar sesión de estudio Pomodoro | RF10, RF12 |
 | CU05 | Ver Tablero de Avance Personal | RF08, RF11, RF15 |
 | CU06 | Gestionar insignias y retos | RF05, RF06 |
@@ -85,13 +90,18 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 
 | Campo | Descripción |
 |---|---|
-| **Actor principal** | Estudiante |
-| **Precondición** | El estudiante accede a la URL de la aplicación por primera vez. |
-| **Flujo normal** | 1. El estudiante pulsa "Crear cuenta". 2. Ingresa nombre, correo y contraseña. 3. Agrega al menos una materia con su horario. 4. El sistema valida los datos, cifra la contraseña y guarda la cuenta y la materia en SQLite mediante el servidor. 5. El sistema crea la preferencia visual predeterminada y redirige al Dashboard. |
-| **Flujos alternativos** | A1: Correo ya registrado → el sistema informa que el correo ya está registrado. A2: Contraseña con menos de 8 caracteres o más de 72 bytes UTF-8 → rechaza el registro e informa el límite. A3: Sin materia → el sistema bloquea el registro hasta agregar al menos una. |
-| **Postcondición** | La cuenta queda activa, los datos persisten en SQLite y el estudiante accede al Dashboard. |
+| **Actor principal** | Estudiante (todavía sin cuenta). |
+| **Permisos** | Operación pública: no requiere sesión ni incluye CU00. El servidor asigna siempre `rol = Estudiante`; el cliente no puede enviar `rol` ni otros campos no autorizados (RN21). La gestión posterior de materias exige sesión y propiedad de la cuenta. |
+| **Disparador** | El estudiante selecciona «Crear cuenta» en la pantalla de acceso (`#form-registro`). |
+| **Precondición** | El correo no está registrado y el servidor con SQLite está disponible. |
+| **Flujo normal** | 1. El estudiante ingresa nombre, correo y contraseña, y selecciona la materia inicial en un desplegable cargado desde `GET /api/catalogo-materias` (solo entradas activas), con horario opcional. 2. El cliente envía `POST /api/auth/registro`. 3. El servidor rechaza campos no permitidos y valida tipos, obligatoriedad y longitudes. 4. Normaliza el correo (minúsculas y sin espacios externos) y comprueba que no exista. 5. Cifra la contraseña con bcrypt. 6. En una sola transacción comprueba que la entrada del catálogo existe y está activa, y crea la `cuenta` con rol Estudiante, su `preferencia_visual` predeterminada y la `materia` inicial, con `id_catalogo_materia` y el nombre copiado del catálogo. 7. Responde 201 con la cuenta sin `contrasena_hash`. 8. El cliente inicia sesión con las mismas credenciales (CU00), muestra «Cuenta creada correctamente.» y abre el Dashboard. |
+| **Flujos alternativos** | A1: Después del registro, el estudiante agrega materias desde Agenda o las edita y elimina (HU16). A2: si el catálogo no tiene entradas activas, el formulario muestra un aviso y deshabilita el envío. |
+| **Excepciones** | E1: Correo ya registrado → 409 «El correo ya está registrado». E2: Falta nombre, correo, contraseña o materia → 400 «Nombre, correo, contraseña y materia inicial son obligatorios» y no se crea ningún registro (RN03). E3: Contraseña que no es texto, con menos de 8 caracteres o con más de 72 bytes UTF-8 → 400 con el límite. E4: Campo no autorizado, por ejemplo `rol` → 400 «La solicitud contiene campos no permitidos»; en la materia, un nombre libre o un campo extra → 400 (RN26). E5: Texto que excede la longitud del modelo (nombre 60, correo 100 y horario 100 caracteres) → 400. E6: Falla durante la transacción → se revierte completa; no quedan cuentas sin materia ni sin preferencia. E7: Catálogo sin entradas activas → 409 «No hay asignaturas disponibles en el catálogo; contacta al Administrador». E8: Entrada del catálogo inexistente → 400; inactiva → 409. En E7 y E8 no se crea ningún registro. |
+| **Postcondición** | Existe una cuenta activa con rol Estudiante, una preferencia visual y al menos una materia asociadas por `id_cuenta`, y el estudiante queda autenticado. Si falla cualquier validación, no se persiste nada. |
+| **Reglas de negocio** | RN01 (correo único), RN02 (contraseña cifrada y nunca expuesta), RN03 (al menos una materia), RN21 (rol fijado por el servidor y propiedad de las materias), RN26 (selección desde el catálogo activo; Decisión #10, pendiente de revisión docente). |
+| **Trazabilidad** | RF01, RNF12, RNF-16 · HU01, HU16, HU29 · implementado en `cd8d9f7` (validaciones), `f62c5e5` y `3eb2b71` (catálogo) |
 
-> **Nota de diseño (22 de septiembre de 2026 — PLANEADA, pendiente de implementación):** por observación de la docente, el paso 3 debe cambiar de "escribir el nombre de la materia" a **"seleccionar la materia de un catálogo institucional"** (`CatalogoMateria`, ver `E7-diccionario-datos.md` y `E12-diagrama-clases.drawio`). El flujo normal pasado a `<select>` quedaría: *"3. Selecciona su materia de la lista del catálogo institucional vigente (y opcionalmente ingresa el horario)."* Este cambio **todavía no está implementado en el código** (el formulario de registro sigue siendo un campo de texto libre); se documenta aquí como diseño aprobado en espera de desarrollo.
+> **Antecedente — nota de diseño del 22 de septiembre de 2026 (implementada el 24 de octubre de 2026 en `f62c5e5` y `3eb2b71`, Decisión #10, pendiente de revisión docente; el texto siguiente se conserva como registro histórico):** por observación de la docente, el paso 3 debe cambiar de "escribir el nombre de la materia" a **"seleccionar la materia de un catálogo institucional"** (`CatalogoMateria`, ver `E7-diccionario-datos.md` y `E12-diagrama-clases.drawio`). El flujo normal pasado a `<select>` quedaría: *"3. Selecciona su materia de la lista del catálogo institucional vigente (y opcionalmente ingresa el horario)."* Este cambio **todavía no está implementado en el código** (el formulario de registro sigue siendo un campo de texto libre); se documenta aquí como diseño aprobado en espera de desarrollo.
 
 ---
 
@@ -102,7 +112,7 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 | **Actor principal** | Estudiante |
 | **Precondición** | El usuario tiene una sesión activa en el sistema. |
 | **Flujo normal** | 1. El usuario pulsa "Nueva tarea". 2. Ingresa nombre, fecha de entrega, prioridad y materia (opcional). 3. El sistema valida que la fecha sea futura y el nombre no esté vacío. 4. Guarda la tarea en SQLite mediante el servidor con estado "Pendiente". 5. Programa un recordatorio automático para 24 horas antes de la fecha de entrega. 6. La tarea aparece en la lista con su chip de prioridad. |
-| **Flujos alternativos** | A1: Fecha en el pasado → "La fecha debe ser futura". A2: Nombre vacío → "El nombre es obligatorio". A3: El usuario edita una tarea existente → los cambios se persisten y el recordatorio se reprograma. |
+| **Flujos alternativos** | A1: Fecha en el pasado → "La fecha debe ser futura". A2: Nombre vacío → "El nombre es obligatorio". A3: El usuario edita una tarea existente → los cambios se persisten; si la tarea no está completada y cambian su nombre o su fecha de entrega, el recordatorio se reprograma (`<<extend>>` CU10). |
 | **Postcondición** | La tarea queda guardada con estado "Pendiente" y el recordatorio programado. |
 
 ---
@@ -111,11 +121,16 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 
 | Campo | Descripción |
 |---|---|
-| **Actor principal** | Estudiante |
-| **Precondición** | Existe al menos una tarea con estado "Pendiente" o "En progreso". |
-| **Flujo normal** | 1. El estudiante activa el checkbox de la tarea. 2. El sistema cambia el estado a "Completada" y registra la fecha. 3. El sistema suma los puntos correspondientes. 4. Verifica si se cumple alguna condición de insignia. 5. Si se desbloquea una insignia, muestra animación de celebración. 6. Actualiza el panel de progreso (cálculo en tiempo real, sin tabla de reporte). |
-| **Flujos alternativos** | A1: Insignia ya obtenida → solo suma puntos sin mostrar animación. A2: Progreso del reto semanal completado → el sistema otorga los puntos del reto. |
-| **Postcondición** | La tarea queda en estado "Completada" y los puntos se acumulan; el Tablero de Avance Personal reflejará el cambio en su próxima consulta. |
+| **Actor principal** | Estudiante. El Sistema ejecuta la evaluación de gamificación. |
+| **Permisos** | Requiere sesión activa (CU00) y rol Estudiante (`authorize('Estudiante')`); solo se completan tareas de la propia cuenta. El Administrador y el Revisor institucional no completan tareas. |
+| **Disparador** | El estudiante pulsa «Completar» en una tarea (`data-accion="completar-tarea"`). |
+| **Precondición** | La tarea pertenece a la cuenta autenticada y no está en estado «Completada». |
+| **Flujo normal** | 1. El cliente envía `PATCH /api/tareas/:id/completar`. 2. El servidor abre una transacción `IMMEDIATE`. 3. Busca la tarea por `id_tarea` e `id_cuenta`. 4. Cambia el estado a «Completada» y registra `fecha_completada`. 5. Cancela los recordatorios pendientes de la tarea. 6. Acredita 10 puntos una sola vez con origen `Tarea` e `id_origen` de la tarea (RN22, RN23). 7. Punto de extensión «Evaluación de gamificación»: actualiza las metas y los retos no completados de la semana con la métrica `tareas`, evalúa las insignias y calcula el nivel. 8. Registra la notificación «Tarea completada». 9. Confirma la transacción y responde con la tarea y el resumen de puntos, insignias, retos, metas, total y nivel. 10. La interfaz actualiza la lista y la gamificación; el Tablero recalcula en su siguiente consulta. |
+| **Flujos alternativos** | A1: La tarea cumple la condición de una insignia no obtenida → la desbloquea y la notifica (CU06). A2: La insignia ya estaba obtenida → no se duplica. A3: Un reto de la semana alcanza su objetivo → se marca completado, sus puntos se acreditan una vez y se notifica. A4: Una meta de la semana alcanza su objetivo → queda `cumplida`. A5: El total alcanza otro umbral → la respuesta informa el nuevo nivel. |
+| **Excepciones** | E1: Tarea inexistente o de otra cuenta → 404 «Tarea no encontrada», sin revelar si existe. E2: Tarea ya completada → 409 «La tarea ya fue completada y recompensada»; no se acreditan puntos de nuevo. E3: Rol distinto de Estudiante → 403. E4: Sin sesión, sesión cerrada o cuenta inactiva → 401. E5: Error dentro de la transacción → se revierten tarea, puntos, progreso, insignias y notificaciones. |
+| **Postcondición** | La tarea queda «Completada» y existe exactamente un movimiento de 10 puntos por ella; las recompensas derivadas se registran como máximo una vez. Si ocurre un error, se conserva el estado anterior. |
+| **Reglas de negocio** | RN07–RN09 (ledger de puntos), RN10, RN11, RN21, RN22, RN23, RN24; RN28 (un reto inactivo no acumula progreso ni recompensa; implementado en `b113445`). |
+| **Trazabilidad** | RF03, RF05, RF06, RF07, RF15 · HU03, HU05, HU06, HU07 · CU06 (`<<extend>>`) |
 
 ---
 
@@ -149,12 +164,18 @@ La accesibilidad para personas con discapacidad física es una condición de cal
 
 | Campo | Descripción |
 |---|---|
-| **Actores** | Estudiante (retos propios), Administrador (estado de cualquier reto), Sistema (evaluación automática). |
-| **Precondición** | El actor tiene una sesión activa; el reto pertenece al estudiante autenticado o la operación de estado la ejecuta un Administrador. |
-| **Flujo normal** | 1. El Estudiante crea explícitamente un reto para una semana; no existe generación semanal automática. 2. El sistema evalúa automáticamente las insignias y el progreso de los retos activos después de las acciones que correspondan. 3. El Estudiante puede editar en su reto `descripcion`, `condicion`, `puntos_recompensa`, `progreso` y `semana`, o completarlo manualmente. 4. El propietario o el Administrador puede activar, desactivar o reactivar el reto. 5. Al completar el reto, el sistema registra la recompensa una sola vez. |
-| **Flujos alternativos** | A1: Insignia ya obtenida → el sistema no la duplica. A2: Reto inactivo → no acumula progreso automático ni recompensa por ese progreso. A3: Un reto desactivado y reactivado conserva sus puntos ya otorgados y no genera otro crédito; la semana sigue reservada por la regla de unicidad. A4: El reto ya completado no vuelve a otorgar recompensa. |
-| **Postcondición** | Las insignias quedan registradas; cada reto conserva su estado y progreso y los puntos se acreditan como máximo una vez. |
-| **Trazabilidad** | HU05, HU06, HU18, HU22 · RF05, RF06 · RN10, RN11, RN28 |
+| **Actores** | Estudiante (retos propios y consulta de insignias), Administrador (catálogo de insignias, asignación de retos, corrección de asignaciones y estado de los retos), Sistema (evaluación automática desde CU03 y CU04). |
+| **Permisos** | Requiere sesión activa (CU00). El Estudiante crea, consulta, edita, completa y elimina solo retos propios (RN21). El Administrador puede operar retos de cualquier cuenta y crear un reto para un estudiante indicando `id_cuenta`. El catálogo de insignias y la asignación o revocación manual son exclusivos del Administrador. |
+| **Disparador** | El actor abre Gamificación (P08) o el panel administrativo (P17), o el Sistema recibe un evento de CU03 o CU04. |
+| **Precondición** | Para operar un reto, este pertenece a la cuenta autenticada o el actor es Administrador. |
+| **Flujo normal** | 1. El Estudiante crea un reto para una semana con `descripcion`, `condicion` (`metrica:objetivo`, RN24), `puntos_recompensa` y `semana`; no existe generación semanal automática. 2. El sistema lo guarda sin progreso y sin completar. 3. Cuando CU03 o CU04 generan un evento, el Sistema suma progreso a los retos no completados de esa semana según su métrica y, al alcanzar el objetivo, completa el reto y acredita la recompensa una sola vez (RN23). 4. El Sistema evalúa las insignias y desbloquea las que cumplan su condición, sin duplicarlas (RN11). 5. El Estudiante consulta sus retos, insignias, puntos y nivel en P08. |
+| **Flujos alternativos** | A1 *(limitado por la Decisión #09; ver riesgo registrado)*: El Estudiante edita `descripcion`, `condicion`, `puntos_recompensa`, `semana` o `progreso` de su reto. A2 *(ver riesgo registrado)*: El Estudiante completa manualmente su reto: se marca completado y se acreditan sus `puntos_recompensa` una sola vez, en una transacción. A3: El Estudiante elimina su reto si no está completado. A4: El Administrador asigna un reto semanal a un estudiante desde P17. A5: El Administrador crea, edita o elimina insignias del catálogo. A6: El Administrador asigna o revoca una insignia con motivo (CU14). A7 (RN28/HU31, `PATCH /api/retos/:id/estado`): el propietario o el Administrador desactiva o reactiva el reto; mientras está inactivo no acumula progreso automático, no se revocan sus puntos y la reactivación no repite la recompensa. |
+| **Excepciones** | E1: Reto de otra cuenta → 403; reto inexistente → 404. E2: Segundo reto de la misma cuenta y semana → 409 «El registro ya existe» (UNIQUE `id_cuenta`, `semana`). E3: Reto ya completado → no vuelve a acreditar puntos (RN10); la ruta responde 200 con el reto sin cambios. E4: `puntos_recompensa` no positivo o `progreso` negativo → 400. E5: Un Estudiante intenta administrar insignias → 403. E6: Insignia ya obtenida → la asignación no se duplica. |
+| **Postcondición** | Cada reto conserva su estado y progreso; sus puntos se acreditan como máximo una vez y las insignias quedan registradas sin duplicados. |
+| **Reglas de negocio** | RN07–RN11, RN15, RN21, RN23, RN24, RN28 (Decisión #09, pendiente de revisión docente). |
+| **Trazabilidad** | RF05, RF06, RF07, RF08 · HU05, HU06, HU07, HU18, HU22, HU26, HU31 · extiende CU03 y CU04; se relaciona con CU13 y CU14 |
+
+> **Riesgo registrado (actualizado tras la Decisión #09, `b113445`).** La Decisión #06 conserva que el Estudiante edite `puntos_recompensa` (1–10.000, validado en la API) y `progreso`, y que complete manualmente su reto. La Decisión #09 hace transaccional el completado con un único crédito por reto, bloquea (409) la edición de recompensa, progreso y semana y la eliminación de retos completados, y rechaza completar retos inactivos. **Limitación vigente:** el completado manual no verifica el objetivo ni garantiza actividad académica real, y un Estudiante puede crear retos en otras semanas y completarlos manualmente, por lo que el total acumulable no está acotado por estas reglas.
 
 ---
 
@@ -212,9 +233,9 @@ Esta tabla complementa las fichas existentes sin repetir sus flujos.
 
 | CU | Objetivo | Disparador | HU | RF | RN aplicables |
 |---|---|---|---|---|---|
-| CU01 | Registrar cuenta y materias | Seleccionar “Crear cuenta” | HU01, HU16 | RF01 | RN01–RN03, RN21 |
+| CU01 | Registrar cuenta y materias | Seleccionar “Crear cuenta” | HU01, HU16, HU29 | RF01 | RN01–RN03, RN21, RN26 |
 | CU02 | Gestionar tareas | Seleccionar “Nueva tarea”, Editar o Eliminar | HU02, HU19 | RF02, RF04, RF09 | RN04–RN06, RN21 |
-| CU03 | Completar tarea y recompensar | Seleccionar Completar | HU03 | RF03, RF05, RF07 | RN07–RN11, RN21 |
+| CU03 | Completar tarea y recompensar | Seleccionar Completar | HU03, HU05, HU06, HU07 | RF03, RF05, RF06, RF07, RF15 | RN07–RN11, RN21–RN24 |
 | CU04 | Realizar sesión Pomodoro | Seleccionar Iniciar | HU10, HU12 | RF10, RF12 | RN19–RN21 |
 | CU05 | Consultar tablero y metas | Abrir Tablero o cambiar semana | HU08, HU11, HU15, HU17 | RF08, RF11, RF15 | RN12–RN14, RN21 |
 | CU06 | Gestionar gamificación | Abrir Gamificación o actuar sobre un reto | HU05–HU07, HU18, HU31 | RF05–RF08 | RN07–RN11, RN15, RN21, RN28 |
@@ -227,12 +248,23 @@ Esta tabla complementa las fichas existentes sin repetir sus flujos.
 
 ## Trazabilidad CRUD Completa — 3 Casos de Uso Críticos
 
-Por instrucción de la docente, se documentan con el máximo nivel de detalle
-los 3 casos de uso que concentran más lógica de negocio y más entidades
-relacionadas del sistema. Para cada uno se muestra la cadena completa:
-**RF ↔ HU ↔ clase/método ↔ endpoint ↔ pantalla/botón ↔ prueba**, verificada
-contra el código real (no solo contra la documentación) — mismo estándar
-exigido en el punto 7 del checklist de Construcción (`M18_matriz_unificada_construccion.md`).
+Por instrucción de la docente se documentan con el máximo nivel de detalle tres casos de uso críticos: **CU01** (punto de entrada y creación transaccional de la cuenta), **CU03** (transacción de recompensa) y **CU06** (reglas de gamificación y retos). La tabla de CU02 se conserva como trazabilidad complementaria. Cada fila muestra la cadena **operación ↔ HU/RN ↔ entidad ↔ endpoint ↔ controlador → servicio ↔ pantalla ↔ prueba**, verificada contra el código del repositorio el 24 de octubre de 2026. La columna *Estado* distingue lo implementado de lo planeado; «Sin prueba automática» indica que no se identificó una prueba que ejercite esa operación.
+
+Controladores: `src/controllers/authController.js` y `src/controllers/resourceControllers.js` (objetos `subjects`, `tasks`, `challenges`, `badges` y `accountBadges`). Rutas: `src/routes/authRoutes.js` y `src/routes/resourceRoutes.js`.
+
+### CU01 — Registrar cuenta y materias (creación transaccional)
+
+| Operación | HU · RN | Entidad | Endpoint | Controlador → servicio | Pantalla / acción | Prueba | Estado |
+|---|---|---|---|---|---|---|---|
+| Crear cuenta, preferencia y materia inicial | HU01 · RN01–RN03, RN21 | `cuenta`, `preferencia_visual`, `materia` | `POST /api/auth/registro` | `register` → `authService.register` (transacción) | Acceso · `#form-registro` | `tests/api/api.test.js` (201 sin hash, 409 duplicado, 400 sin materia, 400 con `rol`, 400 contraseña); `tests/api/input-validation.test.js` (`validateRegistration`) | Implementado |
+| Iniciar sesión tras el registro | HU01 · RN02 | `cuenta` | `POST /api/auth/login` | `login` → `authService.authenticate` | `iniciarSesion()` después del registro | `tests/api/api.test.js` (401 credenciales, 403 cuenta inactiva) | Implementado |
+| Consultar materias | HU01, HU16 · RN21 | `materia` | `GET /api/materias`, `GET /api/materias/:id` | `subjects.list` / `subjects.get` → `materiaService` | Vista Materias | `tests/api/api.test.js` (200 propia, 403 ajena, 401 sin sesión) | Implementado |
+| Crear materia adicional | HU01, HU16 · RN21, RN26 | `materia` | `POST /api/materias` (`id_catalogo_materia`) | `subjects.create` → `materiaService.crearDesdeCatalogo` (transacción IMMEDIATE) | `#form-materia` con desplegable del catálogo | `tests/api/api.test.js`; `tests/integration/materia-catalogo-concurrencia.test.js` | Implementado (`3eb2b71`) |
+| Actualizar materia | HU16 · RN21, RN26 | `materia` | `PUT /api/materias/:id` | `subjects.update` → `materiaService.actualizarDesdeCatalogo` | `data-accion="editar-materia"` | `tests/api/api.test.js`; `tests/integration/materia-catalogo-concurrencia.test.js` | Implementado (`3eb2b71`) |
+| Eliminar materia | HU16 · integridad FK | `materia` | `DELETE /api/materias/:id` | `subjects.remove` → `materiaService` | `data-accion="eliminar-materia"` con confirmación | `tests/api/api.test.js` (204) | Implementado |
+| Seleccionar la materia del catálogo | HU01, HU29 · RN26 | `catalogo_materia`, `materia` | `GET /api/catalogo-materias` (pública); `POST /api/auth/registro` | `catalogoMateriaService.obtenerActiva` dentro de `authService.register` | `#form-registro` con desplegable | `tests/api/api.test.js`; `tests/frontend/browser.test.js` | Implementado (`f62c5e5`, `3eb2b71`) |
+
+**Pruebas faltantes:** ninguna identificada para CU01 en el código local. La reversión del registro, los límites del nombre y los casos del catálogo (vacío, inactivo, inexistente y concurrencia) están cubiertos en `api.test.js`, `input-validation.test.js`, `browser.test.js` y `materia-catalogo-concurrencia.test.js`. Pendiente operativo: migrar la base principal y cargar el catálogo antes de abrir el registro.
 
 ### CU02 — Gestionar tareas académicas (CRUD completo)
 
@@ -242,36 +274,48 @@ exigido en el punto 7 del checklist de Construcción (`M18_matriz_unificada_cons
 | Consultar (listar/filtrar) | HU09 | `TareaService.listarTareas` | `GET /api/tareas` | P04/P12 · `#buscar-tarea`, `#filtro-prioridad`, `#filtro-estado` → `renderizarTareas()` | Frontend estático |
 | Actualizar | HU19 | `TareaService.actualizarTarea` | `PUT /api/tareas/:id` | P04/P05 · `data-accion="editar-tarea"` | `tests/api/api.test.js` |
 | Eliminar | HU19 | `TareaService.eliminarTarea` | `DELETE /api/tareas/:id` | P04/P05 · `data-accion="eliminar-tarea"` | `tests/api/api.test.js` |
-| Efecto colateral (`<<extend>>`) | HU04 | `PlanificadorRecordatoriosService.sincronizarAutomatico` | *(interno, disparado por crear/actualizar tarea)* | — | `tests/integration/reminders.test.js` |
+| Programar recordatorio (obligatorio al crear, RN05; `<<extend>>` CU10 solo al editar nombre o fecha) | HU04 | `PlanificadorRecordatoriosService.sincronizarAutomatico` | *(interno, disparado por crear/actualizar tarea)* | — | `tests/integration/reminders.test.js` |
 
 **Reglas de negocio aplicables:** RN04–RN06, RN21. **Clase en el diagrama:** `Tarea` (E12), con las 6 operaciones de M9 (`crearTarea`…`eliminarTarea`) mapeadas 1 a 1 contra esta tabla.
 
 ### CU03 — Completar tarea y recibir recompensa (transacción de gamificación)
 
-| Operación | HU | Clase.método | Endpoint | Pantalla / botón | Prueba |
-|---|---|---|---|---|---|
-| Completar (transacción) | HU03 | `GamificacionService.completarTareaConGamificacion` | `PATCH /api/tareas/:id/completar` | P04 Tareas · `data-accion="completar-tarea"` | `tests/integration/objectives-6-10.test.js` (`TC-O6-TAREA`) |
-| Idempotencia (no duplicar) | HU03 | `GamificacionService.completarTareaConGamificacion` (verifica `estado` antes de otorgar puntos) | mismo endpoint | mismo botón, segunda pulsación bloqueada por estado `Completada` | `TC-O6-DUPLICADO` |
-| Rollback ante fallo | HU03 | Transacción `IMMEDIATE` de Sequelize dentro del mismo método | mismo endpoint | — (comportamiento interno) | `TC-O6-ROLLBACK` |
-| Otorgar puntos (sub-operación) | HU07 | `Punto.otorgarPuntos` | *(interno, dentro de la transacción)* | reflejo en P08 · `renderizarGamificacion()` | `tests/integration/objectives-6-10.test.js` |
-| Evaluar insignias (`<<extend>>` → CU06) | HU05 | `CuentaInsignia.evaluarInsignias`, `desbloquearInsignia` | *(interno)* | animación de celebración en P04/P08 | `tests/integration/objectives-6-10.test.js` |
-| Evaluar nivel | HU07 | `NivelCuenta.evaluarNivelCuenta` | *(interno)* | reflejo en P08 | `tests/integration/objectives-6-10.test.js` |
+Las funciones internas citadas pertenecen a `src/services/gamificacionService.js` y se ejecutan dentro de la misma transacción.
 
-**Reglas de negocio aplicables:** RN07–RN11, RN21 (append-only en `Punto`, sin edición de movimientos históricos). **Clases en el diagrama:** `Tarea`, `Punto`, `CuentaInsignia`, `NivelCuenta`, más la clase de servicio `GamificacionService` que orquesta la transacción completa (E12).
+| Operación | HU · RN | Entidad | Endpoint | Controlador → servicio | Pantalla / acción | Prueba | Estado |
+|---|---|---|---|---|---|---|---|
+| Completar la tarea | HU03 · RN21, RN22 | `tarea` | `PATCH /api/tareas/:id/completar` | `tasks.complete` → `GamificacionService.completarTareaConGamificacion` | Tareas · `data-accion="completar-tarea"` | `tests/integration/objectives-6-10.test.js` (TC-O6-TAREA); `tests/api/api.test.js` (200 propia, 404 ajena) | Implementado |
+| Acreditar 10 puntos una vez | HU03, HU07 · RN07, RN08, RN22, RN23 | `punto` | interno | `otorgarUnaVez` (índice `uq_punto_evento`) | reflejo en P08 | TC-O6-TAREA | Implementado |
+| Impedir doble completado | HU03 · RN10, RN23 | `tarea`, `punto` | mismo endpoint | verificación de estado → 409 | — | TC-O6-DUPLICADO; `tests/api/api.test.js` (409) | Implementado |
+| Cancelar recordatorios de la tarea | HU04 · complementa RN05 | `recordatorio` | interno | `PlanificadorRecordatoriosService.cancelarDeTarea` | — | `tests/integration/reminders.test.js` | Implementado |
+| Progreso de metas y retos (retos: `<<extend>>` → CU06) | HU06, HU15 · RN12, RN13, RN24 | `meta`, `reto`, `punto` | interno | `actualizarMetas`, `actualizarRetos` | P08 | TC-O6-TAREA (reto y meta cumplidos, un crédito de reto) | Implementado |
+| Evaluar insignias (`<<extend>>` → CU06) | HU05 · RN11 | `cuenta_insignia` | interno | `evaluarInsignias` | celebración en P04/P08 | TC-O6-TAREA («Primera tarea» sin duplicar) | Implementado |
+| Evaluar nivel | HU07 · RN15 | `nivel_cuenta`, `punto` | interno | `evaluarCambioNivel` | P08 | TC-O6-TAREA (nivel y total) | Implementado |
+| Notificar | HU24 · RN16, RN17 | `notificacion` | interno | `notificar` | Centro de notificaciones | TC-O6-TAREA | Implementado |
+| Revertir ante fallo | HU03 · RN23 | todas las anteriores | mismo endpoint | transacción `IMMEDIATE` | — | TC-O6-ROLLBACK | Implementado |
+| Excluir retos inactivos del progreso | HU06 · RN28 | `reto` | interno | filtro `activo: true` en `actualizarRetos` | — | `tests/integration/reto-estado.test.js` | Implementado (`b113445`) |
+
+**Pruebas faltantes:** completar con rol Administrador o Revisor (403) mediante la API. El progreso de retos inactivos está cubierto en `reto-estado.test.js`.
+
+**Diferencia con E12/M9 (pendiente deliberado):** la versión anterior de esta tabla citaba `Punto.otorgarPuntos`, `CuentaInsignia.evaluarInsignias` y `NivelCuenta.evaluarNivelCuenta`. Esas funciones existen en `src/crud/`, pero CU03 no las invoca; usa las funciones internas de `gamificacionService.js` indicadas arriba. Si E12 o M9 conservan los nombres anteriores, la diferencia queda registrada para su revisión; no se modificaron.
 
 ### CU06 — Gestionar insignias y retos (relaciones N:M y reglas append-only)
 
-| Operación | HU | Clase.método | Endpoint | Pantalla / botón | Prueba |
-|---|---|---|---|---|---|
-| Consultar insignias propias | HU07 | `CuentaInsignia.listarInsigniasDesbloqueadas` | `GET /api/cuenta-insignias` | P08 Gamificación · `renderizarGamificacion()` | API |
-| Desbloquear insignia (automático) | HU05 | `CuentaInsignia.desbloquearInsignia`, `evaluarInsignias` | *(interno, disparado por CU03/CU04)* | animación de celebración | `tests/integration/objectives-6-10.test.js` |
-| Editar reto propio | HU18 | `Reto.actualizarReto` | `PUT /api/retos/:id` | P08 · `data-accion="editar-reto"` | Manual (CRUD contra servidor real) |
-| Eliminar reto propio | HU18 | `Reto.eliminarReto` | `DELETE /api/retos/:id` | P08 · `data-accion="eliminar-reto"` | Manual |
-| Progreso automático del reto | HU06 | `Reto.actualizarProgresoReto`, `completarReto` | *(interno, dentro de la transacción de gamificación)* | reflejo en P08 | `tests/integration/objectives-6-10.test.js` |
-| Administrar catálogo de insignias | HU22 | `Insignia.crearInsignia`, `actualizarInsignia`, `eliminarInsignia` | `POST/PUT/DELETE /api/insignias/:id` | P17 Catálogos (Administrador) · `#form-admin-insignia` | `tests/api/api.test.js` |
-| Corregir asignación (revocar) | HU26 | `CorreccionAdministrativaService.asignarInsignia`, `revocarInsignia` | `POST /api/cuenta-insignias`, `DELETE /api/cuenta-insignias/:id_cuenta/:id_insignia` | P17 (Administrador) · `data-accion="revocar-insignia-admin"` | `tests/integration/admin-corrections.test.js` |
+| Operación | HU · RN | Entidad | Endpoint | Controlador → servicio / CRUD | Pantalla / acción | Prueba | Estado |
+|---|---|---|---|---|---|---|---|
+| Crear reto | HU06 · RN10, RN21 | `reto` | `POST /api/retos` | `challenges.create` → `retoService` (`retoCrud.crearReto`) | P08; P17 «Asignar reto semanal» | `tests/api/api.test.js` (201) | Implementado |
+| Consultar retos | HU06 · RN21 | `reto` | `GET /api/retos`, `GET /api/retos/:id` | `challenges.list` / `challenges.get` → `listarRetos`, `obtenerReto` | P08 | Sin prueba automática | Implementado |
+| Editar reto | HU18 · RN21 | `reto` | `PUT /api/retos/:id` | `challenges.update` → `actualizarReto` | P08 · `data-accion="editar-reto"` | `tests/api/api.test.js` (200) | Implementado |
+| Completar reto manualmente | HU18 · RN10 | `reto`, `punto` | `PATCH /api/retos/:id/completar` | `challenges.complete` → `completarReto` | P08 | `tests/api/api.test.js`; `tests/integration/reto-estado.test.js` (concurrencia y rollback) | Implementado (`b113445`); limitación de autenticidad registrada |
+| Eliminar reto | HU18 · RN21 | `reto` | `DELETE /api/retos/:id` | `challenges.remove` → `eliminarReto` | P08 · `data-accion="eliminar-reto"` con confirmación | `tests/api/api.test.js` (204) | Implementado |
+| Progreso automático del reto (extensión de CU03/CU04) | HU06 · RN23, RN24 | `reto`, `punto` | interno (CU03/CU04) | `actualizarRetos` en `gamificacionService.js` | reflejo en P08 | TC-O6-TAREA | Implementado |
+| Activar, desactivar o reactivar reto | HU06, HU18, HU31 · RN28 | `reto.activo` | `PATCH /api/retos/:id/estado` | `challenges.setState` → `retoCrud.activarReto` / `desactivarReto` | P08 y P17 · `data-accion="estado-reto"` | `tests/api/api.test.js`; `tests/integration/reto-estado.test.js` | Implementado (`b113445`) |
+| Consultar insignias desbloqueadas | HU05, HU07 · RN21 | `cuenta_insignia` | `GET /api/cuenta-insignias` | `accountBadges.list` | P08 · `renderizarGamificacion()` | `tests/api/api.test.js` (200) | Implementado |
+| Desbloquear insignia automáticamente (extensión de CU03/CU04) | HU05 · RN11 | `cuenta_insignia` | interno (CU03/CU04) | `evaluarInsignias` en `gamificacionService.js` | celebración | TC-O6-TAREA | Implementado |
+| Administrar catálogo de insignias | HU22 · RN11 | `insignia` | `POST /api/insignias`, `PUT`/`DELETE /api/insignias/:id` | `badges.*` → `insigniaService` | P17 · `#form-admin-insignia` | `tests/api/api.test.js` (201/200, 403 Estudiante) | Implementado |
+| Asignar o revocar insignia con motivo | HU26 · RN07, RN11 | `cuenta_insignia` | `POST /api/cuenta-insignias`, `DELETE /api/cuenta-insignias/:id_cuenta/:id_insignia` | `accountBadges.*` → `CorreccionAdministrativaService` | P17 · `data-accion="revocar-insignia-admin"` | `tests/api/api.test.js`; `tests/integration/admin-corrections.test.js` | Implementado |
 
-**Reglas de negocio aplicables:** RN07–RN11, RN15, RN21. **Clases en el diagrama:** `Insignia`, `CuentaInsignia` (asociación N:M), `Reto`, más `CorreccionAdministrativaService` para las correcciones administrativas (E12).
+**Pruebas faltantes:** consulta de retos mediante la API (`GET /api/retos`). Los casos de reto ajeno (403), inexistente (404), semana duplicada (409), crédito único, estado y bloqueo de retos completados están cubiertos en `api.test.js` y `reto-estado.test.js` (`b113445`).
 
 ---
 
@@ -307,7 +351,7 @@ exigido en el punto 7 del checklist de Construcción (`M18_matriz_unificada_cons
 | HU26 | Como Administrador, quiero consultar movimientos de puntos y asignaciones de insignias y revocar registros incorrectos, para corregir inconsistencias justificadas. | RF05, RF07 |
 | HU27 | Como Administrador, quiero consultar, actualizar, desactivar o reactivar cuentas, para atender correcciones y necesidades de seguridad. | RF01, RNF12 |
 | HU28 | Como Revisor institucional, quiero consultar indicadores agregados de un periodo, para revisar el avance sin modificar datos del estudiante. | RF11 |
-| HU29 *(planeada)* | Como Administrador, quiero gestionar el catálogo de materias, para que los estudiantes seleccionen su materia en lugar de escribirla. | RF01 |
+| HU29 | Como Administrador, quiero gestionar el catálogo de materias, para que los estudiantes seleccionen su materia en lugar de escribirla. | RF01 |
 | HU30 | Como Estudiante, quiero desactivar mi propia cuenta desde Mi perfil, para suspender mi acceso sin perder mis datos. | RF01 |
 | HU31 | Como Administrador, quiero activar, desactivar o reactivar retos de las cuentas, para controlar su disponibilidad sin alterar los puntos ya otorgados. | RF06 |
 
@@ -341,17 +385,17 @@ Los criterios de aceptación completos y la cobertura CRUD de HU01–HU31 se enc
 | **Postcondición** | El historial conserva únicamente sesiones válidas. |
 | **Trazabilidad** | HU21 · RF10, RF11 · RN14 |
 
-## CU13 — Administrar cuentas y catálogos
+## CU13 — Administrar cuentas, catálogos y estado de retos
 
 | Campo | Descripción |
 |---|---|
 | **Actor principal** | Administrador |
 | **Disparador** | El Administrador abre el panel autorizado. |
 | **Precondición** | Permisos administrativos vigentes. |
-| **Flujo normal** | 1. Selecciona cuentas, insignias, niveles o *(PLANEADO)* el catálogo de materias. 2. Consulta el registro. 3. Crea o modifica catálogos, actualiza/desactiva/reactiva una cuenta o activa/desactiva/reactiva un reto. 4. El sistema valida permisos, unicidad e integridad. 5. Persiste y confirma. |
+| **Flujo normal** | 1. Selecciona cuentas, insignias, niveles o el catálogo de materias (P17, `f62c5e5`). 2. Consulta el registro. 3. Crea o modifica catálogos, actualiza/desactiva/reactiva una cuenta o activa/desactiva/reactiva un reto. 4. El sistema valida permisos, unicidad e integridad. 5. Persiste y confirma. |
 | **Flujos alternativos** | A1: registro relacionado impide eliminar → informa la restricción. A2: valor duplicado → rechaza. |
 | **Postcondición** | La cuenta o catálogo queda actualizado sin romper referencias. |
-| **Trazabilidad** | HU22, HU23, HU27, HU29 *(planeada)*, HU31 · RF01, RF05, RF06, RF07 · RN01, RN02, RN11, RN15, RN26 *(planeada)*, RN27, RN28 |
+| **Trazabilidad** | HU22, HU23, HU27, HU29, HU31 · RF01, RF05, RF06, RF07 · RN01, RN02, RN11, RN15, RN26, RN27, RN28 |
 
 ## CU14 — Corregir movimientos y asignaciones
 

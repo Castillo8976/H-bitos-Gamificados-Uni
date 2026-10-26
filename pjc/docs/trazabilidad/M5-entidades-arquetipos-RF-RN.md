@@ -25,12 +25,13 @@ Esta matriz conecta cada entidad del modelo de datos con su arquetipo conceptual
 | **insignia** | Insignia | RF05 | Catálogo global independiente del estudiante · nombre y condición únicos · se desbloquea automáticamente al cumplirse la condición |
 | **cuenta_insignia** | Insignia (N:M) | RF05 | PK compuesta (id_cuenta, id_insignia) garantiza que el mismo estudiante no obtenga la misma insignia dos veces · se crea automáticamente |
 | **punto** | Punto | RF03 · RF07 | cantidad > 0 · origen IN {Tarea, Reto, Sesion} · total de puntos de una cuenta = suma de todos sus registros en esta tabla |
-| **reto** | Reto | RF06 | Se crea manualmente, 1 por semana y cuenta · `activo` (planeado): el propietario y el Administrador pueden cambiar el estado · solo el reto activo acumula progreso automático · se acredita recompensa como máximo una vez (RN10, RN28) |
+| **reto** | Reto | RF06 | Se crea manualmente, 1 por semana y cuenta · `activo` (`b113445`, Decisión #09): el propietario y el Administrador pueden cambiar el estado · solo el reto activo acumula progreso automático · se acredita recompensa como máximo una vez (RN10, RN28) |
 | **meta** | Meta | RF15 | 1 meta por semana por cuenta · objetivo no supera 120% del promedio histórico · valor_actual se actualiza automáticamente · cumplida se mantiene explícita por consistencia histórica |
 | **recordatorio** | Recordatorio | RF04 · RNF15 | Se genera automáticamente al crear una tarea con fecha · mínimo 24 h antes de la entrega · no se reenvía si enviado=TRUE · se elimina en cascada si se borra la tarea |
 | **preferencia_visual** | Preferencia visual | RF13 · RNF04 | Relación 1:1 con cuenta (UNIQUE en id_cuenta) · se crea automáticamente al registrar cuenta · tema IN {6 colores definidos} · datos persisten al reiniciar (RNF04) |
 | **nivel_cuenta** | Nivel de cuenta | RF07 | Catálogo global ordenado · nombre y orden únicos · puntos mínimos no negativos · el nivel se deriva del total acumulado |
 | **notificacion** | Notificación | RF04 · RNF15 | Pertenece a una cuenta · inicia no leída · puede marcarse como leída o eliminarse · se elimina en cascada con la cuenta |
+| **catalogo_materia** | Catálogo de asignaturas | RF01 · RN26 · HU29 | Catálogo global administrado (tabla 14, Decisión #10) · nombre único sin distinguir mayúsculas ni espacios · solo las entradas activas se pueden seleccionar · no se elimina con materias asociadas (RESTRICT), solo se desactiva |
 
 ---
 

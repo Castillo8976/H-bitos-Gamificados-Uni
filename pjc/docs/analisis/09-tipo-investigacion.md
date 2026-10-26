@@ -21,7 +21,7 @@ El proyecto se apoya en un **enfoque mixto**, aplicado de forma secuencial: prim
 - 93 % mostró interés en un sistema de recompensas.
 - Funcionalidades más solicitadas ordenadas por porcentaje (recordatorios 88 %, historial 72 %, estadísticas 68 %, metas semanales 61 %).
 
-Este componente **justifica cuáles módulos priorizar** (los cinco módulos funcionales del alcance responden directamente a las funcionalidades más solicitadas en la encuesta).
+Este componente **justifica cuáles módulos priorizar** (cinco de los seis módulos funcionales del alcance responden directamente a las funcionalidades más solicitadas en la encuesta; el módulo de cuentas y administración se incorporó a partir de la revisión documental). Los módulos describen el alcance funcional y no equivalen a los objetivos específicos OE01–OE04.
 
 ### Componente cualitativo
 

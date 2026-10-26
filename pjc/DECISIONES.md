@@ -105,3 +105,182 @@ límites aprobados para los campos se registran en E7. Quedan sin resolver la
 decisión sobre materia inicial (pregunta 5), los aspectos adicionales de
 contraseña (pregunta 8) y el bloqueo al desactivar la última cuenta
 Administradora activa (pregunta 7).
+
+---
+
+## Decisión #07
+
+**¿Qué decidí?**
+Mantener cuatro objetivos específicos (OE01–OE04): OE04 integra el antiguo
+OE05 de configuración y personalización, y el objetivo general no declara
+mejoras de rendimiento académico ni de bienestar emocional. Esta decisión
+sustituye únicamente la parte de la Decisión #06 referida a los objetivos; el
+resto de la Decisión #06 se mantiene.
+
+**¿Por qué?**
+La docente pidió el 26 de septiembre de 2026 corregir los verbos del objetivo
+general, formular los objetivos específicos como diseño de módulos y unir los
+objetivos 4 y 5. El sistema no mide el rendimiento académico ni el bienestar
+emocional, por lo que no se presentan como resultados. Las funciones de cuentas
+y administración se conservan como requisitos del sistema (RF01, RF05, RF06 y
+RF07) trazados a OE01 y OE03, sin crear un objetivo específico adicional.
+
+**¿Qué artefacto respalda esta decisión?**
+`04-objetivo-general.md`, `05-objetivos-especificos.md`, la ERS y las matrices
+`11` y `14`.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026 para la corrección documental;
+pendiente de revisión docente.
+
+---
+
+## Decisión #08
+
+**¿Qué decidí?**
+Invalidar de forma persistente todos los JWT emitidos antes de desactivar una
+cuenta mediante el atributo `cuenta.version_sesion` (INTEGER, DEFAULT 0). La
+versión se incrementa de forma atómica solo cuando la cuenta pasa de activa a
+inactiva, tanto si la desactiva su propietario como un Administrador. Cada JWT
+incluye la versión (`ver`) y se rechaza si no la trae o si no coincide con la
+almacenada. La reactivación no reduce ni reinicia la versión.
+
+**¿Por qué?**
+RN27 exige que una cuenta desactivada no pueda iniciar sesión. Se comprobó que,
+al reactivarla, los tokens anteriores aún vigentes volvían a ser aceptados y que
+la revocación en memoria se perdía al reiniciar el servidor. Esta decisión amplía
+RN27 y HU30: los tokens anteriores a la desactivación permanecen inválidos aunque
+la cuenta se reactive o el servidor se reinicie. Los tokens emitidos antes del
+cambio de esquema, que no contienen `ver`, se rechazan; los usuarios deben
+iniciar sesión una vez.
+
+**¿Qué artefacto respalda esta decisión?**
+E7 (`cuenta.version_sesion`), E11, `src/models/Cuenta.js`, la migración aditiva de
+`src/config/schema.js`, M7, M8, M17 y las pruebas
+`tests/integration/session-version.test.js` y
+`tests/schema/session-version-migration.test.js`.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026; no constituye una aprobación
+docente. Pendientes deliberados: E8, E9 y E12 (diagramas excluidos de esta
+corrección) y M9 no muestran `version_sesion` ni `desactivarCuenta`; RN27, HU27 y
+HU30 se sincronizarán en la Fase 7. El logout individual mantiene la revocación
+en memoria. La protección de la última cuenta Administradora activa sigue sin
+decisión. La migración de la base principal requiere una autorización aparte.
+
+**Actualización (24 de octubre de 2026, Fase 7A):** RN27, HU27, HU30 y M9
+(`desactivarCuenta`; la reactivación usa `actualizarCuenta`) quedaron
+sincronizados con el código local (`28b601a`). E8, E9 y E12 siguen sin cambios.
+
+---
+
+## Decisión #09
+
+**¿Qué decidí?**
+Completar el estado de los retos y proteger la consistencia de sus recompensas,
+conservando los permisos de la Decisión #06:
+
+- `reto.activo` (DEFAULT TRUE) se cambia solo mediante `PATCH /api/retos/:id/estado`,
+  por el Estudiante propietario o el Administrador; el `PUT` general no acepta
+  `activo`. Desactivar o reactivar no borra progreso, puntos ni historial.
+- Un reto inactivo no recibe progreso automático ni nuevas recompensas; su
+  completado manual se rechaza con 409.
+- El completado manual se conserva para el propietario y el Administrador; se
+  ejecuta en una transacción con un UPDATE condicionado y acredita una sola vez
+  (índice `uq_punto_evento`).
+- `puntos_recompensa` (1–10.000) y `progreso` siguen siendo editables mientras el
+  reto no esté completado; después se rechazan con 409. Por la misma razón, la
+  `semana` de un reto completado tampoco cambia, porque liberarla permitiría crear
+  otro reto en ella y acreditar de nuevo. `descripcion` y `condicion` siguen
+  editables, ya que no generan recompensas nuevas.
+- Solo se eliminan retos no completados; uno completado conserva la trazabilidad
+  de su recompensa y mantiene reservada su semana.
+- Se aplican en la API los límites de RNF-16 (`puntos_recompensa` 1–10.000,
+  `valor_objetivo` 1–10.080, `duracion_minutos` 1–1.440) y el formato RN24
+  `metrica:objetivo` cuando se crea o cambia una condición; los registros
+  antiguos no se invalidan.
+
+**¿Por qué?**
+El diagnóstico mostró que, mediante la API, un reto podía recibir recompensas sin
+límite y acreditarse repetidamente al eliminarlo y crearlo de nuevo en la misma
+semana, y que el estado `activo` documentado en E7, E9, E12 y RN28 no existía en
+el código. Se cierran las acreditaciones repetidas sin retirar recompensas
+históricas ni reiniciar progreso.
+
+**Limitación explícita**
+Estas reglas protegen la consistencia de la acreditación, pero no garantizan que
+un reto completado manualmente o con progreso editado represente actividad
+académica real. El completado manual y la edición del progreso se conservan por
+la Decisión #06; la autenticidad de esos logros queda como pendiente de seguridad
+funcional y no se declara resuelta. En particular, el límite es de una recompensa
+por reto y por semana: un Estudiante puede crear retos en otras semanas válidas y
+completarlos manualmente, de modo que el total acumulable no está acotado por estas
+reglas.
+
+**¿Qué artefacto respalda esta decisión?**
+E7, E11 (`reto.activo`), `src/models/Reto.js`, la migración aditiva de
+`src/config/schema.js`, M7, M8, M17 y las pruebas
+`tests/integration/reto-estado.test.js`, `tests/schema/reto-activo-migration.test.js`
+y `tests/api/api.test.js`.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026; no constituye una aprobación
+docente y no modifica retrospectivamente la Decisión #06. Pendientes: los límites
+de RNF-16 se validan en la API y no como CHECK de SQLite (E9 dibuja el CHECK de
+`puntos_recompensa`); E8, E9 y E12 conservan la marca «pendiente» de `activo` y de
+`activarReto`/`desactivarReto`; RN28, HU06, HU18, HU31, CU06 y la matriz `14` se
+sincronizarán en la Fase 7. La migración de la base principal (`version_sesion` y
+`reto.activo`) requiere una autorización aparte.
+
+**Actualización (24 de octubre de 2026, Fase 7A):** RN28, HU06, HU18, HU31,
+CU06, la matriz `14`, M5 y M9 quedaron sincronizados con el código local
+(`b113445`). Los demás pendientes de este apartado se mantienen.
+
+---
+
+## Decisión #10
+
+**¿Qué decidí?**
+Incorporar `catalogo_materia` como tabla independiente y global, administrada por
+el rol Administrador, con lo que el esquema pasa de 13 a 14 tablas. La materia se
+asocia al catálogo mediante `materia.id_catalogo_materia`, inicialmente opcional.
+La consulta pública devuelve solo el identificador y el nombre de las entradas
+activas. Una entrada con materias asociadas no se elimina, solo se desactiva, y
+desactivarla conserva las relaciones históricas. `materia.nombre` se conserva
+como copia histórica; en las materias nuevas el backend lo obtiene del catálogo.
+No se siembran asignaturas: la carga inicial la realiza un Administrador. Si no
+hay entradas activas, no se crean registros nuevos de cuenta.
+
+**¿Por qué?**
+La observación docente pidió una tabla para la materia inicial. Una entidad propia
+cumple 3FN, permite integridad referencial (RESTRICT) y la gestión administrativa
+de HU29, cosa que no ofrecen las alternativas que conservaban 13 tablas.
+
+**Alcance y etapas**
+- D-1: estructura, migración aditiva M1, administración del catálogo en P17 y
+  consulta pública. No cambia el registro ni la creación de materias.
+- D-2 (sin autorizar): selección del catálogo en el registro y en «Nueva materia».
+- M2 (sin autorizar): correspondencias revisadas por personas entre las materias
+  existentes y el catálogo; las seis materias actuales no se renombran ni se
+  asocian automáticamente.
+- M3 (sin autorizar): reconstrucción de `materia` para exigir NOT NULL.
+- Sin `UNIQUE(id_cuenta, id_catalogo_materia)` hasta decidir el manejo de
+  asignaturas repetidas en distintos períodos.
+
+**¿Qué artefacto respalda esta decisión?**
+E7 (sección 14 y FK de `materia`), E10 (14 tablas y Excepción 3), E11, M7, M8,
+M17, RN26 y HU29.
+
+**Estado**
+Adoptada por el equipo el 24 de octubre de 2026; pendiente de revisión docente.
+RN26, HU29, CU01 y CU13 siguen como planeadas hasta su sincronización en la
+Fase 7. E8, E9 y E12 no se modifican y conservan `catalogo_materia` como
+planeada. La migración de la base principal requiere una autorización aparte.
+
+**Actualización (24 de octubre de 2026, Fase 7A):** implementada en el código
+local (`f62c5e5`, `3eb2b71`). RN26, HU29, CU01, CU13 y las matrices M quedaron
+sincronizadas. Esta decisión resuelve, a nivel del equipo, la pregunta 5 de la
+Decisión #06 (materia inicial), sin modificar el texto histórico de esa
+decisión y pendiente de revisión docente. Siguen pendientes la migración de la
+base principal, la carga de asignaturas reales y la actualización de E8, E9 y
+E12.

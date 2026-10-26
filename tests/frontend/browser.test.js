@@ -19,10 +19,20 @@ const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 const authService = require('../../src/services/authService');
 const Cuenta = require('../../src/models/Cuenta');
-const Materia = require('../../src/models/Materia');
 const app = require('../../src/app');
 const planificador = require('../../src/services/planificadorRecordatoriosService');
 const Notificacion = require('../../src/models/Notificacion');
+
+function localizarNavegador() {
+  const candidatos = [
+    process.env.CHROME_PATH,
+    process.platform === 'win32' ? path.join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe') : '/usr/bin/google-chrome',
+    process.platform === 'win32' ? path.join(process.env['PROGRAMFILES(X86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe') : '/usr/bin/chromium'
+  ].filter(Boolean);
+  const ejecutable = candidatos.find(candidato => fs.existsSync(candidato));
+  if (!ejecutable) throw new Error('No se encontró Chrome/Chromium. Configure CHROME_PATH para ejecutar la prueba de navegador.');
+  return ejecutable;
+}
 
 const esperar = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -74,26 +84,32 @@ class Cdp {
 }
 
 async function esperarCondicion(cdp, expresion, intentos = 80) {
+  let ultimoError;
   for (let intento = 0; intento < intentos; intento += 1) {
-    if (await cdp.evaluar(`Boolean(${expresion})`)) return;
+    try {
+      if (await cdp.evaluar(`Boolean(${expresion})`)) return;
+    } catch (error) {
+      ultimoError = error;
+    }
     await esperar(100);
   }
-  throw new Error(`No se cumplió la condición: ${expresion}`);
+  throw new Error(`No se cumplió la condición: ${expresion}. Último error: ${ultimoError?.message ?? ultimoError ?? 'ninguno'}`);
 }
 
 async function autenticar(cdp, correo) {
   await cdp.evaluar(`(async()=>{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:${JSON.stringify(correo)},contrasena:'ClaveSegura123!'})});const d=await r.json();sessionStorage.setItem('studyquest_token',d.token);location.reload();return r.status})()`);
-  await esperarCondicion(cdp, "!document.querySelector('#aplicacion').hidden");
+  await esperarCondicion(cdp, "document.readyState==='complete' && document.querySelector('#aplicacion')?.hidden === false");
 }
 
 async function run() {
   await inicializarEsquema();
+  const { id_catalogo_materia } = await require('../helpers/catalogo').sembrarCatalogo();
   for (const [nombre, correo, rol] of [
     ['Estudiante Browser', 'estudiante-browser@test.local', 'Estudiante'],
     ['Administrador Browser', 'admin-browser@test.local', 'Administrador'],
     ['Revisor Browser', 'revisor-browser@test.local', 'Revisor institucional']
   ]) {
-    const cuenta = await authService.register({ nombre, correo, contrasena: 'ClaveSegura123!', materia: { nombre: 'Materia inicial' } });
+    const cuenta = await authService.register({ nombre, correo, contrasena: 'ClaveSegura123!', materia: { id_catalogo_materia } });
     if (rol !== 'Estudiante') await Cuenta.update({ rol }, { where: { id_cuenta: cuenta.id_cuenta } });
   }
 
@@ -103,21 +119,10 @@ async function run() {
   });
   const puerto = servidor.address().port;
   const puertoCdp = 9333;
-  const candidatosChrome = process.platform === 'win32' ? [
-    process.env['ProgramFiles'] && path.join(process.env['ProgramFiles'], 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    process.env['ProgramFiles(x86)'] && path.join(process.env['ProgramFiles(x86)'], 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'Application', 'chrome.exe')
-  ] : ['/usr/bin/google-chrome'];
-  const ejecutableChrome = process.env.CHROME_BIN || candidatosChrome.find(ruta => ruta && fs.existsSync(ruta));
-  if (!ejecutableChrome) throw new Error('No se encontró Chrome; define CHROME_BIN para ejecutar la prueba de navegador.');
-  const chrome = await new Promise((resolve, reject) => {
-    const proceso = spawn(ejecutableChrome, [
-      '--headless=new', '--no-sandbox', '--disable-gpu', `--remote-debugging-port=${puertoCdp}`,
-      `--user-data-dir=${path.join(directory, 'chrome')}`, '--remote-allow-origins=*', 'about:blank'
-    ], { stdio: 'ignore' });
-    proceso.once('error', reject);
-    proceso.once('spawn', () => resolve(proceso));
-  });
+  const chrome = spawn(localizarNavegador(), [
+    '--headless=new', '--no-sandbox', '--disable-gpu', `--remote-debugging-port=${puertoCdp}`,
+    `--user-data-dir=${path.join(directory, 'chrome')}`, '--remote-allow-origins=*', 'about:blank'
+  ], { stdio: 'ignore' });
 
   let cdp;
   try {
@@ -127,15 +132,72 @@ async function run() {
     await cdp.enviar('Runtime.enable'); await cdp.enviar('Page.enable');
     await esperarCondicion(cdp, "document.querySelector('#form-login')");
     await esperarCondicion(cdp, "document.readyState==='complete'");
-    await esperar(100);
+    await esperarCondicion(cdp, "document.querySelector('#form-registro select').options.length === 2");
     assert.equal(await cdp.evaluar(`(()=>{const t=document.querySelector('#tab-login');t.focus();t.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));return document.activeElement.id==='tab-registro'&&document.activeElement.getAttribute('aria-selected')==='true'})()`), true);
     assert.equal(await cdp.evaluar(`(()=>{const t=document.querySelector('#tab-registro');t.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));return document.activeElement.id==='tab-login'&&document.activeElement.getAttribute('aria-selected')==='true'})()`), true);
+
+    // RN26: catálogo vacío impide el registro; al reactivarlo se puede elegir una asignatura.
+    const CatalogoMateria = require('../../src/models/CatalogoMateria');
+    await CatalogoMateria.update({ activo: false }, { where: { id_catalogo_materia } });
+    await cdp.evaluar("document.querySelector('#tab-registro').click()");
+    await esperarCondicion(cdp, "document.querySelector('#aviso-catalogo-registro').textContent.includes('No hay asignaturas disponibles') && document.querySelector('#form-registro [type=submit]').disabled");
+    await CatalogoMateria.update({ activo: true }, { where: { id_catalogo_materia } });
+    await cdp.evaluar("document.querySelector('#tab-login').click();document.querySelector('#tab-registro').click()");
+    await esperarCondicion(cdp, "document.querySelector('#form-registro select').options.length === 2 && !document.querySelector('#form-registro [type=submit]').disabled");
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-registro');f.elements.nombre.value='Registro Navegador';f.elements.correo.value='registro-browser@test.local';f.elements.contrasena.value='ClaveSegura123!';f.elements.id_catalogo_materia.value=${JSON.stringify(id_catalogo_materia)};f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#aplicacion').hidden === false");
+    assert.equal(await Cuenta.count({ where: { correo: 'registro-browser@test.local' } }), 1);
+    await cdp.evaluar("document.querySelector('[data-vista=materias]').click()");
+    await esperarCondicion(cdp, "document.querySelector('#form-materia select').options.length === 2");
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-materia');f.elements.id_catalogo_materia.value=${JSON.stringify(id_catalogo_materia)};f.elements.horario.value='Lunes';f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#lista-materias').textContent.includes('Lunes')");
+    const cuentaRegistro = await Cuenta.findOne({ where: { correo: 'registro-browser@test.local' } });
+    assert.equal(await require('../../src/models/Materia').count({ where: { id_cuenta: cuentaRegistro.id_cuenta, id_catalogo_materia } }), 2);
 
     await autenticar(cdp, 'estudiante-browser@test.local');
     assert.equal(await cdp.evaluar("document.querySelector('#usuario-rol').textContent"), 'Estudiante');
     assert.equal(await cdp.evaluar("document.querySelector('#form-perfil').elements.nombre.value"), 'Estudiante Browser');
     assert.equal(await cdp.evaluar("document.querySelectorAll('#form-preferencias').length"), 1);
     assert.deepEqual(await cdp.evaluar(`Array.from(document.querySelectorAll('input:not([type=hidden]),select,textarea')).filter(e=>!e.labels?.length&&!e.getAttribute('aria-label')&&!e.getAttribute('aria-labelledby')).map(e=>e.id||e.name)`), []);
+
+    // HU06/HU18/RN10/RN28: crear, duplicar, editar y completar desde controles reales.
+    await cdp.evaluar("document.querySelector('[data-vista=gamificacion]').click();document.querySelector('#mostrar-form-reto').click()");
+    assert.equal(await cdp.evaluar("document.activeElement===document.querySelector('#form-reto [name=descripcion]')"), true);
+    assert.equal(await cdp.evaluar("document.querySelector('#form-reto').elements.semana.value === semanaActualReto()"), true);
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-reto');f.elements.descripcion.value='Reto desde Chrome';f.elements.tipo_condicion.value='minutos';f.elements.objetivo.value=30;f.elements.puntos_recompensa.value=15;f.elements.semana.value='2026-W48';f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#panel-form-reto').hidden && estado.retos.some(r=>r.descripcion==='Reto desde Chrome')");
+    const retoBrowserId = await cdp.evaluar("estado.retos.find(r=>r.descripcion==='Reto desde Chrome').id_reto");
+    assert.equal(await cdp.evaluar("estado.retos.find(r=>r.descripcion==='Reto desde Chrome').condicion"), 'minutos:30');
+    await cdp.evaluar(`(()=>{document.querySelector('#mostrar-form-reto').click();const f=document.querySelector('#form-reto');f.elements.descripcion.value='Semana duplicada';f.elements.objetivo.value=2;f.elements.puntos_recompensa.value=10;f.elements.semana.value='2026-W48';f.requestSubmit()})()`);
+    await esperarCondicion(cdp, "document.querySelector('#avisos .error')");
+    assert.match(await cdp.evaluar("document.querySelector('#avisos').textContent"), /El registro ya existe/i);
+    assert.equal(await cdp.evaluar("estado.retos.length"), 1);
+    await cdp.evaluar("document.querySelector('#cancelar-reto').click();document.querySelector('#lista-retos-metas [data-accion=editar-reto]').click()");
+    assert.deepEqual(await cdp.evaluar(`(()=>{const f=document.querySelector('#form-reto');return [f.elements.descripcion.value,f.elements.tipo_condicion.value,f.elements.objetivo.value,f.elements.puntos_recompensa.value,f.elements.semana.value,f.elements.progreso.value]})()`), ['Reto desde Chrome', 'minutos', '30', '15', '2026-W48', '0']);
+    await cdp.evaluar("(()=>{const f=document.querySelector('#form-reto');f.elements.puntos_recompensa.value=23;f.elements.progreso.value=2;f.requestSubmit()})()");
+    await esperarCondicion(cdp, "document.querySelector('#panel-form-reto').hidden && estado.retos[0].puntos_recompensa===23 && estado.retos[0].progreso===2");
+    const retoGuardado = await require('../../src/models/Reto').findByPk(retoBrowserId);
+    assert.equal(retoGuardado.puntos_recompensa, 23);
+    assert.equal(retoGuardado.progreso, 2);
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=estado-reto]').click()");
+    await esperarCondicion(cdp, 'estado.retos[0].activo === false');
+    assert.equal(await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]')===null"), true);
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=estado-reto]').click()");
+    await esperarCondicion(cdp, 'estado.retos[0].activo === true');
+    const puntosAntesReto = await cdp.evaluar('estado.totalPuntos');
+    await cdp.evaluar('window.confirmOriginal=window.confirm;window.confirm=()=>false');
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]').click()");
+    assert.equal(await cdp.evaluar('estado.retos[0].completado'), false);
+    await cdp.evaluar('window.confirm=()=>true');
+    await cdp.evaluar("document.querySelector('#lista-retos-metas [data-accion=completar-reto]').click()");
+    await esperarCondicion(cdp, 'estado.retos[0].completado && estado.totalPuntos === '+(puntosAntesReto + 23));
+    assert.equal(await cdp.evaluar("document.querySelector('#gamificacion-puntos').textContent"), String(puntosAntesReto + 23));
+    assert.equal(await cdp.evaluar("document.querySelectorAll('#lista-retos-metas [data-accion=completar-reto],#lista-retos-metas [data-accion=editar-reto],#lista-retos-metas [data-accion=eliminar-reto]').length"), 0);
+    // Reintento del mismo crédito contra API real: el contrato es idempotente (200).
+    await cdp.evaluar(`api('/retos/${retoBrowserId}/completar',{method:'PATCH'}).then(()=>recargarGamificacion())`);
+    assert.equal(await cdp.evaluar('estado.totalPuntos'), puntosAntesReto + 23);
+    assert.deepEqual(await sequelize.query("SELECT COUNT(*) AS n, SUM(cantidad) AS total FROM punto WHERE origen = 'Reto' AND id_origen = :id", { replacements: { id: retoBrowserId }, plain: true }), { n: 1, total: 23 });
+    await cdp.evaluar('window.confirm=window.confirmOriginal');
 
     // P04/P05 y objetivo 6: la acción real crea y completa una tarea y abre la recompensa.
     await cdp.evaluar("document.querySelector('[data-vista=tareas]').click();document.querySelector('#mostrar-form-tarea').click()");
@@ -199,7 +261,7 @@ async function run() {
 
     // P06: una sesión iniciada desde la interfaz se persiste mediante la API real.
     await cdp.evaluar("document.querySelector('[data-vista=pomodoro]').click();document.querySelector('#iniciar-temporizador').click()");
-    await esperar(1100);
+    await esperarCondicion(cdp, "estado.temporizador.transcurrido > 0");
     await cdp.evaluar("document.querySelector('#guardar-temporizador').click()");
     await esperarCondicion(cdp, "document.querySelector('#modal-recompensa').open");
     await cdp.evaluar("document.querySelector('#cerrar-recompensa').click()");
@@ -211,22 +273,23 @@ async function run() {
     await esperarCondicion(cdp, "document.querySelector('#estado-exportacion').textContent.includes('exitosamente')");
     assert.equal(await cdp.evaluar("document.querySelector('[data-vista=administracion]').hidden"), true);
 
-    await cdp.evaluar(`(()=>{document.querySelector('[data-vista=configuracion]').click();
-      window.fetchOriginal=window.fetch;window.solicitudesDesactivacion=0;
-      window.fetch=(url,opciones={})=>{if(url==='/api/cuentas/${estudianteId}'&&opciones.method==='DELETE')window.solicitudesDesactivacion++;
-      return window.fetchOriginal(url,opciones)};document.querySelector('#desactivar-cuenta').click()})()`);
+    // RF01/HU30/RN27: Cancelar no envía la desactivación; Confirmar la envía una sola vez, limpia la sesión y muestra el acceso.
+    const estudianteActiva = async () => (await Cuenta.findOne({ where: { correo: 'estudiante-browser@test.local' } })).activa;
+    await cdp.evaluar("document.querySelector('[data-vista=configuracion]').click()");
+    await cdp.evaluar("window.desactivaciones=0;const f=window.fetch;window.fetch=(u,o)=>{if(o?.method==='DELETE'&&/\\/cuentas\\/[^/]+$/.test(String(u)))window.desactivaciones++;return f(u,o)}");
+    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click()");
     assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').open"), true);
-    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').textContent.includes('estas seguro que quieres desactivar?')"), true);
-    assert.equal(await cdp.evaluar("document.querySelector('#cancelar-desactivar-cuenta').textContent.trim()"), 'Cancelar');
-    assert.equal(await cdp.evaluar("document.querySelector('#confirmar-desactivar-cuenta').textContent.trim()"), 'Confirmar');
+    assert.equal(await cdp.evaluar("document.activeElement.id"), 'cancelar-desactivar-cuenta');
     await cdp.evaluar("document.querySelector('#cancelar-desactivar-cuenta').click()");
-    assert.equal(await cdp.evaluar('window.solicitudesDesactivacion'), 0);
-    assert.equal((await Cuenta.findByPk(estudianteId)).activa, true);
-    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click();document.querySelector('#confirmar-desactivar-cuenta').click()");
+    assert.equal(await cdp.evaluar("document.querySelector('#modal-desactivar-cuenta').open"), false);
+    assert.equal(await cdp.evaluar('window.desactivaciones'), 0);
+    assert.equal(await estudianteActiva(), true);
+    await cdp.evaluar("document.querySelector('#desactivar-cuenta').click();const c=document.querySelector('#confirmar-desactivar-cuenta');c.click();c.click()");
     await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
-    assert.equal(await cdp.evaluar('window.solicitudesDesactivacion'), 1);
-    assert.equal((await Cuenta.findByPk(estudianteId)).activa, false);
-    assert.equal(await Materia.count({ where: { id_cuenta: estudianteId } }), 1);
+    assert.equal(await cdp.evaluar('window.desactivaciones'), 1);
+    assert.equal(await cdp.evaluar("sessionStorage.getItem('studyquest_token')"), null);
+    assert.equal(await cdp.evaluar("document.querySelector('#avisos').textContent.includes('desactivada')"), true);
+    assert.equal(await estudianteActiva(), false);
 
     await cdp.evaluar("sessionStorage.clear();location.reload()"); await esperarCondicion(cdp, "!document.querySelector('#acceso').hidden");
     await autenticar(cdp, 'admin-browser@test.local');
@@ -246,18 +309,22 @@ async function run() {
     console.log('✅ Chrome: Estudiante, Administrador, Revisor y responsive verificados sin errores');
   } finally {
     if (cdp) cdp.cerrar();
-    if (chrome.exitCode === null && chrome.signalCode === null) chrome.kill('SIGTERM');
     await new Promise(resolve => {
-      if (chrome.exitCode !== null || chrome.signalCode !== null) resolve();
-      else chrome.once('close', resolve);
+      if (chrome.exitCode !== null) return resolve();
+      chrome.once('close', resolve);
+      chrome.kill();
+      setTimeout(resolve, 2000);
     });
     await new Promise(resolve => servidor.close(resolve));
     await sequelize.close();
-    try {
-      fs.rmSync(directory, { recursive: true, force: true, maxRetries: 20, retryDelay: 500 });
-    } catch (error) {
-      if (process.platform !== 'win32' || error.code !== 'EPERM') throw error;
-      console.warn(`⚠️ No se pudo limpiar inmediatamente el perfil temporal de Chrome: ${directory}`);
+    for (let intento = 0; intento < 5; intento += 1) {
+      try {
+        fs.rmSync(directory, { recursive: true, force: true });
+        break;
+      } catch (error) {
+        if (error.code !== 'EPERM' && error.code !== 'EBUSY') throw error;
+        await esperar(250);
+      }
     }
   }
 }

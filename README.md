@@ -35,34 +35,91 @@ git --version
 
 ## Instalación e inicio
 
-Los siguientes comandos se ejecutan desde la raíz del repositorio, donde están
-`package.json` y `database.sqlite`:
+Todos los comandos se ejecutan desde la raíz del repositorio (donde está
+`package.json`). La base SQLite **no** se distribuye: cada instalación crea la
+suya con `npm run db:migrate`.
+
+### Ubuntu (paso a paso)
+
+1. Instalar Node.js 24 LTS (mínimo 20.17) con [nvm](https://github.com/nvm-sh/nvm),
+   sin `sudo`:
+
+   ```bash
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+   source ~/.bashrc
+   nvm install 24
+   node --version && npm --version
+   ```
+
+2. Clonar e instalar las dependencias exactas de `package-lock.json`:
+
+   ```bash
+   git clone https://github.com/Castillo8976/H-bitos-Gamificados-Uni.git
+   cd H-bitos-Gamificados-Uni
+   npm ci
+   ```
+
+3. Crear la base de datos (15 tablas) y cargar el catálogo de 57 asignaturas
+   de Ingeniería de Sistemas. Ambos comandos son idempotentes:
+
+   ```bash
+   npm run db:migrate
+   npm run catalog:import
+   ```
+
+4. Crear la cuenta Administradora inicial. La contraseña se escribe en la
+   terminal y no queda en el historial ni en archivos:
+
+   ```bash
+   read -rp "Correo del Administrador: " BOOTSTRAP_EMAIL
+   read -rsp "Contraseña (mín. 8 caracteres): " BOOTSTRAP_PASSWORD; echo
+   BOOTSTRAP_NAME="Administrador" BOOTSTRAP_ROLE="Administrador" \
+     BOOTSTRAP_EMAIL="$BOOTSTRAP_EMAIL" BOOTSTRAP_PASSWORD="$BOOTSTRAP_PASSWORD" \
+     npm run bootstrap:account
+   unset BOOTSTRAP_PASSWORD
+   ```
+
+5. Iniciar el servidor y abrir `http://localhost:3000` en Google Chrome:
+
+   ```bash
+   npm start
+   ```
+
+   Para detenerlo, `Ctrl+C` en esa terminal (cierra la base de datos de forma
+   ordenada). Comprobación rápida desde otra terminal:
+
+   ```bash
+   curl http://localhost:3000/api/health
+   ```
+
+   Respuesta esperada:
+
+   ```json
+   {"estado":"ok","servicio":"studyquest-api","base_datos":"sqlite"}
+   ```
+
+Para usar variables propias, copia `.env.example` a `.env`, ajústalo y cárgalo
+antes de iniciar: `set -a; source .env; set +a; npm start`. El archivo `.env`
+está ignorado por Git.
+
+### Actualizar una base existente
+
+El servidor **no** migra automáticamente una base que ya tiene datos: si falta
+alguna migración, se detiene e indica cuáles faltan. Para actualizarla:
 
 ```bash
-git clone https://github.com/Castillo8976/H-bitos-Gamificados-Uni.git
-cd H-bitos-Gamificados-Uni
-npm install
-npm start
+cp database.sqlite ~/database.respaldo-$(date +%Y%m%d-%H%M%S).sqlite
+npm run db:migrate
 ```
 
-Si el proyecto ya está descargado, basta con abrir una terminal en la carpeta
-del repositorio y ejecutar `npm install` una vez. Después, `npm start` inicia el
-servidor y conserva la terminal ocupada mientras la aplicación está activa.
+`db:migrate` solo aplica cambios aditivos, verifica `PRAGMA integrity_check` y
+las claves foráneas, y puede repetirse sin efectos.
 
-La API queda disponible en `http://localhost:3000` y la interfaz web en la misma
-dirección. Para verificar el estado del servidor:
+### Windows y macOS
 
-```bash
-curl http://localhost:3000/api/health
-```
-
-Respuesta esperada:
-
-```json
-{"estado":"ok","servicio":"studyquest-api","base_datos":"sqlite"}
-```
-
-Para detener el servidor presiona `Ctrl+C` en la terminal.
+Los pasos son los mismos con Node.js 20.17 o superior (instalador oficial o
+nvm). En PowerShell, las variables del paso 4 se definen con
+`$env:BOOTSTRAP_EMAIL = "..."` antes de `npm run bootstrap:account`.
 
 ### Configuración opcional
 
@@ -89,7 +146,7 @@ npm start
 En Linux o macOS:
 
 ```bash
-PORT=3001 DATABASE_STORAGE=./studyquest-dev.sqlite JWT_SECRET=cambie-esta-clave npm start
+PORT=3001 DATABASE_STORAGE=./studyquest-dev.sqlite JWT_SECRET="$(openssl rand -hex 32)" npm start
 ```
 
 `PORT` usa `3000` por defecto y `DATABASE_STORAGE` usa `database.sqlite` en la
@@ -108,19 +165,16 @@ npm run test:api             # Verifica contratos HTTP, autenticación y roles
 npm run test:frontend        # Verifica la publicación del frontend
 npm run test:browser         # Recorrido real con Chrome/CDP
 npm run bootstrap:account    # Crea o prepara una cuenta administrativa
+npm run db:migrate           # Crea la base o aplica migraciones aditivas pendientes
+npm run catalog:import       # Carga el catálogo inicial de asignaturas (idempotente)
+npm run test:e2e             # Batería Playwright E2E (Chrome del sistema, headless)
 ```
 
 El comando `npm run bootstrap:account` utiliza estas variables:
 
-```powershell
-$env:BOOTSTRAP_NAME = "Administrador"
-$env:BOOTSTRAP_EMAIL = "admin@studyquest.local"
-$env:BOOTSTRAP_PASSWORD = "cambie-esta-clave"
-$env:BOOTSTRAP_ROLE = "Administrador"
-npm run bootstrap:account
-```
-
-La contraseña del ejemplo debe cambiarse antes de usar la cuenta.
+`BOOTSTRAP_NAME`, `BOOTSTRAP_EMAIL`, `BOOTSTRAP_PASSWORD` y `BOOTSTRAP_ROLE`
+(`Administrador` o `Revisor institucional`). Requiere el catálogo cargado y no
+trae ninguna contraseña predeterminada: ver el paso 4 de la instalación.
 
 ## Errores comunes
 
@@ -213,8 +267,6 @@ responsive conectada a la API real. Permite probar:
 - Cronómetro Pomodoro 25/5, modo Libre, descansos automáticos y registro de sesiones.
 - Cambio de tareas a estado `En progreso`.
 - Consulta de puntos, nivel, insignias, retos y metas.
-- Sugerencia automática e idempotente de una meta semanal por cuenta.
-- Filtros de tareas por materia, estado, prioridad y rango de fechas de entrega.
 - Recompensa transaccional al completar tareas o guardar sesiones.
 - Tablero semanal calculado en tiempo real y exportación JSON.
 - Creación y administración de recordatorios; programación automática al crear tareas.
@@ -262,21 +314,15 @@ POST /api/auth/logout
 GET  /api/auth/perfil
 ```
 
-Las rutas protegidas reciben el encabezado `Authorization: Bearer <token>`. Los roles aprobados son `Estudiante`, `Administrador` y `Revisor institucional`. El registro público siempre asigna el rol Estudiante. El backend impide desactivar o degradar al último Administrador activo.
+Las rutas protegidas reciben el encabezado `Authorization: Bearer <token>`. Los roles aprobados son `Estudiante`, `Administrador` y `Revisor institucional`. El registro público siempre asigna el rol Estudiante.
 
-El registro recibe `nombre`, `correo`, `contrasena` y una `materia` inicial con `nombre` y `horario` opcional, cumpliendo HU01. En la misma transacción crea la cuenta, su preferencia visual y la primera materia.
+El registro recibe `nombre`, `correo`, `contrasena` y una `materia` inicial con `id_catalogo_materia` (una asignatura activa del catálogo) y `horario` opcional, cumpliendo HU01, HU29 y RN26 (Decisión #10). El nombre de la materia se copia del catálogo. En la misma transacción crea la cuenta, su preferencia visual y la primera materia. Mientras el catálogo no tenga asignaturas activas, el formulario muestra un aviso y el registro no puede completarse: en una instalación nueva se cargan con `npm run catalog:import`, y después el Administrador las gestiona desde P17.
 
 La primera cuenta privilegiada se prepara localmente, sin exponer un cambio de rol en el registro público:
 
-```bash
-BOOTSTRAP_NAME="Administrador" \
-BOOTSTRAP_EMAIL="admin@studyquest.local" \
-BOOTSTRAP_PASSWORD="cambie-esta-clave" \
-BOOTSTRAP_ROLE="Administrador" \
-npm run bootstrap:account
-```
+con `npm run bootstrap:account`, siguiendo el paso 4 de [Instalación e inicio](#instalación-e-inicio) (la contraseña se escribe en la terminal; no hay credenciales predeterminadas).
 
-Los recursos se publican bajo `/api`: `cuentas`, `materias`, `tareas`, `preferencias`, `sesiones`, `recordatorios`, `notificaciones`, `puntos`, `insignias`, `cuenta-insignias`, `niveles`, `retos` y `metas`. También están disponibles `metas/sugerida`, `estadisticas/semanales`, `estadisticas/institucionales` y `exportacion/datos`. La matriz completa se encuentra en [M15](pjc/docs/trazabilidad/M15_trazabilidad_construccion.md).
+Los recursos se publican bajo `/api`: `cuentas`, `materias`, `tareas`, `preferencias`, `sesiones`, `recordatorios`, `notificaciones`, `puntos`, `insignias`, `cuenta-insignias`, `niveles`, `retos`, `metas` y `catalogo-materias`. `GET /api/catalogo-materias` es público y solo devuelve asignaturas activas; crear, editar, `PATCH /api/catalogo-materias/:id/estado` y eliminar requieren Administrador. Además: `PATCH /api/retos/:id/estado` (desactivar o reactivar un reto, propietario o Administrador) y `DELETE /api/cuentas/:id` (desactivación de la cuenta, que invalida todos sus tokens mediante `version_sesion`). También están disponibles `estadisticas/semanales`, `estadisticas/institucionales` y `exportacion/datos`. La matriz completa se encuentra en [M15](pjc/docs/trazabilidad/M15_trazabilidad_construccion.md).
 
 ## Pruebas
 
@@ -343,7 +389,7 @@ sin interactuar con tu perfil personal de Chrome.
 
 ## Esquema vigente
 
-El sistema contiene exactamente 13 tablas: `cuenta`, `materia`, `tarea`, `sesion_estudio`, `insignia`, `cuenta_insignia`, `punto`, `reto`, `meta`, `recordatorio`, `preferencia_visual`, `nivel_cuenta` y `notificacion`.
+El código define 15 tablas: las 13 originales (`cuenta`, `materia`, `tarea`, `sesion_estudio`, `insignia`, `cuenta_insignia`, `punto`, `reto`, `meta`, `recordatorio`, `preferencia_visual`, `nivel_cuenta`, `notificacion`), `catalogo_materia` (Decisión #10) y `desafio_autenticacion` (verificación de correo opcional, pendiente de decisión del equipo). Las migraciones aditivas (`catalogo_materia`, `materia.id_catalogo_materia`, `reto.activo`, `cuenta.version_sesion`, `cuenta.correo_verificado`, `cuenta.mfa_correo`, `desafio_autenticacion`) se aplican solo con `npm run db:migrate`; el servidor se niega a arrancar sobre una base existente desactualizada. Tras migrar una base anterior a la Decisión #08 los tokens previos dejan de ser válidos y hay que iniciar sesión de nuevo.
 
 La entidad `reporte` no forma parte del esquema. Las estadísticas se calculan a partir de las tablas transaccionales.
 
@@ -362,3 +408,45 @@ No se ha declarado Línea Base 1.
 ## Registro de cambios
 
 La adopción definitiva de SQLite y la unificación de los artefactos se documenta en [CRF-001](pjc/docs/configuracion/CRF-001-unificacion-linea-tecnica.md). Los roles se formalizan en [CRF-002](pjc/docs/configuracion/CRF-002-incorporacion-roles.md), los objetivos 6–10 en [CRF-003](pjc/docs/configuracion/CRF-003-flujo-gamificacion-estadisticas-roles.md) y el cierre de alcance de pantallas en [CRF-005](pjc/docs/configuracion/CRF-005-cierre-validacion-pantallas.md).
+
+### Verificación de correo y segundo paso (opcional)
+
+El Bloque D es una ampliación pendiente de aprobación docente y viene **desactivado**:
+`AUTH_EMAIL_VERIFICATION=false`, `AUTH_EMAIL_MFA=off` (solo admite `off|optional`, sin modo obligatorio).
+Las cuentas anteriores se consideran verificadas para conservar su acceso. Al activar la verificación,
+los nuevos registros deben confirmar su correo; el segundo paso se activa voluntariamente desde Perfil.
+El cambio de correo del Estudiante usa un código al destino nuevo y revoca las sesiones anteriores.
+
+Configuración sin secretos en el repositorio:
+
+| Variable | Valor predeterminado / uso |
+| --- | --- |
+| `AUTH_EMAIL_VERIFICATION` | `false`; `true` activa verificación y cambio de correo con código |
+| `AUTH_EMAIL_MFA` | `off`; `optional` habilita enrolamiento desde Perfil |
+| `MAIL_TRANSPORT` | `memoria` captura en `mailService.mensajes`, sin Internet; `smtp` envía |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Servidor, puerto (587) y TLS (`false`) |
+| `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Autenticación y remitente SMTP |
+| `AUTH_CODE_SECRET` | Pepper HMAC secreto; obligatorio en producción con funciones activas |
+| `AUTH_CODE_TTL_MINUTES` | 10, entre 1 y 30 |
+| `AUTH_CODE_MAX_ATTEMPTS` | 5 |
+| `AUTH_CODE_MAX_RESENDS` | 3 |
+| `AUTH_CODE_RESEND_COOLDOWN_SECONDS` | 60 |
+
+En producción, activar alguna función exige `MAIL_TRANSPORT=smtp`, `SMTP_HOST`, `MAIL_FROM`
+y `AUTH_CODE_SECRET`; una configuración incompleta impide iniciar. En desarrollo sin pepper se usa
+uno efímero: reiniciar invalida códigos pendientes. No se registran códigos ni credenciales SMTP.
+El reenvío de verificación responde 202 genérico; se conserva el 409 de registro duplicado por contrato,
+lo cual sigue permitiendo enumerar correos. El limitador de login vive en un solo proceso y debe usar
+un almacén compartido si se escala. SMTP no participa de la transacción SQLite: un correo entregado
+justo antes de un fallo de commit puede contener un código inutilizable; se debe reenviar.
+
+Recuperación: un Administrador autenticado puede enviar `PATCH /api/cuentas/:id/seguridad`
+con `{"mfa_correo":false,"correo_verificado":true}` (puede omitir uno). Se revocan las sesiones y
+los desafíos pendientes. `scripts/bootstrap-account.js`, con las variables `BOOTSTRAP_*` habituales,
+deja la cuenta de emergencia verificada, sin segundo paso y revoca sus sesiones anteriores.
+Si falla el correo durante el registro, la cuenta queda sin verificar: usar «Reenviar verificación»
+y copiar el identificador del desafío incluido en el mensaje recibido.
+
+El código por correo es un factor relativamente débil: comparte los riesgos de la cuenta de correo.
+Una mejora posterior sería TOTP o passkeys. Las pruebas usan exclusivamente SQLite temporal y
+`MAIL_TRANSPORT=memoria`, sin correo real.

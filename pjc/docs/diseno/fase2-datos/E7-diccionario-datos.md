@@ -13,9 +13,9 @@
 
 ## Descripción general
 
-Define las **13 entidades** del dominio con sus atributos, tipos de datos, restricciones de integridad y reglas de negocio. Cada entidad está vinculada a sus Requisitos Funcionales (RF) y es trazable al MER Conceptual, Modelo Relacional y DDL.
+Define las **14 entidades** del dominio (13 hasta la Decisión #10; `catalogo_materia` se incorporó el 24 de octubre de 2026 como decisión del equipo, pendiente de revisión docente) con sus atributos, tipos de datos, restricciones de integridad y reglas de negocio. Cada entidad está vinculada a sus Requisitos Funcionales (RF) y es trazable al MER Conceptual, Modelo Relacional y DDL.
 
-> **Actualización documental (19 de octubre de 2026):** se aprobaron límites para `cuenta.nombre`, `reto.puntos_recompensa`, `meta.valor_objetivo` y `sesion_estudio.duracion_minutos`, además de `reto.activo` y las acciones de desactivar cuenta/cambiar estado de reto. Los límites y el nuevo estado de reto son requisitos documentales; su validación, migración y exposición en la interfaz quedan pendientes de implementación.
+> **Actualización documental (19 de octubre de 2026):** se aprobaron límites para `cuenta.nombre`, `reto.puntos_recompensa`, `meta.valor_objetivo` y `sesion_estudio.duracion_minutos`, además de `reto.activo` y las acciones de desactivar cuenta/cambiar estado de reto. Los límites y el nuevo estado de reto son requisitos documentales; su validación, migración y exposición en la interfaz quedan pendientes de implementación. **Actualización (24 de octubre de 2026):** implementados en el código local — límites de RNF-16 validados en la API, no como CHECK de SQLite (`b113445`); `reto.activo` y su migración aditiva (`b113445`, Decisión #09); desactivación de cuenta con `cuenta.version_sesion` (`28b601a`, Decisión #08). La base principal aún no tiene aplicadas estas migraciones.
 
 > **Nota de corrección (agosto 2026):** este documento pasó por dos correcciones. Primero se agregaron `nivel_cuenta` y `notificacion` (llegando a 14 entidades). Después se **eliminó `reporte`** por decisión del equipo: sus datos son 100% calculables en tiempo real (ver nota al final de la sección `recordatorio`), por lo que mantenerlos como tabla propia era una redundancia innecesaria. El conteo final es 13 entidades.
 
@@ -32,6 +32,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **fecha_registro** | DATE | No | Fecha de creación de la cuenta. DEFAULT CURRENT_DATE. |
 | **activa** | BOOLEAN/INT | No | TRUE = cuenta activa. FALSE = suspendida. DEFAULT TRUE. El Estudiante puede desactivar su propia cuenta; solo el Administrador puede reactivarla. Los datos se conservan. |
 | **rol** | VARCHAR(30) | No | Rol autorizado. CHECK IN ('Estudiante','Administrador','Revisor institucional'). DEFAULT 'Estudiante'. CRF-002. |
+| **version_sesion** | INTEGER | No | Versión de sesión. DEFAULT 0, CHECK ≥ 0. Se incrementa una vez cuando la cuenta pasa de activa a inactiva; los JWT emitidos con otra versión dejan de ser válidos aunque la cuenta se reactive. Uso interno: no se expone ni se edita desde la API (RN27, HU30, Decisión #08). |
 
 > **Reglas:** correo único · contraseña siempre cifrada · datos persisten al reiniciar (RNF04) · entidad raíz de la que dependen todas las demás.
 
@@ -46,10 +47,11 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **nombre** | VARCHAR(80) | No | Nombre de la asignatura. Obligatorio. |
 | **horario** | VARCHAR(100) | Sí | Días y horas de clase. Nullable si el estudiante no lo registra. |
 | **activa** | BOOLEAN/INT | No | TRUE = materia activa en el semestre. DEFAULT TRUE. |
+| **id_catalogo_materia (FK→catalogo_materia)** | VARCHAR(36) | Sí | Asignatura del catálogo (sección 14). ON DELETE RESTRICT. Opcional para conservar las materias anteriores sin asociación automática (Decisión #10). |
 
 > **Reglas:** pertenece a una cuenta · mínimo una materia al registrarse (RF01) · se usa para filtrar tareas (RF09).
 
-> **PLANEADO — pendiente de implementación (22 de septiembre de 2026):** por observación de la docente, `nombre` dejará de escribirse libremente y pasará a seleccionarse de un catálogo institucional (`catalogo_materia`, ver **Anexo A** al final de este documento). El campo `id_catalogo_materia (FK→catalogo_materia)` se añadirá a esta tabla cuando se implemente en código; **hoy esa columna no existe** en `E11-script-DDL-v2.sql` ni en `src/models/Materia.js`. `horario` y `activa` permanecen igual porque son propios de cada estudiante, no del catálogo.
+> **Decisión #10 (24 de octubre de 2026, equipo; pendiente de revisión docente):** a partir de la observación docente del 22 de septiembre, la materia se asocia a una entrada de `catalogo_materia` mediante `id_catalogo_materia`. La columna es opcional: las materias anteriores conservan su `nombre` y quedan sin asociación hasta una correspondencia revisada por personas (M2, no autorizada). `nombre` se conserva como copia histórica del nombre del catálogo en el momento de crear la materia; renombrar el catálogo no lo modifica (desnormalización deliberada, ver E10). La selección desde el catálogo en el registro y en «Nueva materia» se integra en una etapa posterior (D-2).
 
 ---
 
@@ -138,7 +140,7 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | **semana** | VARCHAR(10) | No | Formato YYYY-WNN. UNIQUE combinado con id_cuenta. |
 | **progreso** | INTEGER | No | Avance actual. DEFAULT 0. CHECK >= 0. |
 | **completado** | BOOLEAN/INT | No | TRUE = reto completado. DEFAULT FALSE. |
-| **activo** | BOOLEAN/INT | No | TRUE = admite progreso automático. FALSE = desactivado. DEFAULT TRUE. El propietario y el Administrador pueden cambiar el estado; pendiente de migración e implementación. |
+| **activo** | BOOLEAN/INT | No | TRUE = admite progreso automático. FALSE = desactivado. DEFAULT TRUE. El propietario y el Administrador pueden cambiar el estado mediante `PATCH /api/retos/:id/estado`; desactivar o reactivar no altera progreso ni puntos. Las bases anteriores lo reciben con DEFAULT TRUE (Decisión #09). |
 
 > **Reglas:** se crea manualmente, no se genera automáticamente cada semana · 1 reto por semana por estudiante (UNIQUE id_cuenta + semana) · el progreso automático solo se acumula mientras `activo = TRUE` · al completar, incluso manualmente por el propietario, genera como máximo un registro en `punto` con `origen = Reto` · desactivar no revoca puntos y reactivar no vuelve a acreditarlos (RN10, RN28).
 
@@ -227,6 +229,20 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 
 ---
 
+## 14. `catalogo_materia` — Catálogo institucional de asignaturas `RF01 · RN26 · HU29`
+
+| Campo (PK/FK) | Tipo | Nulo | Descripción / Reglas |
+|---|---|---|---|
+| **id_catalogo_materia (PK)** | VARCHAR(36) | No | Identificador único de la asignatura del catálogo. |
+| **nombre** | VARCHAR(80) | No | Nombre oficial de la asignatura. UNIQUE COLLATE NOCASE; se guarda sin espacios sobrantes. |
+| **activo** | BOOLEAN/INT | No | TRUE = seleccionable para materias nuevas. DEFAULT TRUE. Desactivar conserva las materias ya asociadas. |
+
+> **Reglas (Decisión #10):** catálogo global administrado por el rol Administrador, con el mismo patrón que `insignia` y `nivel_cuenta` · la consulta pública devuelve solo `id_catalogo_materia` y `nombre` de las entradas activas · una entrada con materias asociadas no se elimina (RESTRICT), solo se desactiva · no se siembran asignaturas: la carga inicial la realiza un Administrador.
+>
+> **Limitación:** `COLLATE NOCASE` de SQLite solo iguala mayúsculas y minúsculas ASCII; «Álgebra» y «ÁLGEBRA» no se consideran iguales en la base. La API compara nombres normalizados para detectar esos duplicados antes de guardar.
+
+---
+
 ## Resumen de entidades
 
 | # | Entidad | Tipo | RF principal |
@@ -244,11 +260,14 @@ Define las **13 entidades** del dominio con sus atributos, tipos de datos, restr
 | 11 | preferencia_visual | Débil (1:1) | RF13, RNF04 |
 | 12 | nivel_cuenta | Fuerte (catálogo) | RF07 |
 | 13 | notificacion | Débil | RF04, RNF15 |
+| 14 | catalogo_materia | Fuerte (catálogo) — Decisión #10 | RF01, RN26 |
 
 ---
 
 ## Anexo A — Entidades PLANEADAS (no implementadas en código)
 
+> **Actualización (24 de octubre de 2026):** `catalogo_materia` pasó al cuerpo del documento (sección 14) por la Decisión #10 del equipo, pendiente de revisión docente; se conserva este anexo como antecedente del diseño propuesto. La columna `materia.id_catalogo_materia` se adoptó como **opcional**, no como NOT NULL.
+>
 > Las tablas de este anexo **no forman parte** de las 13 tablas aprobadas ni de `E11-script-DDL-v2.sql`. Se documentan como diseño en espera de autorización. Los nombres de campo se escriben sin negrita a propósito para distinguirlas de las tablas vigentes.
 
 ### A.1 `catalogo_materia` — Catálogo institucional de asignaturas disponibles `RF01 · RN26`

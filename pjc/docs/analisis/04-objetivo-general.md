@@ -7,8 +7,7 @@
 
 ---
 
-Diseñar y desarrollar una plataforma web gamificada que permita a los estudiantes
-universitarios de instituciones privadas en Medellín fortalecer sus hábitos de estudio
-mediante herramientas de organización académica, seguimiento del tiempo y un sistema
-de recompensas gamificado, mejorando así su rendimiento académico, su autorregulación
-y su bienestar emocional.
+Desarrollar una plataforma web gamificada que permita a los estudiantes universitarios
+de instituciones privadas de Medellín organizar sus tareas académicas, registrar su
+tiempo de estudio y obtener recompensas por el cumplimiento de sus metas, con el fin de
+apoyar la formación de hábitos de estudio y la autorregulación del aprendizaje.

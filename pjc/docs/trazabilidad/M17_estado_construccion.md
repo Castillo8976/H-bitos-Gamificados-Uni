@@ -1,6 +1,6 @@
 # M17 — Estado funcional y pendientes de Construcción
 
-**Fecha de revisión:** 26 de octubre de 2026
+**Fecha de revisión:** 20 de septiembre de 2026
 **Fuente:** hoja CONSTRUCCIÓN de `Ingenieria de Software 3.xlsx`  
 **Estado:** desarrollo funcional en avance; tenemos pendientes para cerrar el checklist y declarar Línea Base 1.
 
@@ -17,10 +17,10 @@ sus controles desarrollados en la interfaz.
 
 | Área | Qué tenemos funcionando | Qué nos falta o qué límite tenemos |
 |---|---|---|
-| Acceso | Registro con primera materia, login, logout, consulta y **edición del perfil** (nombre/correo) desde P13, y permisos por rol | Falta endurecer la protección de autenticación (revocación de sesiones, casos negativos) |
-| Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por materia, estado, prioridad y rango de fechas | Mantener cobertura de validaciones de negocio en nuevas variantes |
+| Acceso | Registro con primera materia, login, logout, consulta y **edición del perfil** (nombre/correo) desde P13, y permisos por rol | Falta endurecer la protección de autenticación (casos negativos). La desactivación invalida de forma persistente los JWT anteriores mediante `version_sesion` (Decisión #08); el logout individual sigue revocando solo en memoria |
+| Materias y tareas | Crear, consultar, editar y eliminar; completar tareas; buscar por nombre y filtrar por estado/prioridad. Catálogo de asignaturas (`catalogo_materia`, tabla 14) administrado en P17 y FK opcional en `materia` (Decisión #10, etapa D-1) | Faltan filtros por materia/fecha; la selección desde el catálogo en el registro y en «Nueva materia» (D-2) y las correspondencias de materias anteriores (M2) siguen pendientes |
 | Sesiones | Cronómetro Pomodoro y guardado con recompensa; **historial visual de sesiones con edición y eliminación** desde P06 | Falta el flujo visual de sesión libre explícita y descansos |
-| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, meta semanal sugerida idempotente, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 | Falta cerrar validación de condiciones y ajustes históricos |
+| Gamificación | Transacción de tarea/sesión, puntos, evaluación de insignias, metas, retos y nivel; **el estudiante ya puede editar/eliminar sus propios retos y metas** desde P08 | Estado activo/inactivo de retos (`PATCH /api/retos/:id/estado`), completado manual transaccional con crédito único, bloqueo de edición de recompensa/progreso y de eliminación en retos completados, límites RNF-16 en API y formato RN24 para condiciones nuevas (Decisión #09). Falta: los límites RNF-16 no son CHECK en SQLite y el completado manual no prueba actividad académica real |
 | Recordatorios | Alta manual, consulta, activación/desactivación y eliminación | No equivale a programación automática ni a entrega de avisos vencidos; falta completar ese flujo |
 | Notificaciones | Consulta, marcado como leída y eliminación | No hay evidencia de entrega con navegador cerrado |
 | Preferencias | Tema y modo oscuro persistentes | Faltan avatar y restablecimiento previstos en el prototipo |
@@ -78,7 +78,8 @@ incluimos en el punto 5; no son equivalentes a declarar correctamente el modelo.
 
 ### 🟡 5. Backend CRUD por entidad principal — Parcial
 
-Tenemos API y operaciones para las 13 entidades, con particularidades del
+Tenemos API y operaciones para las 13 entidades (14 desde la Decisión #10:
+`catalogo_materia`, `f62c5e5`), con particularidades del
 modelo: los puntos son movimientos y algunas operaciones son de lectura,
 asignación, marcado o desactivación. Ya coordinamos tareas y sesiones con
 recompensas mediante transacciones; esos flujos no funcionan de manera aislada.
@@ -184,8 +185,13 @@ Tenemos JWT, contraseñas almacenadas como hash, cierre de sesión, control de
 propiedad y tres roles. Ya existen vistas de Estudiante, Administrador y
 Revisor institucional, con permisos comprobados también en el backend.
 
-**Falta:** Reforzar la protección ante intentos de acceso, la revocación de
-sesiones y las validaciones; completar perfil, edición administrativa y pruebas
+**Avance (24 de octubre de 2026):** al desactivar una cuenta se incrementa
+`cuenta.version_sesion` y se rechazan todos los JWT anteriores, también tras
+reactivarla o reiniciar el servidor (Decisión #08). El logout individual revoca
+el token solo en memoria y esa revocación se pierde al reiniciar.
+
+**Falta:** Reforzar la protección ante intentos de acceso, la persistencia de la
+revocación del logout individual y las validaciones; completar perfil, edición administrativa y pruebas
 negativas. No nos falta crear los roles ni sus vistas desde cero.
 
 ### ❌ 13. Declarar Línea Base 1 como ECS — Pendiente
@@ -232,7 +238,7 @@ La actualización del Word la tenemos pendiente para una etapa posterior.
 - Probamos las transacciones de gamificación, la protección ante recompensas duplicadas y la reversión de operaciones cuando ocurre un error.
 - Corregimos la diferencia entre fecha UTC y local en `Punto.fecha`, conservando DATE de E7/E11 y sin modificar registros históricos. La API devuelve los 25 puntos esperados en el periodo del caso de prueba.
 - Agregamos `tests/schema/point-date.test.js` con instantes fijos alrededor de medianoche UTC; pasó con `TZ=America/Bogota`.
-- Ejecutamos `npm test` y `npm run test:browser` con resultado satisfactorio. En Chrome recorrimos los flujos de tarea/sesión, recompensas, indicadores, exportación y vistas por rol, incluyendo un ancho de 390 px; el cleanup de perfiles temporales quedó tolerante al bloqueo EPERM de Windows.
+- Ejecutamos `npm test` y `npm run test:browser` con resultado satisfactorio. En Chrome recorrimos los flujos de tarea/sesión, recompensas, indicadores, exportación y vistas por rol, incluyendo un ancho de 390 px.
 - Comprobamos que nuestra base local tiene 13 tablas, integridad `ok` y cero violaciones de claves foráneas.
 
 Estas pruebas nos permiten identificar qué flujos funcionan. Nos queda ampliar
@@ -422,6 +428,6 @@ significa que todos los requisitos de Construcción estén terminados.
 | Actualizar las historias de acuerdo al diagrama de clases | ✅ Documentado | `13-historias-usuario-criterios-aceptacion.md`: HU01, HU06, HU15, HU17, HU18, HU20, HU21 y HU25 citan ahora los atributos del diagrama. |
 | Casos de uso: faltan `<<include>>` y `<<extend>>` | ✅ Documentado | `02_Diagrama_de_Casos_de_Uso_General.drawio`: CU00 Iniciar sesión, 15 `<<include>>` y 3 `<<extend>>`; justificación en `07-casos-de-uso.md`. |
 | Documentar el caso de uso general y 3 CU críticos con trazabilidad CRUD | ✅ Documentado | `07-casos-de-uso.md`: CUG01 con ficha completa y trazabilidad CRUD de CU02, CU03 y CU06. |
-| La materia inicial debe seleccionarse de una tabla catálogo | 🟡 Solo diseño | `catalogo_materia` en E7 (Anexo A), E9, E12, HU29, RN26. **Sin implementar en código**; el formulario de registro sigue con texto libre. |
+| La materia inicial debe seleccionarse de una tabla catálogo | ✅ Implementado en el código local (24 de octubre de 2026) | `catalogo_materia` (tabla 14), administración en P17 y selección obligatoria en el registro y en «Nueva materia» (`f62c5e5`, `3eb2b71`; Decisión #10, pendiente de revisión docente). Pendiente: migración de la base principal y carga de asignaturas reales; E8, E9 y E12 aún lo muestran como planeado. |
 
-**Nota:** `E11-script-DDL-v2.sql`, el modelo `Materia`, las rutas y el frontend no se modificaron para el catálogo, a la espera de autorización. Las pruebas automáticas (`npm test`) siguen en verde.
+**Nota (histórica, previa a la Decisión #10):** `E11-script-DDL-v2.sql`, el modelo `Materia`, las rutas y el frontend no se modificaron para el catálogo, a la espera de autorización. **Actualización (24 de octubre de 2026):** el catálogo se implementó en D-1 y D-2 con pruebas en SQLite temporal.

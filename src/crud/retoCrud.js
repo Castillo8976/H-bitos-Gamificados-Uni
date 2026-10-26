@@ -12,6 +12,8 @@
  */
 
 const Reto = require('../models/Reto');
+const { Transaction } = require('sequelize');
+const Punto = require('../models/Punto');
 const crypto = require('crypto');
 
 
@@ -128,7 +130,8 @@ async function actualizarProgresoReto(id, incremento) {
     console.log('⚠️ No se encontró el reto');
     return null;
   }
-  if (!reto.activo) return reto;
+  // RN28: un reto inactivo o ya completado no acumula progreso.
+  if (!reto.activo || reto.completado) return null;
 
   const nuevoProgreso = reto.progreso + incremento;
   await reto.update({ progreso: nuevoProgreso });
@@ -160,28 +163,44 @@ async function actualizarProgresoReto(id, incremento) {
  * // → Crea automáticamente registro en tabla punto
  */
 async function completarReto(id) {
-  const reto = await Reto.findByPk(id);
-
-  if (!reto) {
-    console.log('⚠️ No se encontró el reto');
-    return null;
-  }
-
-  if (reto.completado) {
-    console.log('⚠️ Este reto ya fue completado anteriormente');
-    return null;
-  }
-
-  // Marca el reto como completado
-  await reto.update({ completado: true });
-
-  // Acredita los puntos — importación dinámica para evitar dependencia circular
-  const { otorgarPuntos } = require('./puntoCrud');
-  await otorgarPuntos(reto.id_cuenta, reto.puntos_recompensa, 'Reto', reto.id_reto);
-
-  console.log(`🎯 ¡Reto completado! "${reto.descripcion}" | +${reto.puntos_recompensa} pts`);
-  return { reto, puntosOtorgados: reto.puntos_recompensa };
+  // RN10/RN28 (Decisión #09): una sola transacción; el UPDATE condicionado elige un único ganador
+  // y uq_punto_evento (id_cuenta, origen, id_origen) respalda la acreditación única del reto.
+  return Reto.sequelize.transaction({ type: Transaction.TYPES.IMMEDIATE }, async transaction => {
+    const [filas] = await Reto.update(
+      { completado: true },
+      { where: { id_reto: id, completado: false, activo: true }, transaction }
+    );
+    if (!filas) {
+      console.log('⚠️ Reto inexistente, inactivo o ya completado');
+      return null;
+    }
+    const reto = await Reto.findByPk(id, { transaction });
+    await Punto.create({
+      id_punto: crypto.randomUUID(), id_cuenta: reto.id_cuenta, cantidad: reto.puntos_recompensa,
+      origen: 'Reto', id_origen: reto.id_reto
+    }, { transaction });
+    console.log(`🎯 ¡Reto completado! "${reto.descripcion}" | +${reto.puntos_recompensa} pts`);
+    return { reto, puntosOtorgados: reto.puntos_recompensa };
+  });
 }
+
+/**
+ * Cambia el estado de un reto (RF06/HU18/HU31/RN28, Decisión #09; E12 activarReto/desactivarReto).
+ * No altera progreso, recompensa, completado ni puntos acreditados.
+ *
+ * @async
+ * @param {string}  id     - UUID del reto.
+ * @param {boolean} activo - Nuevo estado.
+ * @returns {Promise<void>}
+ */
+async function cambiarEstadoReto(id, activo) {
+  await Reto.update({ activo }, { where: { id_reto: id } });
+}
+
+/** RF06/HU31/RN28: reactiva el reto sin reiniciar progreso ni volver a acreditar. */
+const activarReto = id => cambiarEstadoReto(id, true);
+/** RF06/HU31/RN28: detiene el progreso automático y las nuevas recompensas del reto. */
+const desactivarReto = id => cambiarEstadoReto(id, false);
 
 
 // ─────────────────────────────────────────
@@ -197,14 +216,15 @@ async function completarReto(id) {
  * @returns {Promise<void>}
  */
 async function actualizarReto(id, datos) {
-  const [filas] = await Reto.update(datos, { where: { id_reto: id } });
-  console.log(filas > 0 ? '✅ Reto actualizado' : '⚠️ No se encontró el reto');
+  // Decisión #09: recompensa, progreso y semana solo cambian si el reto sigue sin completar (atómico).
+  const protegido = CAMPOS_PROTEGIDOS.some(campo => Object.hasOwn(datos, campo));
+  const [filas] = await Reto.update(datos, { where: { id_reto: id, ...(protegido && { completado: false }) } });
+  console.log(filas > 0 ? '✅ Reto actualizado' : '⚠️ Reto inexistente o completado');
+  return filas;
 }
 
-/** Cambia únicamente el estado de activación, conservando avance y recompensas. */
-async function cambiarEstadoReto(id, activo) {
-  return actualizarReto(id, { activo });
-}
+/** Campos que un reto completado conserva tal como se acreditó (Decisión #09). */
+const CAMPOS_PROTEGIDOS = ['puntos_recompensa', 'progreso', 'semana'];
 
 
 // ─────────────────────────────────────────
@@ -219,7 +239,8 @@ async function cambiarEstadoReto(id, activo) {
  * @returns {Promise<void>}
  */
 async function eliminarReto(id) {
-  const filas = await Reto.destroy({ where: { id_reto: id } });
+  // Decisión #09: un reto completado nunca se elimina, aunque la comprobación previa compita con un completado.
+  const filas = await Reto.destroy({ where: { id_reto: id, completado: false } });
   console.log(filas > 0 ? '🗑️ Reto eliminado' : '⚠️ No se encontró el reto');
 }
 
@@ -230,7 +251,9 @@ module.exports = {
   obtenerReto,
   actualizarProgresoReto,
   completarReto,
+  activarReto,
+  desactivarReto,
   actualizarReto,
-  cambiarEstadoReto,
+  CAMPOS_PROTEGIDOS,
   eliminarReto
 };

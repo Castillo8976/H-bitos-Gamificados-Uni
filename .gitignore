@@ -17,6 +17,16 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Base de datos local: contiene datos de trabajo y se inicializa desde E11.
+# Base de datos local: cada instalación la crea con npm run db:migrate
 database.sqlite
 database.sqlite.backup-*
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Variables de entorno (se versiona solo .env.example)
+.env.*
+!.env.example
+
+test-results/
+playwright-report/

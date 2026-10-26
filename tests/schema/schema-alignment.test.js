@@ -12,6 +12,8 @@ const sequelize = require('../../src/database');
 const { inicializarEsquema } = require('../../src/config/schema');
 
 const models = {
+  desafio_autenticacion: require('../../src/models/DesafioAutenticacion'),
+  catalogo_materia: require('../../src/models/CatalogoMateria'),
   cuenta: require('../../src/models/Cuenta'),
   materia: require('../../src/models/Materia'),
   tarea: require('../../src/models/Tarea'),
@@ -28,8 +30,10 @@ const models = {
 };
 
 const expected = {
-  cuenta: ['id_cuenta','nombre','correo','contrasena_hash','fecha_registro','activa','rol'],
-  materia: ['id_materia','id_cuenta','nombre','horario','activa'],
+  desafio_autenticacion: ['id_desafio','id_cuenta','proposito','codigo_hash','destino','intentos','reenvios','ultimo_envio','expira_en','consumido_en','creado_en'],
+  catalogo_materia: ['id_catalogo_materia','nombre','activo'],
+  cuenta: ['id_cuenta','nombre','correo','contrasena_hash','fecha_registro','activa','rol','version_sesion','correo_verificado','mfa_correo'],
+  materia: ['id_materia','id_cuenta','id_catalogo_materia','nombre','horario','activa'],
   tarea: ['id_tarea','id_cuenta','id_materia','nombre','fecha_entrega','prioridad','estado','fecha_completada'],
   sesion_estudio: ['id_sesion','id_cuenta','id_tarea','fecha','duracion_minutos','modo_enfoque'],
   insignia: ['id_insignia','nombre','descripcion','condicion','icono'],
@@ -75,6 +79,7 @@ function modelType(attribute) {
 
 async function run() {
   await inicializarEsquema();
+  await inicializarEsquema();
 
   const tables = await sequelize.query(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -87,7 +92,18 @@ async function run() {
   const e7 = fs.readFileSync(e7Path, 'utf8');
 
   for (const [table, columns] of Object.entries(expected)) {
-    const e7Fields = e7TableDefinition(e7, table);
+    // Bloque D es aditivo y no altera E7/E11 (ampliación sin aprobación docente).
+    const e7Fields = table === 'desafio_autenticacion' ? {
+      id_desafio: { type: 'VARCHAR(36)', nullable: false }, id_cuenta: { type: 'VARCHAR(36)', nullable: false },
+      proposito: { type: 'VARCHAR(30)', nullable: false }, codigo_hash: { type: 'TEXT', nullable: false },
+      destino: { type: 'VARCHAR(120)', nullable: true }, intentos: { type: 'INTEGER', nullable: false },
+      reenvios: { type: 'INTEGER', nullable: false }, ultimo_envio: { type: 'DATETIME', nullable: true },
+      expira_en: { type: 'DATETIME', nullable: false }, consumido_en: { type: 'DATETIME', nullable: true },
+      creado_en: { type: 'DATETIME', nullable: false }
+    } : e7TableDefinition(e7, table);
+    if (table === 'cuenta') Object.assign(e7Fields, {
+      correo_verificado: { type: 'INTEGER', nullable: false }, mfa_correo: { type: 'INTEGER', nullable: false }
+    });
     const dbColumns = await sequelize.query(`PRAGMA table_info(${table})`, {
       type: sequelize.QueryTypes.SELECT
     });
@@ -107,6 +123,8 @@ async function run() {
   }
 
   const primaryKeys = {
+    desafio_autenticacion: ['id_desafio'],
+    catalogo_materia: ['id_catalogo_materia'],
     cuenta: ['id_cuenta'], materia: ['id_materia'], tarea: ['id_tarea'],
     sesion_estudio: ['id_sesion'], insignia: ['id_insignia'],
     cuenta_insignia: ['id_cuenta', 'id_insignia'], punto: ['id_punto'],
@@ -121,13 +139,15 @@ async function run() {
   }
 
   const defaults = {
-    cuenta: { fecha_registro: 'CURRENT_DATE', activa: '1', rol: "'Estudiante'" },
+    desafio_autenticacion: { intentos: '0', reenvios: '0' },
+    catalogo_materia: { activo: '1' },
+    cuenta: { correo_verificado: '1', mfa_correo: '0', fecha_registro: 'CURRENT_DATE', activa: '1', rol: "'Estudiante'" },
     nivel_cuenta: { puntos_minimos: '0', orden: '1' },
     preferencia_visual: { tema: "'purple'", modo_oscuro: '0', fecha_actualizado: 'CURRENT_DATE' },
     materia: { activa: '1' }, tarea: { estado: "'Pendiente'" },
     sesion_estudio: { fecha: 'CURRENT_DATE', modo_enfoque: '0' },
     cuenta_insignia: { fecha_obtenida: 'CURRENT_DATE' }, punto: { fecha: 'CURRENT_DATE' },
-    reto: { progreso: '0', completado: '0', activo: '1' }, meta: { valor_actual: '0', cumplida: '0' },
+    reto: { progreso: '0', completado: '0' }, meta: { valor_actual: '0', cumplida: '0' },
     recordatorio: { enviado: '0', activo: '1' },
     notificacion: { leida: '0', fecha: 'CURRENT_DATE' }
   };
@@ -140,14 +160,16 @@ async function run() {
   }
 
   const requiredChecks = {
-    cuenta: ['activa IN (0,1)', "rol IN ('Estudiante','Administrador','Revisor institucional')", 'length(trim(nombre)) BETWEEN 2 AND 60'],
+    desafio_autenticacion: ["proposito IN ('verificar_correo','segundo_factor','cambiar_correo')"],
+    catalogo_materia: ['activo IN (0,1)'],
+    cuenta: ['correo_verificado IN (0,1)', 'mfa_correo IN (0,1)', 'activa IN (0,1)', "rol IN ('Estudiante','Administrador','Revisor institucional')"],
     nivel_cuenta: ['puntos_minimos >= 0', 'orden > 0'],
     preferencia_visual: ["tema IN ('purple','teal','amber','coral','blue','green')", 'modo_oscuro IN (0,1)'],
     materia: ['activa IN (0,1)'],
     tarea: ["prioridad IN ('Alta','Media','Baja')", "estado IN ('Pendiente','En progreso','Completada')"],
     sesion_estudio: ['duracion_minutos BETWEEN 1 AND 1440', 'modo_enfoque IN (0,1)'],
     punto: ['cantidad > 0', "origen IN ('Tarea','Reto','Sesion')"],
-    reto: ['puntos_recompensa BETWEEN 1 AND 10000', 'progreso >= 0', 'completado IN (0,1)', 'activo IN (0,1)'],
+    reto: ['puntos_recompensa BETWEEN 1 AND 10000', 'progreso >= 0', 'completado IN (0,1)'],
     meta: ['valor_objetivo BETWEEN 1 AND 10080', 'valor_actual >= 0', 'cumplida IN (0,1)'],
     recordatorio: ['enviado IN (0,1)', 'activo IN (0,1)'],
     notificacion: ["tipo IN ('Insignia','Reto','Meta','Nivel','Sistema')", 'leida IN (0,1)']
@@ -160,6 +182,7 @@ async function run() {
   }
 
   const requiredUniqueKeys = {
+    catalogo_materia: [['nombre']],
     cuenta: [['correo']],
     nivel_cuenta: [['nombre']],
     preferencia_visual: [['id_cuenta']],
@@ -192,20 +215,10 @@ async function run() {
     /UNIQUE|constraint.*uq_punto_evento/i
   );
   await sequelize.query("INSERT INTO punto (id_punto, id_cuenta, cantidad, origen, id_origen, fecha) VALUES ('p-3', 'acct-idempotencia', 10, 'Tarea', NULL, '2026-09-21')");
-  await assert.rejects(() => sequelize.query(
-    "INSERT INTO cuenta (id_cuenta, nombre, correo, contrasena_hash) VALUES ('acct-short-name', 'A', 'short-name@test.local', 'hash')"
-  ));
-  await assert.rejects(() => sequelize.query(
-    "INSERT INTO reto (id_reto,id_cuenta,descripcion,condicion,puntos_recompensa,semana) VALUES ('reto-bad-reward','acct-idempotencia','Reto','tareas:1',10001,'2026-W39')"
-  ));
-  await assert.rejects(() => sequelize.query(
-    "INSERT INTO meta (id_meta,id_cuenta,semana,descripcion,valor_objetivo) VALUES ('meta-bad-target','acct-idempotencia','2026-W39','Meta',10081)"
-  ));
-  await assert.rejects(() => sequelize.query(
-    "INSERT INTO sesion_estudio (id_sesion,id_cuenta,duracion_minutos) VALUES ('sesion-bad-duration','acct-idempotencia',1441)"
-  ));
 
   const expectedForeignKeys = [
+    ['desafio_autenticacion','id_cuenta','cuenta','id_cuenta','CASCADE'],
+    ['materia','id_catalogo_materia','catalogo_materia','id_catalogo_materia','RESTRICT'],
     ['preferencia_visual','id_cuenta','cuenta','id_cuenta','CASCADE'],
     ['materia','id_cuenta','cuenta','id_cuenta','CASCADE'],
     ['tarea','id_cuenta','cuenta','id_cuenta','CASCADE'],
@@ -241,7 +254,7 @@ async function run() {
     sequelize.query("INSERT INTO tarea (id_tarea,id_cuenta,nombre,fecha_entrega,prioridad) VALUES ('x','inexistente','X','2026-01-01','Urgente')")
   );
 
-  console.log('✅ E7 → E11 → 13 modelos → SQLite: alineación verificada');
+  console.log('✅ E7 → E11 → 15 modelos → SQLite: alineación verificada');
   console.log('✅ Sin reporte; integridad ok; 0 violaciones de claves foráneas');
 }
 

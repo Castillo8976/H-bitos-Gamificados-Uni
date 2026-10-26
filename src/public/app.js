@@ -54,11 +54,14 @@ function escapar(valor = '') {
 async function api(ruta, opciones = {}) {
   const encabezados = { ...(opciones.body ? { 'Content-Type': 'application/json' } : {}), ...opciones.headers };
   if (estado.token) encabezados.Authorization = `Bearer ${estado.token}`;
-  const respuesta = await fetch(`${API}${ruta}`, { ...opciones, headers: encabezados });
+  let respuesta;
+  try { respuesta = await fetch(`${API}${ruta}`, { ...opciones, headers: encabezados }); }
+  catch (_) { throw new Error('No se pudo conectar con el servidor. Verifica que esté en ejecución.'); }
   const contenido = respuesta.status === 204 ? null : await respuesta.json().catch(() => null);
   if (!respuesta.ok) {
     const error = new Error(contenido?.error || 'No fue posible completar la solicitud');
     error.status = respuesta.status;
+    error.contenido = contenido;
     throw error;
   }
   return contenido;
@@ -69,67 +72,28 @@ async function api(ruta, opciones = {}) {
 function avisar(mensaje, tipo = 'informacion') {
   const aviso = document.createElement('div');
   aviso.className = `aviso ${tipo}`;
-  aviso.textContent = mensaje;
+  aviso.setAttribute('role', tipo === 'error' ? 'alert' : 'status');
+  aviso.textContent = `${tipo === 'error' ? 'Error: ' : tipo === 'exito' ? 'Listo: ' : ''}${mensaje}`;
   // Una sola confirmación evita cubrir la interfaz cuando hay acciones rápidas.
   $('#avisos').replaceChildren(aviso);
-  window.setTimeout(() => aviso.remove(), 3200);
-}
-
-function configurarValidacionesCampos() {
-  $$('[data-validar-nombre-cuenta]').forEach(input => {
-    const validar = () => {
-      if (!input.value) {
-        input.setCustomValidity('');
-        return;
-      }
-      const nombre = input.value.trim();
-      const longitud = [...nombre].length;
-      const valido = longitud >= 2 && longitud <= 60 && /^[\p{L}\p{M} '-]+$/u.test(nombre);
-      input.setCustomValidity(valido ? '' : 'Usa entre 2 y 60 caracteres: letras, espacios, apóstrofos o guiones.');
-    };
-    input.addEventListener('input', validar);
-    input.addEventListener('blur', validar);
-  });
-  $$('[data-validar-contrasena]').forEach(input => {
-    input.addEventListener('input', () => {
-      const bytes = new TextEncoder().encode(input.value).length;
-      input.setCustomValidity(bytes <= 72 ? '' : 'La contraseña no puede superar 72 bytes UTF-8.');
-    });
-  });
-}
-
-function confirmarDesactivacionCuenta() {
-  const dialogo = $('#modal-desactivar-cuenta');
-  const confirmar = $('#confirmar-desactivar-cuenta');
-  const cancelar = $('#cancelar-desactivar-cuenta');
-  return new Promise(resolve => {
-    const finalizar = resultado => {
-      confirmar.removeEventListener('click', alConfirmar);
-      cancelar.removeEventListener('click', alCancelar);
-      dialogo.removeEventListener('cancel', alCancelarNativo);
-      if (dialogo.open) dialogo.close();
-      resolve(resultado);
-    };
-    const alConfirmar = () => finalizar(true);
-    const alCancelar = () => finalizar(false);
-    const alCancelarNativo = evento => {
-      evento.preventDefault();
-      finalizar(false);
-    };
-    confirmar.addEventListener('click', alConfirmar);
-    cancelar.addEventListener('click', alCancelar);
-    dialogo.addEventListener('cancel', alCancelarNativo);
-    dialogo.showModal();
-  });
+  // Los errores permanecen más tiempo para poder leerlos y corregir el formulario.
+  window.setTimeout(() => aviso.remove(), tipo === 'error' ? 8000 : 3200);
 }
 
 /** Deshabilita temporalmente un formulario para evitar envíos duplicados. */
 /** RF02/HU02: deshabilita botones del formulario mientras termina su solicitud. */
 async function duranteEnvio(formulario, trabajo) {
   const botones = [...formulario.querySelectorAll('button')];
-  botones.forEach(boton => { boton.disabled = true; });
+  formulario.setAttribute('aria-busy', 'true');
+  botones.forEach(boton => {
+    boton.disabled = true;
+    if (boton.type === 'submit') boton.setAttribute('aria-busy', 'true');
+  });
   try { return await trabajo(); }
-  finally { botones.forEach(boton => { boton.disabled = false; }); }
+  finally {
+    formulario.removeAttribute('aria-busy');
+    botones.forEach(boton => { boton.disabled = false; boton.removeAttribute('aria-busy'); });
+  }
 }
 
 /** RF01/HU01: presenta login/registro y oculta la aplicación. */
@@ -150,8 +114,12 @@ function navegar(nombre) {
   const destino = $(`#vista-${nombre}`);
   if (!destino || destino.dataset.permitida === 'false') return;
   $$('.vista').forEach(vista => { vista.hidden = vista.dataset.seccion !== nombre; });
-  $$('.nav-item').forEach(item => item.classList.toggle('activo', item.dataset.vista === nombre));
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  $$('.nav-item').forEach(item => {
+    const activa = item.dataset.vista === nombre;
+    item.classList.toggle('activo', activa);
+    if (activa) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
+  });
+  window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   const titulo = destino.querySelector('h2');
   if (titulo) {
     titulo.tabIndex = -1;
@@ -162,6 +130,7 @@ function navegar(nombre) {
 /** RF01/HU01: alterna registro/login manteniendo el estado accesible de las pestañas. */
 function seleccionarAcceso(nombre) {
   const login = nombre === 'login';
+  if (!login) cargarCatalogoMaterias();
   $('#panel-login').hidden = !login;
   $('#panel-registro').hidden = login;
   $('#tab-login').classList.toggle('activo', login);
@@ -173,10 +142,11 @@ function seleccionarAcceso(nombre) {
 }
 
 /** Cierra la sesión local incluso si el token ya venció en el servidor. */
-/** RF01/HU01: solicita revocación, limpia el token y vuelve al acceso. */
-async function cerrarSesion() {
+/** RF01/HU01: solicita revocación, limpia el token y vuelve al acceso.
+ * Con `revocar = false` solo limpia el estado local (la cuenta ya fue desactivada). */
+async function cerrarSesion(revocar = true) {
   detenerRecepcionAvisos();
-  try { if (estado.token) await api('/auth/logout', { method: 'POST' }); }
+  try { if (revocar && estado.token) await api('/auth/logout', { method: 'POST' }); }
   catch (_) { /* El estado local siempre debe limpiarse. */ }
   sessionStorage.removeItem(CLAVE_TOKEN);
   estado.token = null;
@@ -188,13 +158,15 @@ async function cerrarSesion() {
 
 /** RF01/HU01: autentica, conserva el token y carga la cuenta. */
 async function iniciarSesion(correo, contrasena) {
-  const respuesta = await api('/auth/login', {
-    method: 'POST', body: JSON.stringify({ correo, contrasena })
-  });
-  estado.token = respuesta.token;
-  sessionStorage.setItem(CLAVE_TOKEN, respuesta.token);
-  estado.cuenta = respuesta.cuenta;
-  await cargarAplicacion();
+  let respuesta;
+  try {
+    respuesta = await api('/auth/login', { method: 'POST', body: JSON.stringify({ correo, contrasena }) });
+  } catch (error) {
+    if (error.contenido?.requiere_verificacion) { abrirCodigoCorreo(error.contenido.desafio, 'verificar', correo); return; }
+    throw error;
+  }
+  if (respuesta.requiere_codigo) { abrirCodigoCorreo(respuesta.desafio, 'login', correo); return; }
+  await aceptarSesionCorreo(respuesta);
 }
 
 /** Consulta un recurso sin impedir que carguen las demás tarjetas. */
@@ -221,10 +193,11 @@ async function cargarAplicacion() {
     if (estado.cuenta.rol === 'Administrador') {
       const [cuentas, niveles, insignias] = await Promise.all([api('/cuentas'), api('/niveles'), api('/insignias')]);
       estado.cuentasAdmin = cuentas.datos; estado.niveles = niveles.datos; estado.insignias = insignias.datos;
+      await cargarCatalogoMateriasAdmin();
       renderizarUsuario(); renderizarAdministracion(); await cargarDetalleAdministrativo(); mostrarAplicacion(); prepararPeriodos();
       navegar('administracion'); return;
     }
-    const [materias, tareas, sesiones, puntos, niveles, insignias, cuentaInsignias, retos, metasSugerida, metas, recordatorios, notificaciones, preferencias] = await Promise.all([
+    const [materias, tareas, sesiones, puntos, niveles, insignias, cuentaInsignias, retos, metaSugerida, metas, recordatorios, notificaciones, preferencias] = await Promise.all([
       cargarSeguro('/materias', { datos: [] }), cargarSeguro('/tareas', { datos: [] }),
       cargarSeguro('/sesiones', { datos: [] }), cargarSeguro('/puntos', { datos: [], total: 0 }),
       cargarSeguro('/niveles', { datos: [] }), cargarSeguro('/insignias', { datos: [] }),
@@ -240,8 +213,8 @@ async function cargarAplicacion() {
       retos: retos.datos, metas: metas.datos, recordatorios: recordatorios.datos,
       notificaciones: notificaciones.datos, preferencias: preferencias.dato
     });
-    if (metasSugerida.dato && !estado.metas.some(item => item.id_meta === metasSugerida.dato.id_meta)) {
-      estado.metas = [...estado.metas, metasSugerida.dato];
+    if (metaSugerida.dato && !estado.metas.some(item => item.id_meta === metaSugerida.dato.id_meta)) {
+      estado.metas = [...estado.metas, metaSugerida.dato];
     }
     aplicarPreferencias();
     renderizarTodo();
@@ -306,6 +279,54 @@ function estadoVacio(mensaje) {
   return `<p class="estado-vacio">${escapar(mensaje)}</p>`;
 }
 
+/** Bloque E: representa valores existentes sin modificar el progreso del servidor. */
+function progresoVisual(actual, objetivo, etiqueta) {
+  const maximo = Number(objetivo);
+  const valor = Number(actual);
+  if (!Number.isFinite(maximo) || maximo <= 0 || !Number.isFinite(valor)) return '';
+  return `<progress max="${maximo}" value="${Math.max(0, Math.min(valor, maximo))}" aria-label="${escapar(etiqueta)}" aria-valuetext="${escapar(actual)} de ${maximo}"></progress>`;
+}
+
+/** Bloque E: el texto hace perceptible el estado del reto además de su color. */
+function estadoRetoVisual(reto) {
+  const estadoVisual = reto.completado ? 'completado' : reto.activo ? 'activo' : 'inactivo';
+  return `<span class="chip estado-${estadoVisual}">${estadoVisual === 'completado' ? 'Completado' : estadoVisual === 'activo' ? 'Activo' : 'Inactivo'}</span>`;
+}
+
+/** RNF-06: acompaña la validación nativa con un error junto al campo. */
+function prepararValidacionVisual() {
+  let secuencia = 0;
+  const errores = new WeakMap();
+  function limpiar(campo) {
+    const error = errores.get(campo);
+    if (!error) return;
+    campo.removeAttribute('aria-invalid');
+    const descripciones = (campo.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== error.id);
+    if (descripciones.length) campo.setAttribute('aria-describedby', descripciones.join(' '));
+    else campo.removeAttribute('aria-describedby');
+    error.remove();
+    errores.delete(campo);
+  }
+  document.addEventListener('invalid', evento => {
+    const campo = evento.target;
+    if (!campo.matches('input,select,textarea')) return;
+    limpiar(campo);
+    const error = document.createElement('small');
+    error.id = `error-campo-${++secuencia}`;
+    error.className = 'error-campo';
+    error.textContent = `Revisa este campo: ${campo.validationMessage}`;
+    campo.setAttribute('aria-invalid', 'true');
+    campo.setAttribute('aria-describedby', `${campo.getAttribute('aria-describedby') || ''} ${error.id}`.trim());
+    campo.insertAdjacentElement('afterend', error);
+    errores.set(campo, error);
+  }, true);
+  document.addEventListener('input', evento => limpiar(evento.target));
+  document.addEventListener('change', evento => limpiar(evento.target));
+  document.addEventListener('reset', evento => {
+    evento.target.querySelectorAll('[aria-invalid="true"]').forEach(limpiar);
+  });
+}
+
 /** RF09/HU09: resuelve el nombre de la materia desde el estado cargado. */
 function materiaDe(id) {
   return estado.materias.find(materia => materia.id_materia === id)?.nombre || 'Sin materia';
@@ -328,7 +349,8 @@ function renderizarUsuario() {
   $('#form-perfil').elements.nombre.value = estado.cuenta.nombre;
   $('#form-perfil').elements.correo.value = estado.cuenta.correo;
   $('#perfil-rol').textContent = estado.cuenta.rol;
-  $('#desactivar-cuenta').hidden = estado.cuenta.rol !== 'Estudiante';
+  $('#form-perfil').elements.correo.readOnly = configuracionCorreo.verificacion_correo && estado.cuenta.rol === 'Estudiante';
+  $('#form-mfa-correo').elements.activar.checked = Boolean(estado.cuenta.mfa_correo);
 }
 
 /** RF08/HU08: muestra contadores y próximos pendientes. */
@@ -363,11 +385,33 @@ function opcionesTareas() {
     .map(tarea => `<option value="${escapar(tarea.id_tarea)}">${escapar(tarea.nombre)}</option>`).join('');
 }
 
+/** RN26/Decisión #10: opciones públicas activas; sin selección se impide el alta. */
+async function cargarCatalogoMaterias() {
+  const formularios = [[$('#form-registro'), $('#aviso-catalogo-registro')], [$('#form-materia'), $('#aviso-catalogo-materia')]];
+  for (const [formulario] of formularios) formulario.querySelector('[type=submit]').disabled = true;
+  let datos = [], mensaje = '';
+  try {
+    ({ datos } = await api('/catalogo-materias'));
+    if (!datos.length) mensaje = 'No hay asignaturas disponibles en el catálogo; contacta al Administrador';
+  } catch (_) { mensaje = 'No se pudo cargar el catálogo de asignaturas. Intenta nuevamente.'; }
+  for (const [formulario, aviso] of formularios) {
+    const select = formulario.elements.id_catalogo_materia;
+    const anterior = select.value;
+    select.innerHTML = '<option value="">Selecciona una asignatura</option>' + datos.map(item => `<option value="${escapar(item.id_catalogo_materia)}">${escapar(item.nombre)}</option>`).join('');
+    select.value = anterior;
+    select.disabled = !datos.length;
+    aviso.textContent = mensaje;
+    const editando = formulario.id === 'form-materia' && formulario.elements.id.value;
+    select.required = !editando;
+    formulario.querySelector('[type=submit]').disabled = !datos.length && !editando;
+  }
+}
+
 /** RF09/HU16: muestra materias y controles de edición/eliminación. */
 function renderizarMaterias() {
   $('#total-materias').textContent = estado.materias.length;
   $('#lista-materias').innerHTML = estado.materias.length ? estado.materias.map(materia => `
-    <div class="item"><div class="item-fila"><div><strong>${escapar(materia.nombre)}</strong><br><small>${escapar(materia.horario || 'Sin horario')}</small></div>
+    <div class="item"><div class="item-fila"><div><strong>${escapar(materia.nombre)}</strong>${materia.id_catalogo_materia ? '' : ' <span class="chip">sin catálogo</span>'}<br><small>${escapar(materia.horario || 'Sin horario')}</small></div>
       <div class="acciones"><button class="boton secundario pequeno" data-accion="editar-materia" data-id="${escapar(materia.id_materia)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-materia" data-id="${escapar(materia.id_materia)}">Eliminar</button></div>
     </div></div>`).join('') : estadoVacio('Aún no hay materias registradas.');
   $('#tarea-materia').innerHTML = `<option value="">Sin materia</option>${opcionesMaterias()}`;
@@ -404,11 +448,11 @@ function renderizarGamificacion() {
   $('#total-insignias').textContent = `${obtenidas.size}/${estado.insignias.length}`;
   $('#lista-insignias').innerHTML = estado.insignias.length ? estado.insignias.map(insignia => {
     const asignacion = obtenidas.get(insignia.id_insignia);
-    return `<div class="item insignia ${asignacion ? 'obtenida' : 'bloqueada'}" title="${escapar(insignia.descripcion)} · Condición: ${escapar(insignia.condicion)}"><strong>${asignacion ? '🏅' : '🔒'} ${escapar(insignia.nombre)}</strong><small>${asignacion ? `Obtenida ${escapar(fechaLegible(asignacion.fecha_obtenida))}` : `Condición: ${escapar(insignia.condicion)}`}</small></div>`;
+    return `<div class="item insignia ${asignacion ? 'obtenida' : 'bloqueada'}" title="${escapar(insignia.descripcion)} · Condición: ${escapar(insignia.condicion)}"><strong>${escapar(insignia.nombre)}</strong><span class="chip ${asignacion ? 'logro' : 'estado-inactivo'}">${asignacion ? 'Obtenida' : 'Por desbloquear'}</span><small>${asignacion ? `Obtenida ${escapar(fechaLegible(asignacion.fecha_obtenida))}` : `Condición: ${escapar(insignia.condicion)}`}</small></div>`;
   }).join('') : estadoVacio('El catálogo de insignias está vacío.');
   const avances = [
-    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · ${reto.activo ? 'Activo' : 'Inactivo'} · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="alternar-reto" data-id="${escapar(reto.id_reto)}" data-activo="${reto.activo}">${reto.activo ? 'Desactivar' : 'Reactivar'}</button><button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button></div></div></div>`),
-    ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
+    ...estado.retos.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>Reto · progreso ${escapar(reto.progreso)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small>${estadoRetoVisual(reto)}${progresoVisual(reto.progreso, String(reto.condicion).split(':')[1], 'Progreso del reto')}</div><div class="acciones">${reto.completado ? '' : `<button class="boton secundario pequeno" data-accion="editar-reto" data-id="${escapar(reto.id_reto)}">Editar</button>`}${botonEstadoReto(reto)}${reto.activo && !reto.completado && reto.id_cuenta === estado.cuenta.id_cuenta ? `<button class="boton primario pequeno" data-accion="completar-reto" data-id="${escapar(reto.id_reto)}">Completar</button>` : ''}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`),
+    ...estado.metas.map(meta => `<div class="item"><div class="item-fila"><div><strong>${escapar(meta.descripcion)}</strong><br><small>Meta · ${escapar(meta.valor_actual)}/${escapar(meta.valor_objetivo)}${meta.cumplida ? ' · cumplida' : ''}</small>${progresoVisual(meta.valor_actual, meta.valor_objetivo, 'Progreso de la meta')}</div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-meta" data-id="${escapar(meta.id_meta)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-meta" data-id="${escapar(meta.id_meta)}">Eliminar</button></div></div></div>`)
   ];
   $('#lista-retos-metas').innerHTML = avances.length ? avances.join('') : estadoVacio('No tienes retos o metas registrados.');
   const movimientos = [...estado.puntos].sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
@@ -439,7 +483,7 @@ function renderizarEstadisticas() {
     'Puntos del periodo': dato.puntos_obtenidos,
     'Sesiones Pomodoro': dato.sesiones_pomodoro
   });
-  $('#estadisticas-metas').innerHTML = dato.metas.length ? dato.metas.map(meta => `<div class="item"><strong>${escapar(meta.descripcion)}</strong><small>${meta.valor_actual}/${meta.valor_objetivo} · ${meta.cumplida ? 'Cumplida' : 'En progreso'}</small></div>`).join('') : estadoVacio('No hay meta para esta semana.');
+  $('#estadisticas-metas').innerHTML = dato.metas.length ? dato.metas.map(meta => `<div class="item"><strong>${escapar(meta.descripcion)}</strong><small>${meta.valor_actual}/${meta.valor_objetivo} · ${meta.cumplida ? 'Cumplida' : 'En progreso'}</small>${progresoVisual(meta.valor_actual, meta.valor_objetivo, 'Progreso de la meta semanal')}</div>`).join('') : estadoVacio('No hay meta para esta semana.');
   $('#estadisticas-retos').innerHTML = dato.retos.length ? dato.retos.map(reto => `<div class="item"><strong>${escapar(reto.descripcion)}</strong><small>Progreso ${reto.progreso} · ${reto.completado ? 'Completado' : 'En progreso'}</small></div>`).join('') : estadoVacio('No hay reto para esta semana.');
 }
 
@@ -474,6 +518,17 @@ async function cargarInstitucionales() {
   renderizarInstitucionales();
 }
 
+/** RF01/RN26/HU29, Decisión #10: bloque P17 del catálogo global. */
+async function cargarCatalogoMateriasAdmin() {
+  const { datos } = await api('/catalogo-materias?todas=true');
+  $('#lista-catalogo-materias').innerHTML = datos.map(item => `
+    <div class="item"><div class="item-fila"><div><strong>${escapar(item.nombre)}</strong><br><small>${item.activo ? 'Activa' : 'Inactiva'}</small></div><div class="acciones">
+    <button class="boton secundario pequeno" data-accion="editar-catalogo" data-id="${escapar(item.id_catalogo_materia)}" data-nombre="${escapar(item.nombre)}">Editar nombre</button>
+    <button class="boton secundario pequeno" data-accion="estado-catalogo" data-id="${escapar(item.id_catalogo_materia)}" data-activo="${!item.activo}">${item.activo ? 'Desactivar' : 'Reactivar'}</button>
+    <button class="boton peligro pequeno" data-accion="eliminar-catalogo" data-id="${escapar(item.id_catalogo_materia)}">Eliminar</button>
+    </div></div></div>`).join('') || estadoVacio('No hay asignaturas en el catálogo.');
+}
+
 /** RF01/HU27 y RF07/HU26: presenta cuentas, catálogos y correcciones. */
 function renderizarAdministracion() {
   $('#lista-usuarios-admin').innerHTML = estado.cuentasAdmin.length ? estado.cuentasAdmin.map(cuenta => `
@@ -486,7 +541,7 @@ function renderizarAdministracion() {
   $('#admin-correccion-cuenta').innerHTML = opcionesCuenta;
   $('#admin-insignia-correccion').innerHTML = estado.insignias
     .map(item => `<option value="${escapar(item.id_insignia)}">${escapar(item.nombre)}</option>`).join('');
-  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)} · ${reto.activo ? 'Activo' : 'Inactivo'}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="alternar-reto-admin" data-id="${escapar(reto.id_reto)}" data-activo="${reto.activo}">${reto.activo ? 'Desactivar' : 'Reactivar'}</button></div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
+  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small>${estadoRetoVisual(reto)}${progresoVisual(reto.progreso, String(reto.condicion).split(':')[1], 'Progreso del reto')}</div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
   const puntos = estado.puntosAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${item.cantidad} puntos</strong><br><small>${escapar(item.origen)} · ${escapar(fechaLegible(item.fecha))}</small></div><button class="boton peligro pequeno" data-accion="eliminar-punto-admin" data-id="${escapar(item.id_punto)}">Eliminar movimiento</button></div></div>`);
   const asignaciones = estado.insigniasCuentaAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${escapar(item.insignia?.nombre || 'Insignia')}</strong><br><small>Asignada ${escapar(fechaLegible(item.fecha_obtenida))}</small></div><button class="boton peligro pequeno" data-accion="revocar-insignia-admin" data-id="${escapar(item.id_insignia)}" data-cuenta="${escapar(item.id_cuenta)}">Revocar</button></div></div>`);
   $('#lista-correcciones-admin').innerHTML = [...puntos, ...asignaciones].join('') || estadoVacio('No hay movimientos o insignias para corregir.');
@@ -519,9 +574,9 @@ async function recargarGamificacion() {
 /** RF03/HU03: muestra la recompensa confirmada por el backend. */
 function mostrarRecompensa(resultado) {
   const partes = [`<p><strong>+${resultado.puntos_otorgados} puntos</strong></p>`];
-  if (resultado.insignias_desbloqueadas?.length) partes.push(`<p>🏅 ${escapar(resultado.insignias_desbloqueadas.join(', '))}</p>`);
-  if (resultado.retos_completados?.length) partes.push(`<p>🏆 ${escapar(resultado.retos_completados.join(', '))}</p>`);
-  if (resultado.metas_cumplidas?.length) partes.push(`<p>🎯 ${escapar(resultado.metas_cumplidas.join(', '))}</p>`);
+  if (resultado.insignias_desbloqueadas?.length) partes.push(`<p>Insignias: ${escapar(resultado.insignias_desbloqueadas.join(', '))}</p>`);
+  if (resultado.retos_completados?.length) partes.push(`<p>Retos completados: ${escapar(resultado.retos_completados.join(', '))}</p>`);
+  if (resultado.metas_cumplidas?.length) partes.push(`<p>Metas cumplidas: ${escapar(resultado.metas_cumplidas.join(', '))}</p>`);
   if (resultado.nuevo_nivel) partes.push(`<p>Nuevo nivel: ${escapar(resultado.nivel)}</p>`);
   $('#detalle-recompensa').innerHTML = partes.join('');
   $('#modal-recompensa').showModal();
@@ -649,12 +704,59 @@ function cerrarTarea() {
   $('#panel-form-tarea').hidden = true;
 }
 
+/** HU06/HU18: semana ISO local, incluyendo el año ISO en los cambios de año. */
+function semanaActualReto() {
+  const hoy = new Date();
+  const jueves = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
+  jueves.setUTCDate(jueves.getUTCDate() + 4 - (jueves.getUTCDay() || 7));
+  const inicio = new Date(Date.UTC(jueves.getUTCFullYear(), 0, 1));
+  const semana = Math.ceil(((jueves - inicio) / 86400000 + 1) / 7);
+  return `${jueves.getUTCFullYear()}-W${String(semana).padStart(2, '0')}`;
+}
+
+/** HU06/HU18: editor compartido para crear y editar retos propios pendientes. */
+function abrirReto(reto = null) {
+  const f = $('#form-reto');
+  f.reset();
+  f.elements.id.value = reto?.id_reto || '';
+  f.elements.descripcion.value = reto?.descripcion || '';
+  f.elements.puntos_recompensa.value = reto?.puntos_recompensa ?? '';
+  f.elements.semana.value = reto?.semana || semanaActualReto();
+  const condicion = /^(tareas|sesiones|minutos|pomodoros):([1-9]\d*)$/.exec(reto?.condicion || 'tareas:1');
+  f.querySelector('[value="antigua"]')?.remove();
+  // Los registros antiguos pueden conservar su condición libre al editar otros campos.
+  if (!condicion) f.elements.tipo_condicion.add(new Option(`Actual: ${reto.condicion}`, 'antigua'));
+  f.elements.tipo_condicion.value = condicion?.[1] || 'antigua';
+  f.elements.objetivo.value = condicion?.[2] || '';
+  f.elements.objetivo.disabled = !condicion;
+  f.elements.progreso.value = reto?.progreso ?? 0;
+  f.elements.progreso.disabled = !reto;
+  $('#campo-progreso-reto').hidden = !reto;
+  $('#titulo-form-reto').textContent = reto ? 'Editar reto' : 'Nuevo reto';
+  $('#panel-form-reto').hidden = false;
+  $('#mostrar-form-reto').setAttribute('aria-expanded', 'true');
+  $('#panel-form-reto').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  f.elements.descripcion.focus({ preventScroll: true });
+}
+
+/** HU06/HU18: cierra el editor y devuelve el foco a su acción de apertura. */
+function cerrarReto() {
+  const id = $('#form-reto').elements.id.value;
+  $('#form-reto').reset();
+  $('#form-reto').elements.id.value = '';
+  $('#panel-form-reto').hidden = true;
+  $('#mostrar-form-reto').setAttribute('aria-expanded', 'false');
+  const editar = $$('#lista-retos-metas [data-accion="editar-reto"]').find(b => b.dataset.id === id);
+  (editar || $('#mostrar-form-reto')).focus();
+}
+
 /** RF09/HU16: devuelve el formulario de materia al modo de creación. */
 function limpiarMateria() {
   $('#form-materia').reset();
   $('#form-materia').elements.id.value = '';
   $('#titulo-form-materia').textContent = 'Nueva materia';
   $('#cancelar-materia').hidden = true;
+  cargarCatalogoMaterias();
 }
 
 /** RF10/HU10: representa los segundos restantes del cronómetro. */
@@ -741,7 +843,7 @@ function detenerTemporizador(restablecer = true) {
   $('#iniciar-temporizador').textContent = 'Iniciar';
   $('#guardar-temporizador').hidden = true;
   $('#cancelar-temporizador').hidden = true;
-  $('#estado-temporizador').textContent = 'Listo para comenzar una sesión Pomodoro.';
+  $('#estado-temporizador').textContent = modo === 'libre' ? 'Listo para comenzar una sesión libre.' : 'Listo para comenzar una sesión Pomodoro.';
   $('#tarjeta-temporizador').classList.remove('enfoque');
 }
 
@@ -749,7 +851,6 @@ function detenerTemporizador(restablecer = true) {
 async function guardarSesion() {
   if (estado.temporizador.transcurrido < 1) return avisar('Inicia el cronómetro antes de guardar.', 'error');
   const duracion = Math.max(1, Math.ceil(estado.temporizador.transcurrido / 60));
-  if (duracion > 1440) return avisar('La duración máxima de una sesión es 1.440 minutos.', 'error');
   const respuesta = await api('/sesiones', { method: 'POST', body: JSON.stringify({
     id_tarea: $('#pomodoro-tarea').value || null, duracion_minutos: duracion, modo_enfoque: estado.temporizador.modo === 'pomodoro'
   }) });
@@ -763,16 +864,39 @@ async function guardarSesion() {
 
 /** Delega acciones de listas dinámicas para no registrar eventos repetidos. */
 /** RF02/HU02 y RF07/HU26: despacha acciones identificadas por data-accion; contratos en M16. */
+/** RF06/HU18/HU31/RN28: botón para desactivar o reactivar un reto sin alterar progreso ni puntos. */
+function botonEstadoReto(reto) {
+  return `<button class="boton secundario pequeno" data-accion="estado-reto" data-id="${escapar(reto.id_reto)}" data-activo="${reto.activo ? 'false' : 'true'}">${reto.activo ? 'Desactivar' : 'Reactivar'}</button>`;
+}
+
 async function manejarAccion(evento) {
   const boton = evento.target.closest('[data-accion]');
   if (!boton) return;
   const { accion, id } = boton.dataset;
   try {
+    if (['editar-catalogo', 'estado-catalogo', 'eliminar-catalogo'].includes(accion)) {
+      const ruta = `/catalogo-materias/${id}`;
+      if (accion === 'editar-catalogo') {
+        const nombre = prompt('Nombre de la asignatura:', boton.dataset.nombre);
+        if (nombre === null) return;
+        await api(ruta, { method: 'PUT', body: JSON.stringify({ nombre }) });
+      } else if (accion === 'estado-catalogo') {
+        await api(`${ruta}/estado`, { method: 'PATCH', body: JSON.stringify({ activo: boton.dataset.activo === 'true' }) });
+      } else {
+        if (!confirm('¿Eliminar esta asignatura del catálogo?')) return;
+        await api(ruta, { method: 'DELETE' });
+      }
+      await cargarCatalogoMateriasAdmin(); avisar('Catálogo actualizado.', 'exito');
+    }
     if (accion === 'nueva-tarea') return abrirTarea();
     if (accion === 'editar-materia') {
       const materia = estado.materias.find(item => item.id_materia === id);
       $('#form-materia').elements.id.value = id;
-      $('#form-materia').elements.nombre.value = materia.nombre;
+      await cargarCatalogoMaterias();
+      $('#form-materia').elements.id_catalogo_materia.value = materia.id_catalogo_materia || '';
+      $('#form-materia').elements.id_catalogo_materia.options[0].textContent = 'Conservar asignatura actual';
+      $('#form-materia').elements.id_catalogo_materia.required = false;
+      $('#form-materia [type=submit]').disabled = false;
       $('#form-materia').elements.horario.value = materia.horario || '';
       $('#titulo-form-materia').textContent = 'Editar materia';
       $('#cancelar-materia').hidden = false;
@@ -812,29 +936,21 @@ async function manejarAccion(evento) {
     }
     if (accion === 'editar-reto') {
       const reto = estado.retos.find(item => item.id_reto === id);
-      const descripcion = prompt('Descripción del reto', reto.descripcion);
-      if (descripcion === null || !descripcion.trim()) return;
-      if ([...descripcion.trim()].length > 200) return avisar('La descripción del reto admite máximo 200 caracteres.', 'error');
-      const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion: descripcion.trim() }) });
-      estado.retos = estado.retos.map(item => item.id_reto === id ? respuesta.dato : item);
-      renderizarGamificacion(); avisar('Reto actualizado.', 'exito');
+      if (reto && !reto.completado) abrirReto(reto);
     }
-    if (accion === 'alternar-reto' || accion === 'alternar-reto-admin') {
-      const activo = boton.dataset.activo !== 'true';
-      const respuesta = await api(`/retos/${id}/estado`, {
-        method: 'PATCH', body: JSON.stringify({ activo })
-      });
-      if (accion === 'alternar-reto') {
-        estado.retos = estado.retos.map(item => item.id_reto === id ? respuesta.dato : item);
-        renderizarGamificacion();
-      } else {
-        estado.retosAdmin = estado.retosAdmin.map(item => item.id_reto === id ? respuesta.dato : item);
-        renderizarAdministracion();
-      }
-      avisar(activo
-        ? 'Reto reactivado. Las recompensas ya otorgadas se conservan.'
-        : 'Reto desactivado. Se detuvo el progreso automático y las recompensas ya otorgadas se conservan.',
-      'exito');
+    if (accion === 'completar-reto' && confirm('¿Deseas completar este reto y acreditar su recompensa?')) {
+      boton.disabled = true;
+      await api(`/retos/${id}/completar`, { method: 'PATCH' });
+      await recargarGamificacion();
+      avisar('Reto completado. Puntos actualizados.', 'exito');
+    }
+    if (accion === 'estado-reto') {
+      const activo = boton.dataset.activo === 'true';
+      const respuesta = await api(`/retos/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ activo }) });
+      const reemplazar = lista => lista.map(item => item.id_reto === id ? respuesta.dato : item);
+      estado.retos = reemplazar(estado.retos); estado.retosAdmin = reemplazar(estado.retosAdmin);
+      if (estado.cuenta?.rol === 'Administrador') renderizarAdministracion(); else renderizarGamificacion();
+      avisar(activo ? 'Reto reactivado. Conserva su progreso y sus puntos.' : 'Reto desactivado. No recibirá progreso ni nuevas recompensas.', 'exito');
     }
     if (accion === 'eliminar-reto' && confirm('¿Deseas eliminar este reto?')) {
       await api(`/retos/${id}`, { method: 'DELETE' });
@@ -857,7 +973,7 @@ async function manejarAccion(evento) {
     if (accion === 'editar-sesion') {
       const sesion = estado.sesiones.find(item => item.id_sesion === id);
       const duracion = Number(prompt('Duración en minutos', sesion.duracion_minutos));
-      if (!Number.isInteger(duracion) || duracion < 1 || duracion > 1440) return avisar('La duración debe ser un entero entre 1 y 1.440 minutos.', 'error');
+      if (!Number.isInteger(duracion) || duracion < 1) return avisar('La duración debe ser un entero positivo.', 'error');
       const respuesta = await api(`/sesiones/${id}`, { method: 'PUT', body: JSON.stringify({ duracion_minutos: duracion, modo_enfoque: Boolean(sesion.modo_enfoque) }) });
       estado.sesiones = estado.sesiones.map(item => item.id_sesion === id ? respuesta.dato : item);
       renderizarSesiones(); renderizarResumen(); avisar('Sesión actualizada.', 'exito');
@@ -884,21 +1000,11 @@ async function manejarAccion(evento) {
       estado.notificaciones = estado.notificaciones.filter(item => item.id_notificacion !== id); renderizarNotificaciones();
     }
     if (accion === 'guardar-usuario') {
-      const cuentaActual = estado.cuentasAdmin.find(cuenta => cuenta.id_cuenta === id);
-      const activa = $(`#activa-${id}`).checked;
-      if (cuentaActual?.activa && !activa && !(await confirmarDesactivacionCuenta())) {
-        renderizarAdministracion();
-        return;
-      }
       const respuesta = await api(`/cuentas/${id}`, { method: 'PUT', body: JSON.stringify({
-        rol: $(`#rol-${id}`).value, activa
+        rol: $(`#rol-${id}`).value, activa: $(`#activa-${id}`).checked
       }) });
       estado.cuentasAdmin = estado.cuentasAdmin.map(item => item.id_cuenta === id ? respuesta.dato : item);
-      renderizarAdministracion();
-      const mensaje = cuentaActual?.activa !== respuesta.dato.activa
-        ? (respuesta.dato.activa ? 'Cuenta reactivada; el acceso vuelve a estar habilitado.' : 'Cuenta desactivada; sus datos se conservaron.')
-        : 'Cuenta actualizada.';
-      avisar(mensaje, 'exito');
+      renderizarAdministracion(); avisar('Cuenta actualizada.', 'exito');
     }
     if (accion === 'eliminar-insignia-admin' && confirm('¿Eliminar esta insignia?')) {
       await api(`/insignias/${id}`, { method: 'DELETE' });
@@ -926,6 +1032,19 @@ async function manejarAccion(evento) {
       estado.niveles = estado.niveles.map(item => item.id_nivel === id ? respuesta.dato : item);
       renderizarAdministracion(); avisar('Nivel actualizado.', 'exito');
     }
+    if (accion === 'editar-reto-admin') {
+      const actual = estado.retosAdmin.find(item => item.id_reto === id);
+      const descripcion = prompt('Descripción del reto', actual.descripcion);
+      if (descripcion === null) return;
+      const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion }) });
+      estado.retosAdmin = estado.retosAdmin.map(item => item.id_reto === id ? respuesta.dato : item);
+      renderizarAdministracion(); avisar('Reto actualizado.', 'exito');
+    }
+    if (accion === 'eliminar-reto-admin' && confirm('¿Eliminar este reto?')) {
+      await api(`/retos/${id}`, { method: 'DELETE' });
+      estado.retosAdmin = estado.retosAdmin.filter(item => item.id_reto !== id);
+      renderizarAdministracion(); avisar('Reto eliminado.', 'exito');
+    }
     if (accion === 'eliminar-punto-admin' && confirm('Esta corrección elimina el movimiento. ¿Continuar?')) {
       const motivo = prompt('Motivo obligatorio de la corrección');
       if (!motivo?.trim()) return avisar('Debes indicar el motivo de la corrección.', 'error');
@@ -945,7 +1064,6 @@ async function manejarAccion(evento) {
 
 /** RF01–RF15/HU01–HU28: conecta formularios y botones con sus acciones de M16. */
 function registrarEventos() {
-  configurarValidacionesCampos();
   $('#tab-login').addEventListener('click', () => seleccionarAcceso('login'));
   $('#tab-registro').addEventListener('click', () => seleccionarAcceso('registro'));
   $('.selector-acceso').addEventListener('keydown', evento => {
@@ -964,7 +1082,8 @@ function registrarEventos() {
     if (boton.dataset.vista === 'estadisticas' && !estado.estadisticas) cargarEstadisticas().catch(error => avisar(error.message, 'error'));
     if (boton.dataset.vista === 'institucional' && !estado.institucionales) cargarInstitucionales().catch(error => avisar(error.message, 'error'));
   }));
-  $('#boton-salir').addEventListener('click', cerrarSesion);
+  // Se envuelve para no pasar el Event como argumento `revocar`.
+  $('#boton-salir').addEventListener('click', () => cerrarSesion());
   document.addEventListener('click', manejarAccion);
 
   $('#form-login').addEventListener('submit', evento => {
@@ -978,7 +1097,8 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget;
     duranteEnvio(f, async () => {
       try {
-        await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { nombre: f.elements.materia.value, horario: f.elements.horario.value || null } }) });
+        const registro = await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { id_catalogo_materia: f.elements.id_catalogo_materia.value, horario: f.elements.horario.value || null } }) });
+        if (registro.requiere_verificacion) { abrirCodigoCorreo(registro.desafio, 'verificar', f.elements.correo.value); f.elements.contrasena.value = ''; return; }
         await iniciarSesion(f.elements.correo.value, f.elements.contrasena.value); avisar('Cuenta creada correctamente.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
@@ -987,13 +1107,36 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value;
     duranteEnvio(f, async () => {
       try {
-        const respuesta = await api(id ? `/materias/${id}` : '/materias', { method: id ? 'PUT' : 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, horario: f.elements.horario.value || null }) });
+        const seleccion = f.elements.id_catalogo_materia.value;
+        const actual = estado.materias.find(item => item.id_materia === id);
+        const datos = { horario: f.elements.horario.value || null };
+        if (seleccion && (!id || seleccion !== actual?.id_catalogo_materia)) datos.id_catalogo_materia = seleccion;
+        const respuesta = await api(id ? `/materias/${id}` : '/materias', { method: id ? 'PUT' : 'POST', body: JSON.stringify(datos) });
         estado.materias = id ? estado.materias.map(item => item.id_materia === id ? respuesta.dato : item) : [...estado.materias, respuesta.dato];
         limpiarMateria(); renderizarMaterias(); avisar(`Materia ${id ? 'actualizada' : 'creada'}.`, 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
   });
   $('#cancelar-materia').addEventListener('click', limpiarMateria);
+  $('#mostrar-form-reto').addEventListener('click', () => abrirReto());
+  $('#cerrar-form-reto').addEventListener('click', cerrarReto);
+  $('#cancelar-reto').addEventListener('click', cerrarReto);
+  $('#form-reto').elements.tipo_condicion.addEventListener('change', evento => {
+    $('#form-reto').elements.objetivo.disabled = evento.target.value === 'antigua';
+  });
+  $('#form-reto').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value;
+    duranteEnvio(f, async () => {
+      try {
+        const datos = { descripcion: f.elements.descripcion.value, puntos_recompensa: Number(f.elements.puntos_recompensa.value), semana: f.elements.semana.value };
+        if (f.elements.tipo_condicion.value !== 'antigua') datos.condicion = `${f.elements.tipo_condicion.value}:${f.elements.objetivo.value}`;
+        if (id) datos.progreso = Number(f.elements.progreso.value);
+        const respuesta = await api(id ? `/retos/${id}` : '/retos', { method: id ? 'PUT' : 'POST', body: JSON.stringify(datos) });
+        estado.retos = id ? estado.retos.map(item => item.id_reto === id ? respuesta.dato : item) : [...estado.retos, respuesta.dato];
+        renderizarGamificacion(); cerrarReto(); avisar(`Reto ${id ? 'actualizado' : 'creado'}.`, 'exito');
+      } catch (error) { avisar(error.message, 'error'); }
+    });
+  });
   $('#mostrar-form-tarea').addEventListener('click', () => abrirTarea());
   $('#cerrar-form-tarea').addEventListener('click', cerrarTarea);
   $('#cancelar-tarea').addEventListener('click', cerrarTarea);
@@ -1014,7 +1157,10 @@ function registrarEventos() {
   $$('[data-panel-gamificacion]').forEach(tab => tab.addEventListener('click', () => {
     const historial = tab.dataset.panelGamificacion === 'historial';
     $('#panel-historial-gamificacion').hidden = !historial;
-    $$('.tab-gamificacion').forEach(item => item.classList.toggle('activo', item === tab));
+    $$('.tab-gamificacion').forEach(item => {
+      item.classList.toggle('activo', item === tab);
+      item.setAttribute('aria-pressed', String(item === tab));
+    });
   }));
   $$('input[name="modo-temporizador"]').forEach(input => input.addEventListener('change', () => {
     if (estado.temporizador.activo) return;
@@ -1060,32 +1206,36 @@ function registrarEventos() {
     evento.preventDefault(); const f = evento.currentTarget;
     duranteEnvio(f, async () => {
       try {
-        const respuesta = await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'PUT', body: JSON.stringify({ nombre: f.elements.nombre.value.trim(), correo: f.elements.correo.value.trim() }) });
+        const respuesta = await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'PUT', body: JSON.stringify({ nombre: f.elements.nombre.value.trim(), ...(configuracionCorreo.verificacion_correo && estado.cuenta.rol === 'Estudiante' ? {} : { correo: f.elements.correo.value.trim() }) }) });
         estado.cuenta = respuesta.dato; renderizarUsuario(); avisar('Perfil actualizado.', 'exito');
       } catch (error) { avisar(error.message, 'error'); }
     });
   });
   $('#form-preferencias').elements.tema.addEventListener('change', evento => { document.documentElement.dataset.tema = evento.target.value; });
   $('#form-preferencias').elements.modo_oscuro.addEventListener('change', evento => { document.documentElement.classList.toggle('modo-oscuro', evento.target.checked); });
-  $('#desactivar-cuenta').addEventListener('click', async evento => {
-    const boton = evento.currentTarget;
-    if (!(await confirmarDesactivacionCuenta())) return;
-    boton.disabled = true;
-    try {
-      await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'DELETE' });
-      $('#modal-desactivar-cuenta').close();
-      await cerrarSesion();
-      avisar('Cuenta desactivada. Tus datos se conservaron.', 'exito');
-    } catch (error) {
-      avisar(error.message, 'error');
-    } finally {
-      boton.disabled = false;
-    }
-  });
   $('#eliminar-datos').addEventListener('click', async () => {
     if (!confirm('Esta acción eliminará permanentemente todos tus datos. Exporta primero si deseas conservar una copia. ¿Continuar?')) return;
     try { await api(`/cuentas/${estado.cuenta.id_cuenta}/datos`, { method: 'DELETE' }); await cerrarSesion(); }
     catch (error) { avisar(error.message, 'error'); }
+  });
+
+  /** RF01/HU30/RN27: Cancelar no envía ninguna petición; Confirmar desactiva una sola vez y cierra la sesión. */
+  $('#desactivar-cuenta').addEventListener('click', () => $('#modal-desactivar-cuenta').showModal());
+  $('#cancelar-desactivar-cuenta').addEventListener('click', () => $('#modal-desactivar-cuenta').close());
+  $('#confirmar-desactivar-cuenta').addEventListener('click', async () => {
+    const modal = $('#modal-desactivar-cuenta');
+    const botones = [...modal.querySelectorAll('button')];
+    botones.forEach(boton => { boton.disabled = true; });
+    try {
+      await api(`/cuentas/${estado.cuenta.id_cuenta}`, { method: 'DELETE' });
+      modal.close();
+      await cerrarSesion(false);
+      avisar('Tu cuenta fue desactivada. Tus datos se conservan; solo un Administrador puede reactivarla.', 'exito');
+    } catch (error) {
+      avisar(`No se pudo desactivar la cuenta: ${error.message}`, 'error');
+    } finally {
+      botones.forEach(boton => { boton.disabled = false; });
+    }
   });
 
   $('#cerrar-recompensa').addEventListener('click', () => $('#modal-recompensa').close());
@@ -1123,8 +1273,18 @@ function registrarEventos() {
     try {
       const [cuentas, niveles, insignias] = await Promise.all([api('/cuentas'), api('/niveles'), api('/insignias')]);
       estado.cuentasAdmin = cuentas.datos; estado.niveles = niveles.datos; estado.insignias = insignias.datos;
+      await cargarCatalogoMateriasAdmin();
       renderizarAdministracion(); await cargarDetalleAdministrativo(); avisar('Datos administrativos actualizados.', 'exito');
     } catch (error) { avisar(error.message, 'error'); }
+  });
+  $('#form-admin-catalogo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        await api('/catalogo-materias', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value }) });
+        f.reset(); await cargarCatalogoMateriasAdmin(); avisar('Asignatura creada.', 'exito');
+      } catch (error) { avisar(error.message, 'error'); }
+    });
   });
   $('#form-admin-insignia').addEventListener('submit', evento => {
     evento.preventDefault(); const f = evento.currentTarget;
@@ -1191,8 +1351,137 @@ function registrarEventos() {
 /** Punto de entrada del navegador. Intenta restaurar una sesión de la pestaña. */
 /** RF01/HU01: registra eventos y recupera una sesión si hay token. */
 async function iniciar() {
+  prepararValidacionVisual();
   registrarEventos();
+  await iniciarCorreoOpcional();
+  await cargarCatalogoMaterias();
   if (estado.token) await cargarAplicacion(); else mostrarAcceso();
+}
+
+// Bloque D: controles ocultos hasta recibir configuración explícita del servidor.
+let configuracionCorreo = { verificacion_correo: false, segundo_factor: 'off', reenvio_segundos: 60, caducidad_minutos: 10 };
+let operacionCodigoCorreo = 'verificar';
+let correoReenvio = null;
+let temporizadorCorreo;
+let plazosCorreo;
+async function aceptarSesionCorreo(respuesta) {
+  estado.token = respuesta.token;
+  sessionStorage.setItem(CLAVE_TOKEN, respuesta.token);
+  estado.cuenta = respuesta.cuenta;
+  await cargarAplicacion();
+}
+function mensajeCodigoEnviado() {
+  const enviado = `Código enviado${correoReenvio ? ` a ${correoReenvio}` : ''}. Caduca en ${configuracionCorreo.caducidad_minutos} minutos`;
+  return operacionCodigoCorreo === 'verificar' && !$('#desafio-correo').value
+    ? `Si existe una cuenta pendiente, llegará un código. ${enviado}` : enviado;
+}
+function cuentaRegresivaCorreo(reiniciar = true) {
+  clearInterval(temporizadorCorreo);
+  // El servidor vuelve a comprobar los plazos, incluso si se cierra este diálogo.
+  const ahora = Date.now();
+  if (reiniciar) plazosCorreo = {
+    reenviarDesde: ahora + Number(configuracionCorreo.reenvio_segundos) * 1000,
+    caduca: ahora + Number(configuracionCorreo.caducidad_minutos) * 60000
+  };
+  const { reenviarDesde, caduca } = plazosCorreo;
+  const boton = $('#reenviar-codigo-correo');
+  const actualizar = () => {
+    const restante = Math.max(0, Math.ceil((reenviarDesde - Date.now()) / 1000));
+    const vencido = Date.now() >= caduca;
+    boton.disabled = !vencido && restante > 0;
+    boton.textContent = boton.disabled ? `Reenviar en ${restante} s` : 'Reenviar código';
+    if (vencido) {
+      $('#estado-codigo-correo').textContent = 'El código caducó; solicita otro';
+      clearInterval(temporizadorCorreo);
+    }
+  };
+  actualizar(); temporizadorCorreo = setInterval(actualizar, 1000);
+}
+function abrirCodigoCorreo(desafio, operacion, correo = null, enviando = false) {
+  operacionCodigoCorreo = operacion; correoReenvio = correo;
+  $('#form-codigo-correo').reset();
+  $('#desafio-correo').value = desafio || '';
+  $('#titulo-codigo-correo').textContent = operacion === 'login' ? 'Segundo paso de acceso' : 'Confirma tu correo';
+  $('#estado-codigo-correo').textContent = enviando ? 'Enviando código…' : mensajeCodigoEnviado();
+  $('#reenviar-codigo-correo').hidden = operacion === 'cambio';
+  $('#modal-codigo-correo').showModal();
+  if (enviando) { clearInterval(temporizadorCorreo); plazosCorreo = null; $('#reenviar-codigo-correo').disabled = true; }
+  else cuentaRegresivaCorreo();
+  $('#codigo-correo').focus();
+}
+async function iniciarCorreoOpcional() {
+  try { configuracionCorreo = await api('/auth/configuracion'); } catch (_) { return; }
+  const verificacion = configuracionCorreo.verificacion_correo;
+  const mfa = configuracionCorreo.segundo_factor === 'optional';
+  $('#seguridad-correo').hidden = !verificacion && !mfa;
+  $('#form-mfa-correo').hidden = !mfa;
+  $('#form-cambio-correo').hidden = !verificacion;
+  $('#form-reenviar-verificacion').hidden = !verificacion;
+  $('#cerrar-codigo-correo').addEventListener('click', () => $('#modal-codigo-correo').close());
+  $('#modal-codigo-correo').addEventListener('close', () => { clearInterval(temporizadorCorreo); $('#codigo-correo').value = ''; });
+  $('#form-codigo-correo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        const ruta = { verificar: '/correo/verificar', login: '/login/codigo', cambio: '/correo/cambio/confirmar' }[operacionCodigoCorreo];
+        const identificador = operacionCodigoCorreo === 'verificar' && !f.elements.desafio.value && correoReenvio
+          ? { correo: correoReenvio } : { desafio: f.elements.desafio.value };
+        const resultado = await api(`/auth${ruta}`, { method: 'POST', body: JSON.stringify({ ...identificador, codigo: f.elements.codigo.value }) });
+        $('#modal-codigo-correo').close(); await aceptarSesionCorreo(resultado);
+      } catch (error) { $('#estado-codigo-correo').textContent = error.message; f.elements.codigo.value = ''; }
+    });
+  });
+  $('#reenviar-codigo-correo').addEventListener('click', async () => {
+    const boton = $('#reenviar-codigo-correo');
+    boton.disabled = true;
+    clearInterval(temporizadorCorreo);
+    $('#estado-codigo-correo').textContent = 'Reenviando…';
+    try {
+      const ruta = operacionCodigoCorreo === 'login' ? '/login/codigo/reenviar' : '/correo/reenviar';
+      const datos = $('#desafio-correo').value ? { desafio: $('#desafio-correo').value } : { correo: correoReenvio };
+      await api(`/auth${ruta}`, { method: 'POST', body: JSON.stringify(datos) });
+      $('#estado-codigo-correo').textContent = mensajeCodigoEnviado();
+      cuentaRegresivaCorreo();
+    } catch (error) {
+      if (plazosCorreo) cuentaRegresivaCorreo(false);
+      $('#estado-codigo-correo').textContent = error.message; boton.disabled = false;
+    }
+  });
+  $('#form-reenviar-verificacion').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget; const correo = f.elements.correo.value.trim();
+    duranteEnvio(f, async () => {
+      try {
+        abrirCodigoCorreo('', 'verificar', correo, true);
+        await api('/auth/correo/reenviar', { method: 'POST', body: JSON.stringify({ correo }) });
+        $('#estado-codigo-correo').textContent = mensajeCodigoEnviado();
+        cuentaRegresivaCorreo();
+      } catch (error) {
+        $('#estado-codigo-correo').textContent = error.message;
+        $('#reenviar-codigo-correo').disabled = false;
+        avisar(error.message, 'error');
+      }
+    });
+  });
+  $('#form-mfa-correo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        const resultado = await api('/auth/mfa', { method: 'POST', body: JSON.stringify({ activar: f.elements.activar.checked, contrasena: f.elements.contrasena.value }) });
+        estado.cuenta = resultado.cuenta; renderizarUsuario(); avisar('Segundo paso actualizado.', 'exito');
+      } catch (error) { avisar(error.message, 'error'); }
+      finally { f.elements.contrasena.value = ''; }
+    });
+  });
+  $('#form-cambio-correo').addEventListener('submit', evento => {
+    evento.preventDefault(); const f = evento.currentTarget;
+    duranteEnvio(f, async () => {
+      try {
+        const resultado = await api('/auth/correo/cambio', { method: 'POST', body: JSON.stringify({ correo_nuevo: f.elements.correo_nuevo.value, contrasena: f.elements.contrasena.value }) });
+        abrirCodigoCorreo(resultado.desafio, 'cambio');
+      } catch (error) { avisar(error.message, 'error'); }
+      finally { f.elements.contrasena.value = ''; }
+    });
+  });
 }
 
 iniciar();

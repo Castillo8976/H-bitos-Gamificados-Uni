@@ -9,22 +9,23 @@ El diagrama vigente contiene las **13 clases de entidad** correspondientes a las
 
 > **Nota de corrección (22 de septiembre de 2026 — atributos):** el diagrama incluía todos los métodos exactos, pero varios atributos reales del modelo no aparecían dibujados (por ejemplo, `Reto.descripcion`, `Meta.descripcion`, `Cuenta.rol`, `Cuenta.fecha_registro`, `Insignia.descripcion`/`icono`, `NivelCuenta.descripcion`/`icono`, `Recordatorio.mensaje`/`activo`, `Punto.id_origen`/`fecha`, `Notificacion.fecha`, `SesionEstudio.fecha`, `Tarea.fecha_completada`). Se verificaron los 13 modelos de `src/models/*.js` campo por campo y `E12-diagrama-clases.drawio` ya los incluye todos.
 
-> **Nota de diseño (22 de septiembre de 2026 — CatalogoMateria, PLANEADA):** por observación de la docente, la materia debe **seleccionarse de un catálogo institucional**, no escribirse como texto libre. `E12-diagrama-clases.drawio` ya incluye la clase `CatalogoMateria` (borde punteado gris = planeada) con sus métodos y la relación hacia `Materia`. **Esta clase todavía no existe en el código** (`src/models/`, `src/services/`, `src/routes/`); no se debe interpretar esta tabla ni el diagrama como evidencia de que ya está implementada. La implementación en código queda pendiente de una autorización explícita.
+> **Nota de diseño (22 de septiembre de 2026 — CatalogoMateria; implementada en el código el 24 de octubre de 2026, `f62c5e5` y `3eb2b71`, Decisión #10; E12 aún la muestra como planeada):** por observación de la docente, la materia debe **seleccionarse de un catálogo institucional**, no escribirse como texto libre. `E12-diagrama-clases.drawio` ya incluye la clase `CatalogoMateria` (borde punteado gris = planeada) con sus métodos y la relación hacia `Materia`. **Esta clase todavía no existe en el código** (`src/models/`, `src/services/`, `src/routes/`); no se debe interpretar esta tabla ni el diagrama como evidencia de que ya está implementada. La implementación en código queda pendiente de una autorización explícita.
 
 ---
 
 | Clase | Métodos | CU que lo origina | RF asociado |
 |---|---|---|---|
-| `Cuenta` | `crearCuenta`, `listarCuentas`, `obtenerCuenta`, `actualizarCuenta`, `contarAdministradoresActivos`, `desactivarCuenta`, `reactivarCuenta`, `eliminarCuenta`, `registrar`, `autenticar`, `cerrarSesion`, `obtenerPerfil` | CU01, CU11, CU13 | RF01, RNF12, RN21, RN27 |
-| `Materia` | `crearMateria`, `listarMaterias`, `obtenerMateria`, `actualizarMateria`, `eliminarMateria` | CU01, CU13 | RF01, RF09 |
+| `Cuenta` | `crearCuenta`, `listarCuentas`, `obtenerCuenta`, `actualizarCuenta`, `desactivarCuenta` (`28b601a`; incrementa `version_sesion`), reactivación mediante `actualizarCuenta` (`activa = true`; no existe una función `reactivarCuenta`), `eliminarCuenta`, `registrar`, `autenticar`, `cerrarSesion`, `obtenerPerfil` | CU01, CU11, CU13 | RF01, RNF12, RN21 |
+| `Materia` | `crearMateria`, `listarMaterias`, `obtenerMateria`, `actualizarMateria`, `eliminarMateria`; servicio: `crearDesdeCatalogo`, `actualizarDesdeCatalogo` (`3eb2b71`) | CU01, CU13 | RF01, RF09 |
 | `Tarea` | `crearTarea`, `listarTareas`, `obtenerTarea`, `actualizarTarea`, `completarTarea`, `eliminarTarea` | CU02, CU03, CU07 | RF02, RF03, RF04, RF09 |
 | `SesionEstudio` | `crearSesionEstudio`, `listarSesionesEstudio`, `obtenerSesionEstudio`, `actualizarSesionEstudio`, `eliminarSesionEstudio`, `calcularHorasSemana` | CU04, CU12 | RF10, RF11, RF12 |
 | `Insignia` | `crearInsignia`, `listarInsignias`, `obtenerInsignia`, `actualizarInsignia`, `eliminarInsignia`, `sembrarInsignias` | CU06, CU13 | RF05 |
 | `CuentaInsignia` | `desbloquearInsignia`, `listarInsigniasDesbloqueadas`, `tieneInsignia`, `revocarInsignia`, `evaluarInsignias` | CU03, CU06, CU14 | RF05 |
 | `Punto` | `otorgarPuntos`, `listarPuntos`, `obtenerPunto`, `eliminarPunto`, `calcularTotalPuntos`, `calcularPuntosSemana` | CU03, CU05, CU06, CU14 | RF03, RF07, RF08 |
-| `Reto` | `crearReto`, `listarRetos`, `obtenerReto`, `actualizarProgresoReto`, `completarReto`, `actualizarReto`, `cambiarEstadoReto`, `eliminarReto` | CU06, CU13 | RF06 |
+| `Reto` | `crearReto`, `listarRetos`, `obtenerReto`, `actualizarProgresoReto`, `completarReto`, `actualizarReto`, `activarReto`, `desactivarReto` (`b113445`), `eliminarReto` | CU06, CU13 | RF06 |
+| `CatalogoMateria` | CRUD: `listar`, `obtener`, `crear`, `actualizar`, `eliminar`, `transaccion`; servicio: `obtener`, `obtenerActiva`, `guardar`, `cambiarEstado`, `eliminar` (`f62c5e5`, `3eb2b71`) | CU01, CU13 | RF01, RN26 |
 
-> **Actualización documental (26 de octubre de 2026):** `Reto.activo` y `cambiarEstadoReto` ya están implementados. Los retos se crean manualmente; no se generan semanalmente de forma automática.
+> **Actualización documental (19 de octubre de 2026):** `Reto.activo` y las operaciones de activación/desactivación están aprobadas para la línea base documental, pero aún no existen en el código. Los retos se crean manualmente; no se generan semanalmente de forma automática.
 | `Meta` | `crearMeta`, `listarMetas`, `obtenerMeta`, `actualizarProgresoMeta`, `actualizarMeta`, `eliminarMeta` | CU05 | RF15 |
 | `Recordatorio` | `crearRecordatorio`, `generarRecordatorioAutomatico`, `listarRecordatorios`, `obtenerRecordatorio`, `marcarRecordatorioEnviado`, `toggleRecordatorio`, `eliminarRecordatorio` | CU02, CU10 | RF04, RNF15 |
 | `PreferenciaVisual` | `crearPreferenciaVisual`, `obtenerPreferenciaVisual`, `actualizarPreferenciaVisual`, `obtenerOCrearPreferenciaVisual`, `eliminarPreferenciaVisual` | CU08 | RF13, RNF04 |
