@@ -287,6 +287,172 @@ function progresoVisual(actual, objetivo, etiqueta) {
   return `<progress max="${maximo}" value="${Math.max(0, Math.min(valor, maximo))}" aria-label="${escapar(etiqueta)}" aria-valuetext="${escapar(actual)} de ${maximo}"></progress>`;
 }
 
+const DIAS_HORARIO = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const MINUTOS_INICIO_HORARIO = 5 * 60;
+const MINUTOS_FIN_HORARIO = 22 * 60;
+
+function etiquetaHora(minutos) {
+  const hora = Math.floor(minutos / 60);
+  const minutosHora = String(minutos % 60).padStart(2, '0');
+  const periodo = hora < 12 ? 'a. m.' : 'p. m.';
+  const hora12 = hora % 12 || 12;
+  return `${hora12}:${minutosHora} ${periodo}`;
+}
+
+function opcionesHorasHorario() {
+  return Array.from({ length: ((MINUTOS_FIN_HORARIO - MINUTOS_INICIO_HORARIO) / 30) + 1 }, (_, indice) => {
+    const minutos = MINUTOS_INICIO_HORARIO + indice * 30;
+    return `<option value="${minutos}">${etiquetaHora(minutos)}</option>`;
+  }).join('');
+}
+
+function htmlSelectorHorario(indice = 0) {
+  const sufijo = indice ? `-${indice}` : '';
+  return `<div class="franja-horario" data-franja-horario>
+    <div class="selector-horario-campos">
+      <label>Día<select data-horario-dia aria-label="Día de la franja ${indice + 1}">
+        <option value="">Sin horario</option>${DIAS_HORARIO.map(dia => `<option value="${dia}">${dia}</option>`).join('')}
+      </select></label>
+      <label>Hora de inicio<select data-horario-inicio aria-label="Hora de inicio de la franja ${indice + 1}" disabled><option value="">Selecciona la hora</option>${opcionesHorasHorario()}</select></label>
+      <label>Hora de fin<select data-horario-fin aria-label="Hora de fin de la franja ${indice + 1}" disabled><option value="">Selecciona la hora</option>${opcionesHorasHorario()}</select></label>
+    </div>
+    ${indice ? `<button type="button" class="boton peligro pequeno" data-quitar-horario aria-label="Quitar franja ${indice + 1}">Quitar</button>` : ''}
+    <small class="error-campo" data-error-horario hidden></small>
+  </div>`;
+}
+
+function htmlSelectorHorarioCompleto() {
+  return `<fieldset class="selector-horario" data-selector-horario-control>
+    <legend>Horario <span class="opcional">opcional</span></legend>
+    <div data-franjas-horario>${htmlSelectorHorario()}</div>
+    <button type="button" class="boton secundario pequeno" data-agregar-horario aria-label="Agregar otro día">Agregar otro día</button>
+    <p class="texto-secundario" data-horario-legado hidden></p>
+    <small class="error-campo" data-error-horario-general hidden></small>
+    <input type="hidden" name="horario" value="">
+  </fieldset>`;
+}
+
+function selectorHorario(formulario) {
+  return formulario.querySelector('[data-selector-horario-control]');
+}
+
+function actualizarFranjaHorario(franja) {
+  const dia = franja.querySelector('[data-horario-dia]');
+  const inicio = franja.querySelector('[data-horario-inicio]');
+  const fin = franja.querySelector('[data-horario-fin]');
+  const habilitado = Boolean(dia.value);
+  inicio.disabled = !habilitado;
+  fin.disabled = !habilitado;
+  if (!habilitado) {
+    inicio.value = '';
+    fin.value = '';
+  }
+}
+
+function errorHorario(control, mensaje = '') {
+  const error = control.querySelector('[data-error-horario-general]');
+  error.textContent = mensaje;
+  error.hidden = !mensaje;
+  control.querySelector('[data-franjas-horario]').querySelectorAll('[data-horario-dia],[data-horario-inicio],[data-horario-fin]').forEach(campo => {
+    if (mensaje) campo.setAttribute('aria-invalid', 'true'); else campo.removeAttribute('aria-invalid');
+  });
+}
+
+function leerHorario(formulario) {
+  const control = selectorHorario(formulario);
+  if (!control) return { valor: '', valido: true };
+  const legado = control.dataset.horarioLegado || '';
+  const franjas = [...control.querySelectorAll('[data-franja-horario]')];
+  const resultados = [];
+  const dias = new Set();
+  let mensaje = '';
+  for (const franja of franjas) {
+    const dia = franja.querySelector('[data-horario-dia]').value;
+    const inicio = franja.querySelector('[data-horario-inicio]').value;
+    const fin = franja.querySelector('[data-horario-fin]').value;
+    if (!dia) continue;
+    if (!inicio || !fin) { mensaje = 'Selecciona la hora de inicio y de fin.'; break; }
+    if (Number(fin) <= Number(inicio)) { mensaje = 'La hora de fin debe ser posterior a la de inicio.'; break; }
+    if (dias.has(dia)) { mensaje = 'No puedes repetir el mismo día en dos franjas.'; break; }
+    dias.add(dia);
+    resultados.push(`${dia} ${etiquetaHora(Number(inicio))} – ${etiquetaHora(Number(fin))}`);
+  }
+  const valor = resultados.join('; ');
+  if (!mensaje && valor.length > 100) mensaje = 'El horario no puede superar 100 caracteres.';
+  if (!mensaje && !resultados.length && legado) {
+    formulario.elements.horario.value = legado;
+    errorHorario(control);
+    return { valor: legado, valido: true };
+  }
+  formulario.elements.horario.value = mensaje ? '' : valor;
+  errorHorario(control, mensaje);
+  return { valor: mensaje ? '' : valor, valido: !mensaje };
+}
+
+function inicializarSelectoresHorario() {
+  $$('[data-selector-horario]').forEach(contenedor => {
+    contenedor.innerHTML = htmlSelectorHorarioCompleto();
+    const control = contenedor.firstElementChild;
+    const formulario = contenedor.closest('form');
+    control.querySelector('[data-franjas-horario]').addEventListener('change', evento => {
+      if (evento.target.matches('[data-horario-dia]')) actualizarFranjaHorario(evento.target.closest('[data-franja-horario]'));
+      delete control.dataset.horarioLegado;
+      control.querySelector('[data-horario-legado]').hidden = true;
+      leerHorario(formulario);
+    });
+    control.querySelector('[data-agregar-horario]').addEventListener('click', () => {
+      const franjas = control.querySelector('[data-franjas-horario]');
+      if (franjas.children.length >= 3) return;
+      franjas.insertAdjacentHTML('beforeend', htmlSelectorHorario(franjas.children.length));
+      franjas.lastElementChild.querySelector('[data-quitar-horario]').addEventListener('click', evento => {
+        const siguiente = evento.currentTarget.closest('[data-franja-horario]').previousElementSibling?.querySelector('[data-horario-dia]');
+        evento.currentTarget.closest('[data-franja-horario]').remove();
+        leerHorario(formulario);
+        (siguiente || control.querySelector('[data-horario-dia]')).focus();
+      });
+      leerHorario(formulario);
+      franjas.lastElementChild.querySelector('[data-horario-dia]').focus();
+      if (franjas.children.length === 3) control.querySelector('[data-agregar-horario]').disabled = true;
+    });
+    formulario.addEventListener('reset', () => window.setTimeout(() => establecerHorario(formulario, ''), 0));
+    leerHorario(formulario);
+  });
+}
+
+function establecerHorario(formulario, valor) {
+  const control = selectorHorario(formulario);
+  if (!control) return;
+  const franjas = control.querySelector('[data-franjas-horario]');
+  const filas = valor ? valor.split('; ').map(parte => {
+    const coincidencia = parte.match(/^(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo) (\d{1,2}):(\d{2}) ([ap])\. m\. – (\d{1,2}):(\d{2}) ([ap])\. m\.$/);
+    if (!coincidencia) return null;
+    const convertir = (hora, minutos, periodo) => ((Number(hora) % 12) + (periodo === 'p' ? 12 : 0)) * 60 + Number(minutos);
+    return { dia: coincidencia[1], inicio: convertir(coincidencia[2], coincidencia[3], coincidencia[4]), fin: convertir(coincidencia[5], coincidencia[6], coincidencia[7]) };
+  }) : [];
+  control.dataset.horarioLegado = '';
+  if (valor && (!filas.length || filas.some(franja => !franja))) {
+    control.dataset.horarioLegado = valor;
+    control.querySelector('[data-horario-legado]').textContent = `Actual: ${valor}`;
+    control.querySelector('[data-horario-legado]').hidden = false;
+  }
+  franjas.innerHTML = htmlSelectorHorario();
+  for (const [indice, franja] of filas.filter(Boolean).entries()) {
+    if (indice) franjas.insertAdjacentHTML('beforeend', htmlSelectorHorario(indice));
+    const fila = franjas.children[indice];
+    fila.querySelector('[data-horario-dia]').value = franja.dia;
+    fila.querySelector('[data-horario-inicio]').value = franja.inicio;
+    fila.querySelector('[data-horario-fin]').value = franja.fin;
+    actualizarFranjaHorario(fila);
+  }
+  franjas.querySelectorAll('[data-quitar-horario]').forEach(boton => boton.addEventListener('click', () => {
+    boton.closest('[data-franja-horario]').remove();
+    leerHorario(formulario);
+  }));
+  control.querySelector('[data-agregar-horario]').disabled = franjas.children.length >= 3;
+  formulario.elements.horario.value = valor || '';
+  if (filas.length && filas.every(Boolean)) leerHorario(formulario);
+}
+
 /** Bloque E: el texto hace perceptible el estado del reto además de su color. */
 function estadoRetoVisual(reto) {
   const estadoVisual = reto.completado ? 'completado' : reto.activo ? 'activo' : 'inactivo';
@@ -897,7 +1063,7 @@ async function manejarAccion(evento) {
       $('#form-materia').elements.id_catalogo_materia.options[0].textContent = 'Conservar asignatura actual';
       $('#form-materia').elements.id_catalogo_materia.required = false;
       $('#form-materia [type=submit]').disabled = false;
-      $('#form-materia').elements.horario.value = materia.horario || '';
+      establecerHorario($('#form-materia'), materia.horario || '');
       $('#titulo-form-materia').textContent = 'Editar materia';
       $('#cancelar-materia').hidden = false;
       return;
@@ -1095,6 +1261,7 @@ function registrarEventos() {
   });
   $('#form-registro').addEventListener('submit', evento => {
     evento.preventDefault(); const f = evento.currentTarget;
+    if (!leerHorario(f).valido) return;
     duranteEnvio(f, async () => {
       try {
         const registro = await api('/auth/registro', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, correo: f.elements.correo.value, contrasena: f.elements.contrasena.value, materia: { id_catalogo_materia: f.elements.id_catalogo_materia.value, horario: f.elements.horario.value || null } }) });
@@ -1105,6 +1272,7 @@ function registrarEventos() {
   });
   $('#form-materia').addEventListener('submit', evento => {
     evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value;
+    if (!leerHorario(f).valido) return;
     duranteEnvio(f, async () => {
       try {
         const seleccion = f.elements.id_catalogo_materia.value;
@@ -1352,6 +1520,7 @@ function registrarEventos() {
 /** RF01/HU01: registra eventos y recupera una sesión si hay token. */
 async function iniciar() {
   prepararValidacionVisual();
+  inicializarSelectoresHorario();
   registrarEventos();
   await iniciarCorreoOpcional();
   await cargarCatalogoMaterias();

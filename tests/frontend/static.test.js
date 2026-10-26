@@ -61,6 +61,12 @@ async function run() {
   assert.match(cliente.text, /\/estadisticas\/semanales/);
   assert.match(cliente.text, /\/estadisticas\/institucionales/);
   assert.match(cliente.text, /\/exportacion\/datos/);
+  assert.match(cliente.text, /function htmlSelectorHorarioCompleto/);
+  assert.match(cliente.text, /data-horario-dia/);
+  assert.match(cliente.text, /data-horario-inicio/);
+  assert.match(cliente.text, /data-horario-fin/);
+  assert.match(cliente.text, /data-agregar-horario/);
+  assert.match(cliente.text, /data-horario-legado/);
   // RF06/HU18/HU31/RN28: estado del reto visible y cambiado solo mediante PATCH /retos/:id/estado.
   assert.match(cliente.text, /data-accion="estado-reto"/);
   assert.match(cliente.text, /\/retos\/\$\{id\}\/estado`, \{ method: 'PATCH'/);

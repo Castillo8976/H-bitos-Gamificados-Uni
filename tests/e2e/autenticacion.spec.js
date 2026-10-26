@@ -21,7 +21,7 @@ for (const caso of [
     await prepararRegistro(page);
     await page.locator(`#form-registro [name=${caso.campo}]`).fill(caso.valor);
     await page.locator('#form-registro button[type=submit]').click();
-    if (caso.nativo) await expect(page.locator('#form-registro .error-campo')).toContainText(caso.mensaje);
+    if (caso.nativo) await expect(page.locator('#form-registro .error-campo:visible')).toContainText(caso.mensaje);
     else await aviso(page, caso.mensaje);
     await expect(page.locator('#acceso')).toBeVisible();
     expect(await tokenPagina(page)).toBeNull();
@@ -33,8 +33,8 @@ test('registro sin asignatura se impide antes de enviar', async ({ page }) => {
   const envios = [];
   page.on('request', r => { if (r.url().endsWith('/api/auth/registro')) envios.push(r); });
   await page.locator('#form-registro button[type=submit]').click();
-  await expect(page.locator('#form-registro select')).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.locator('#form-registro .error-campo')).toBeVisible();
+  await expect(page.locator('#form-registro select[name=id_catalogo_materia]')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('#form-registro .error-campo:visible')).toBeVisible();
   expect(envios).toHaveLength(0);
 });
 

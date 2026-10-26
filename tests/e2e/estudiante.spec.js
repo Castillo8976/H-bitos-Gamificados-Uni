@@ -21,18 +21,59 @@ test('Materias permite seleccionar del catálogo, editar y eliminar', async ({ p
   // La primera asignatura ya pertenece al estudiante por el registro.
   await select.selectOption({ index: 2 });
   const nombre = await select.locator('option:checked').textContent();
-  await form.getByLabel(/Horario/).fill('Lunes 10:00');
+  const horario = form.locator('[data-selector-horario-control]');
+  await horario.locator('[data-horario-dia]').selectOption('Lunes');
+  await horario.locator('[data-horario-inicio]').selectOption('600');
+  await horario.locator('[data-horario-fin]').selectOption('660');
   await form.getByRole('button', { name: 'Guardar materia' }).click();
   await aviso(page, 'Materia creada.');
   const fila = item(page, '#lista-materias', nombre);
-  await expect(fila).toContainText('Lunes 10:00');
+  await expect(fila).toContainText('Lunes 10:00 a. m. – 11:00 a. m.');
   await fila.getByRole('button', { name: 'Editar', exact: true }).click();
-  await form.getByLabel(/Horario/).fill('Martes 14:00');
+  await expect(page.locator('#titulo-form-materia')).toHaveText('Editar materia');
+  await horario.locator('[data-horario-dia]').selectOption('Martes');
+  await horario.locator('[data-horario-inicio]').selectOption('840');
+  await horario.locator('[data-horario-fin]').selectOption('900');
+  await expect(horario.locator('[data-horario-dia]')).toHaveValue('Martes');
+  await expect(horario.locator('[data-horario-inicio]')).toHaveValue('840');
   await form.getByRole('button', { name: 'Guardar materia' }).click();
   await aviso(page, 'Materia actualizada.');
-  await expect(fila).toContainText('Martes 14:00');
+  await expect(fila).toContainText('Martes 2:00 p. m. – 3:00 p. m.');
   await dialogo(page, () => fila.getByRole('button', { name: 'Eliminar', exact: true }).click());
   await expect(fila).toHaveCount(0);
+});
+
+test('Horario valida fin, días repetidos y conserva texto histórico no interpretable', async ({ page, request }) => {
+  await vista(page, 'materias');
+  const form = page.locator('#form-materia');
+  const horario = form.locator('[data-selector-horario-control]');
+  const select = form.getByLabel('Asignatura');
+  await select.selectOption({ index: 2 });
+  await horario.locator('[data-horario-dia]').selectOption('Lunes');
+  await horario.locator('[data-horario-inicio]').selectOption('600');
+  await horario.locator('[data-horario-fin]').selectOption('570');
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await expect(horario.locator('[data-error-horario-general]')).toContainText('posterior');
+  await horario.locator('[data-horario-fin]').selectOption('660');
+  await horario.locator('[data-agregar-horario]').click();
+  const franjas = horario.locator('[data-franja-horario]');
+  await franjas.nth(1).locator('[data-horario-dia]').selectOption('Lunes');
+  await franjas.nth(1).locator('[data-horario-inicio]').selectOption('720');
+  await franjas.nth(1).locator('[data-horario-fin]').selectOption('780');
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await expect(horario.locator('[data-error-horario-general]')).toContainText('repetir');
+
+  const token = await tokenPagina(page);
+  const catalogo = (await api(request, token, 'get', '/catalogo-materias')).datos[0];
+  const creada = await api(request, token, 'post', '/materias', { id_catalogo_materia: catalogo.id_catalogo_materia, horario: 'Viernes 6:00 p. m.' }, 201);
+  await page.reload();
+  await vista(page, 'materias');
+  const historica = item(page, '#lista-materias', creada.dato.nombre).last();
+  await historica.getByRole('button', { name: 'Editar', exact: true }).click();
+  await expect(horario.locator('[data-horario-legado]')).toHaveText('Actual: Viernes 6:00 p. m.');
+  await form.getByRole('button', { name: 'Guardar materia' }).click();
+  await aviso(page, 'Materia actualizada.');
+  await expect(historica).toContainText('Viernes 6:00 p. m.');
 });
 
 test('CRUD de tareas, filtros independientes y completar acredita puntos', async ({ page, request }) => {

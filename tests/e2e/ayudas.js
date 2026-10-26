@@ -14,7 +14,7 @@ async function prepararRegistro(page, datos = estudiante(), { seleccionarMateria
   await page.goto('/');
   await page.getByRole('tab', { name: 'Crear cuenta' }).click();
   const form = page.locator('#form-registro');
-  await expect(form.locator('select')).toBeEnabled();
+  await expect(form.locator('select[name=id_catalogo_materia]')).toBeEnabled();
   await form.getByLabel('Nombre completo').fill(datos.nombre);
   await form.getByLabel('Correo', { exact: true }).fill(datos.correo);
   await form.getByLabel(/^Contraseña/).fill(datos.contrasena);

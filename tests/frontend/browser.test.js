@@ -149,7 +149,7 @@ async function run() {
     assert.equal(await Cuenta.count({ where: { correo: 'registro-browser@test.local' } }), 1);
     await cdp.evaluar("document.querySelector('[data-vista=materias]').click()");
     await esperarCondicion(cdp, "document.querySelector('#form-materia select').options.length === 2");
-    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-materia');f.elements.id_catalogo_materia.value=${JSON.stringify(id_catalogo_materia)};f.elements.horario.value='Lunes';f.requestSubmit()})()`);
+    await cdp.evaluar(`(()=>{const f=document.querySelector('#form-materia');f.elements.id_catalogo_materia.value=${JSON.stringify(id_catalogo_materia)};const s=f.querySelector('[data-selector-horario-control]');s.querySelector('[data-horario-dia]').value='Lunes';s.querySelector('[data-horario-dia]').dispatchEvent(new Event('change',{bubbles:true}));s.querySelector('[data-horario-inicio]').value='480';s.querySelector('[data-horario-fin]').value='600';f.requestSubmit()})()`);
     await esperarCondicion(cdp, "document.querySelector('#lista-materias').textContent.includes('Lunes')");
     const cuentaRegistro = await Cuenta.findOne({ where: { correo: 'registro-browser@test.local' } });
     assert.equal(await require('../../src/models/Materia').count({ where: { id_cuenta: cuentaRegistro.id_cuenta, id_catalogo_materia } }), 2);
