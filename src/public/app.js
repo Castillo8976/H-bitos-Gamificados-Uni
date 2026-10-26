@@ -34,6 +34,7 @@ const estado = {
   puntosAdmin: [], insigniasCuentaAdmin: [],
   temporizador: { restante: DURACION_POMODORO, transcurrido: 0, intervalo: null, activo: false, modo: 'pomodoro', descanso: false }
 };
+const adminUI = { paginaUsuarios: 1, tamanoPagina: 20, cuentaSeleccionada: '', accionConfirmada: null };
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -295,10 +296,14 @@ function configurarPanelMovil() {
       elemento.id = idNuevo;
       if (elemento.tagName === 'H2') copia.setAttribute('aria-labelledby', idNuevo);
     });
+    copia.querySelectorAll('[data-vista]').forEach(elemento => {
+      elemento.dataset.vistaMobile = elemento.dataset.vista;
+      delete elemento.dataset.vista;
+    });
     lista.append(copia);
   });
   const botonMas = $('#nav-mas');
-  if (botonMas) botonMas.hidden = !lista.querySelector('[data-vista]');
+  if (botonMas) botonMas.hidden = !lista.querySelector('[data-vista-mobile]');
 }
 
 /** RF11/HU08: calcula el rango inicial del tablero. */
@@ -756,30 +761,58 @@ async function cargarInstitucionales() {
 /** RF01/RN26/HU29, Decisión #10: bloque P17 del catálogo global. */
 async function cargarCatalogoMateriasAdmin() {
   const { datos } = await api('/catalogo-materias?todas=true');
-  $('#lista-catalogo-materias').innerHTML = datos.map(item => `
-    <div class="item"><div class="item-fila"><div><strong>${escapar(item.nombre)}</strong><br><small>${item.activo ? 'Activa' : 'Inactiva'}</small></div><div class="acciones">
-    <button class="boton secundario pequeno" data-accion="editar-catalogo" data-id="${escapar(item.id_catalogo_materia)}" data-nombre="${escapar(item.nombre)}">Editar nombre</button>
-    <button class="boton secundario pequeno" data-accion="estado-catalogo" data-id="${escapar(item.id_catalogo_materia)}" data-activo="${!item.activo}">${item.activo ? 'Desactivar' : 'Reactivar'}</button>
-    <button class="boton peligro pequeno" data-accion="eliminar-catalogo" data-id="${escapar(item.id_catalogo_materia)}">Eliminar</button>
-    </div></div></div>`).join('') || estadoVacio('No hay asignaturas en el catálogo.');
+  estado.catalogoAdmin = datos;
+  renderizarCatalogosAdmin();
 }
 
 /** RF01/HU27 y RF07/HU26: presenta cuentas, catálogos y correcciones. */
 function renderizarAdministracion() {
-  $('#lista-usuarios-admin').innerHTML = estado.cuentasAdmin.length ? estado.cuentasAdmin.map(cuenta => `
-    <div class="item"><div class="item-fila"><div><strong>${escapar(cuenta.nombre)}</strong><br><small>${escapar(cuenta.correo)}</small></div><div class="controles-admin"><select id="rol-${escapar(cuenta.id_cuenta)}" aria-label="Rol de ${escapar(cuenta.nombre)}"><option ${cuenta.rol === 'Estudiante' ? 'selected' : ''}>Estudiante</option><option ${cuenta.rol === 'Administrador' ? 'selected' : ''}>Administrador</option><option ${cuenta.rol === 'Revisor institucional' ? 'selected' : ''}>Revisor institucional</option></select><label class="fila-toggle"><input id="activa-${escapar(cuenta.id_cuenta)}" type="checkbox" ${cuenta.activa ? 'checked' : ''}> Activa</label><button class="boton secundario pequeno" data-accion="guardar-usuario" data-id="${escapar(cuenta.id_cuenta)}">Guardar</button></div></div></div>`).join('') : estadoVacio('No hay cuentas registradas.');
-  const insignias = estado.insignias.map(item => `<div class="item"><div class="item-fila"><div><strong>Insignia · ${escapar(item.nombre)}</strong><br><small>${escapar(item.condicion)}</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-insignia-admin" data-id="${escapar(item.id_insignia)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-insignia-admin" data-id="${escapar(item.id_insignia)}">Eliminar</button></div></div></div>`);
-  const niveles = estado.niveles.map(item => `<div class="item"><div class="item-fila"><div><strong>Nivel ${item.orden} · ${escapar(item.nombre)}</strong><br><small>${item.puntos_minimos} puntos</small></div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-nivel-admin" data-id="${escapar(item.id_nivel)}">Editar</button><button class="boton peligro pequeno" data-accion="eliminar-nivel-admin" data-id="${escapar(item.id_nivel)}">Eliminar</button></div></div></div>`);
-  $('#lista-catalogos-admin').innerHTML = [...insignias, ...niveles].join('') || estadoVacio('No hay catálogos.');
+  renderizarUsuariosAdmin();
+  renderizarCatalogosAdmin();
+  renderizarInsigniasAdmin();
+  renderizarNivelesAdmin();
   const opcionesCuenta = estado.cuentasAdmin.filter(cuenta => cuenta.rol === 'Estudiante' && cuenta.activa).map(cuenta => `<option value="${escapar(cuenta.id_cuenta)}">${escapar(cuenta.nombre)}</option>`).join('');
   $('#admin-reto-cuenta').innerHTML = opcionesCuenta;
-  $('#admin-correccion-cuenta').innerHTML = opcionesCuenta;
+  $('#admin-reto-cuenta').disabled = !opcionesCuenta;
+  $('#estado-cuentas-admin').hidden = Boolean(opcionesCuenta);
   $('#admin-insignia-correccion').innerHTML = estado.insignias
     .map(item => `<option value="${escapar(item.id_insignia)}">${escapar(item.nombre)}</option>`).join('');
-  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? estado.retosAdmin.map(reto => `<div class="item"><div class="item-fila"><div><strong>${escapar(reto.descripcion)}</strong><br><small>${escapar(reto.semana)} · ${escapar(reto.condicion)}${reto.completado ? ' · completado' : ''}${reto.activo ? '' : ' · inactivo'}</small>${estadoRetoVisual(reto)}${progresoVisual(reto.progreso, String(reto.condicion).split(':')[1], 'Progreso del reto')}</div><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></div></div>`).join('') : estadoVacio('Selecciona una cuenta para consultar sus retos.');
-  const puntos = estado.puntosAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${item.cantidad} puntos</strong><br><small>${escapar(item.origen)} · ${escapar(fechaLegible(item.fecha))}</small></div><button class="boton peligro pequeno" data-accion="eliminar-punto-admin" data-id="${escapar(item.id_punto)}">Eliminar movimiento</button></div></div>`);
-  const asignaciones = estado.insigniasCuentaAdmin.map(item => `<div class="item"><div class="item-fila"><div><strong>${escapar(item.insignia?.nombre || 'Insignia')}</strong><br><small>Asignada ${escapar(fechaLegible(item.fecha_obtenida))}</small></div><button class="boton peligro pequeno" data-accion="revocar-insignia-admin" data-id="${escapar(item.id_insignia)}" data-cuenta="${escapar(item.id_cuenta)}">Revocar</button></div></div>`);
-  $('#lista-correcciones-admin').innerHTML = [...puntos, ...asignaciones].join('') || estadoVacio('No hay movimientos o insignias para corregir.');
+  $('#lista-retos-admin').innerHTML = estado.retosAdmin.length ? `<table><caption class="visually-hidden">Retos de la cuenta seleccionada</caption><thead><tr><th>Descripción</th><th>Semana</th><th>Estado</th><th>Progreso</th><th>Acciones</th></tr></thead><tbody>${estado.retosAdmin.map(reto => `<tr><td data-label="Descripción"><strong>${escapar(reto.descripcion)}</strong></td><td data-label="Semana">${escapar(reto.semana)}</td><td data-label="Estado">${estadoRetoVisual(reto)}</td><td data-label="Progreso">${escapar(reto.progreso)} / ${escapar(String(reto.condicion).split(':')[1] || '?')}</td><td data-label="Acciones"><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-reto-admin" data-id="${escapar(reto.id_reto)}">Editar</button>${botonEstadoReto(reto)}${reto.completado ? '' : `<button class="boton peligro pequeno" data-accion="eliminar-reto-admin" data-id="${escapar(reto.id_reto)}">Eliminar</button>`}</div></td></tr>`).join('')}</tbody></table>` : estadoVacio(adminUI.cuentaSeleccionada ? 'Esta cuenta no tiene retos.' : 'Selecciona una cuenta para consultar sus retos.');
+  const puntos = estado.puntosAdmin.map(item => `<tr><td data-label="Tipo">Puntos</td><td data-label="Detalle">${escapar(item.cantidad)} puntos · ${escapar(item.origen)}</td><td data-label="Fecha">${escapar(fechaLegible(item.fecha))}</td><td data-label="Acciones"><button class="boton peligro pequeno" data-accion="eliminar-punto-admin" data-id="${escapar(item.id_punto)}">Eliminar</button></td></tr>`);
+  const asignaciones = estado.insigniasCuentaAdmin.map(item => `<tr><td data-label="Tipo">Insignia</td><td data-label="Detalle">${escapar(item.insignia?.nombre || 'Insignia')}</td><td data-label="Fecha">${escapar(fechaLegible(item.fecha_obtenida))}</td><td data-label="Acciones"><button class="boton peligro pequeno" data-accion="revocar-insignia-admin" data-id="${escapar(item.id_insignia)}" data-cuenta="${escapar(item.id_cuenta)}">Revocar</button></td></tr>`);
+  $('#lista-correcciones-admin').innerHTML = [...puntos, ...asignaciones].length ? `<table><caption class="visually-hidden">Historial de correcciones</caption><thead><tr><th>Tipo</th><th>Detalle</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody>${[...puntos, ...asignaciones].join('')}</tbody></table>` : estadoVacio(adminUI.cuentaSeleccionada ? 'No hay movimientos o insignias para corregir.' : 'Selecciona una cuenta en Retos semanales.');
+  $('#total-retos-admin').textContent = estado.retosAdmin.length;
+  $('#total-correcciones-admin').textContent = estado.puntosAdmin.length + estado.insigniasCuentaAdmin.length;
+}
+
+function renderizarUsuariosAdmin() {
+  const texto = ($('#buscar-usuario-admin')?.value || '').trim().toLowerCase();
+  const rol = $('#filtro-rol-admin')?.value || '';
+  const estadoFiltro = $('#filtro-estado-admin')?.value || '';
+  const filtradas = estado.cuentasAdmin.filter(cuenta => (!texto || `${cuenta.nombre} ${cuenta.correo}`.toLowerCase().includes(texto)) && (!rol || cuenta.rol === rol) && (!estadoFiltro || (estadoFiltro === 'activa' ? cuenta.activa : !cuenta.activa)));
+  const visibles = filtradas.slice(0, adminUI.paginaUsuarios * adminUI.tamanoPagina);
+  $('#total-usuarios-admin').textContent = filtradas.length;
+  $('#resultado-usuarios-admin').textContent = `${filtradas.length} usuario${filtradas.length === 1 ? '' : 's'} encontrado${filtradas.length === 1 ? '' : 's'}.`;
+  $('#mostrar-mas-usuarios').hidden = visibles.length >= filtradas.length;
+  $('#mostrar-mas-usuarios').textContent = `Mostrar más (${Math.max(0, filtradas.length - visibles.length)})`;
+  $('#lista-usuarios-admin').innerHTML = visibles.length ? `<table><caption class="visually-hidden">Usuarios administrativos</caption><thead><tr><th>Nombre y correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${visibles.map(cuenta => `<tr class="item" data-cuenta-row="${escapar(cuenta.id_cuenta)}" data-rol-original="${escapar(cuenta.rol)}" data-activa-original="${cuenta.activa}"><td data-label="Nombre y correo"><strong>${escapar(cuenta.nombre)}</strong><br><small>${escapar(cuenta.correo)}</small></td><td data-label="Rol"><span class="cuenta-rol">${escapar(cuenta.rol)}</span><select class="cuenta-rol-edicion" aria-label="Rol de ${escapar(cuenta.nombre)}" hidden><option>Estudiante</option><option>Administrador</option><option>Revisor institucional</option></select></td><td data-label="Estado"><span class="cuenta-estado chip ${cuenta.activa ? 'estado-activo' : 'estado-inactivo'}">${cuenta.activa ? 'Activa' : 'Inactiva'}</span><label class="cuenta-activa-edicion fila-toggle" hidden><input type="checkbox" aria-label="Activa de ${escapar(cuenta.nombre)}" ${cuenta.activa ? 'checked' : ''}> Activa</label></td><td data-label="Acciones"><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-usuario" data-id="${escapar(cuenta.id_cuenta)}">Editar</button><button class="boton primario pequeno" data-accion="guardar-usuario" data-id="${escapar(cuenta.id_cuenta)}" hidden disabled>Guardar</button><button class="boton secundario pequeno" data-accion="cancelar-usuario" data-id="${escapar(cuenta.id_cuenta)}" hidden>Cancelar</button></div></td></tr>`).join('')}</tbody></table>` : estadoVacio('No hay usuarios que coincidan con los filtros.');
+}
+
+function renderizarCatalogosAdmin() {
+  const datos = estado.catalogoAdmin || [];
+  $('#total-catalogo-admin').textContent = datos.length;
+  $('#lista-catalogo-materias').innerHTML = datos.length ? `<table><thead><tr><th>Asignatura</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${datos.map(item => `<tr><td data-label="Asignatura">${escapar(item.nombre)}</td><td data-label="Estado"><span class="chip ${item.activo ? 'estado-activo' : 'estado-inactivo'}">${item.activo ? 'Activa' : 'Inactiva'}</span></td><td data-label="Acciones"><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-catalogo" data-id="${escapar(item.id_catalogo_materia)}">Editar</button><button class="boton secundario pequeno" data-accion="estado-catalogo" data-id="${escapar(item.id_catalogo_materia)}" data-activo="${!item.activo}">${item.activo ? 'Desactivar' : 'Reactivar'}</button><button class="boton peligro pequeno" aria-label="Eliminar asignatura ${escapar(item.nombre)}" data-accion="eliminar-catalogo" data-id="${escapar(item.id_catalogo_materia)}">Eliminar</button></div></td></tr>`).join('')}</tbody></table>` : estadoVacio('No hay asignaturas en el catálogo.');
+}
+
+function renderizarInsigniasAdmin() {
+  $('#total-insignias-admin').textContent = estado.insignias.length;
+  $('#lista-insignias-admin').innerHTML = estado.insignias.length ? `<table><thead><tr><th>Nombre</th><th>Descripción</th><th>Condición</th><th>Acciones</th></tr></thead><tbody>${estado.insignias.map(item => `<tr><td data-label="Nombre">${escapar(item.nombre)}</td><td data-label="Descripción">${escapar(item.descripcion)}</td><td data-label="Condición">${escapar(item.condicion)}</td><td data-label="Acciones"><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-insignia-admin" data-id="${escapar(item.id_insignia)}">Editar</button><button class="boton peligro pequeno" aria-label="Eliminar insignia ${escapar(item.nombre)}" data-accion="eliminar-insignia-admin" data-id="${escapar(item.id_insignia)}">Eliminar</button></div></td></tr>`).join('')}</tbody></table>` : estadoVacio('No hay insignias registradas.');
+}
+
+function renderizarNivelesAdmin() {
+  const niveles = [...estado.niveles].sort((a, b) => a.orden - b.orden);
+  $('#total-niveles-admin').textContent = niveles.length;
+  $('#lista-niveles-admin').innerHTML = niveles.length ? `<table><thead><tr><th>Orden</th><th>Nombre</th><th>Puntos mínimos</th><th>Acciones</th></tr></thead><tbody>${niveles.map(item => `<tr><td data-label="Orden">${escapar(item.orden)}</td><td data-label="Nombre">${escapar(item.nombre)}</td><td data-label="Puntos mínimos">${escapar(item.puntos_minimos)}</td><td data-label="Acciones"><div class="acciones"><button class="boton secundario pequeno" data-accion="editar-nivel-admin" data-id="${escapar(item.id_nivel)}">Editar</button><button class="boton peligro pequeno" aria-label="Eliminar nivel ${escapar(item.nombre)}" data-accion="eliminar-nivel-admin" data-id="${escapar(item.id_nivel)}">Eliminar</button></div></td></tr>`).join('')}</tbody></table>` : estadoVacio('No hay niveles registrados.');
 }
 
 /** RF07/HU26: consulta retos, puntos e insignias de la cuenta seleccionada. */
@@ -791,8 +824,9 @@ async function cargarDetalleAdministrativo(idCuenta = $('#admin-reto-cuenta').va
     api(`/cuenta-insignias?id_cuenta=${encodeURIComponent(idCuenta)}`)
   ]);
   estado.retosAdmin = retos.datos; estado.puntosAdmin = puntos.datos; estado.insigniasCuentaAdmin = insignias.datos;
+  adminUI.cuentaSeleccionada = idCuenta;
   renderizarAdministracion();
-  $('#admin-reto-cuenta').value = idCuenta; $('#admin-correccion-cuenta').value = idCuenta;
+  $('#admin-reto-cuenta').value = idCuenta;
 }
 
 /** RF03/HU03: refresca progreso y avisos después de registrar un evento. */
@@ -1104,6 +1138,72 @@ function botonEstadoReto(reto) {
   return `<button class="boton secundario pequeno" data-accion="estado-reto" data-id="${escapar(reto.id_reto)}" data-activo="${reto.activo ? 'false' : 'true'}">${reto.activo ? 'Desactivar' : 'Reactivar'}</button>`;
 }
 
+function abrirFormularioAdmin(tipo, valores = {}, titulo = 'Nueva acción') {
+  const modal = $('#modal-admin-form');
+  const formulario = $(`#modal-admin-form [data-admin-form="${tipo}"]`);
+  if (!modal || !formulario) return;
+  if ((tipo === 'insignia' || tipo === 'reto') && valores.condicion) {
+    const condicion = String(valores.condicion);
+    const formatoActual = /^(tareas|sesiones|minutos|pomodoros):([1-9]\d*)$/.exec(condicion);
+    const formatoHistorico = /^([1-9]\d*)_(tareas|sesiones|minutos|pomodoros)$/.exec(condicion);
+    const parseada = formatoActual || (formatoHistorico && [null, formatoHistorico[2], formatoHistorico[1]]);
+    if (parseada) valores = { ...valores, metrica: parseada[1], objetivo: parseada[2] };
+  }
+  $$('.admin-form').forEach(item => { item.hidden = item !== formulario; });
+  formulario.reset();
+  Object.entries(valores).forEach(([nombre, valor]) => {
+    if (formulario.elements[nombre]) formulario.elements[nombre].value = valor ?? '';
+  });
+  if (tipo === 'insignia') sincronizarCondicionAdmin(formulario);
+  if (tipo === 'reto') {
+    formulario.elements.semana.value = valores.semana || semanaActualReto();
+    sincronizarCondicionAdmin(formulario);
+  }
+  $('#titulo-modal-admin').textContent = titulo;
+  formulario.dataset.focoInicial = Object.keys(valores).find(nombre => formulario.elements[nombre]?.type !== 'hidden') || 'nombre';
+  modal.showModal();
+  formulario.elements[formulario.dataset.focoInicial]?.focus();
+}
+
+function cerrarFormularioAdmin() {
+  const modal = $('#modal-admin-form');
+  if (modal?.open) modal.close();
+}
+
+function sincronizarCondicionAdmin(formulario) {
+  const metrica = formulario.elements.metrica;
+  const objetivo = formulario.elements.objetivo;
+  if (!metrica || !objetivo) return;
+  const valor = `${metrica.value}:${objetivo.value || 1}`;
+  if (formulario.elements.condicion) formulario.elements.condicion.value = valor;
+  const previa = $('#vista-previa-condicion');
+  if (previa && formulario.dataset.adminForm === 'insignia') previa.textContent = valor;
+}
+
+function confirmarAdmin(detalle, accion, requiereMotivo = false) {
+  const modal = $('#modal-admin-confirmar');
+  adminUI.accionConfirmada = accion;
+  $('#detalle-confirmar-admin').textContent = detalle;
+  $('#campo-motivo-admin').hidden = !requiereMotivo;
+  $('#form-confirmar-admin').elements.motivo.value = '';
+  if (requiereMotivo) $('#form-confirmar-admin').elements.motivo.required = true;
+  else $('#form-confirmar-admin').elements.motivo.required = false;
+  modal.showModal();
+  (requiereMotivo ? $('#form-confirmar-admin').elements.motivo : $('#cancelar-confirmar-admin')).focus();
+}
+
+function activarPestanaAdmin(nombre) {
+  $$('.admin-tab').forEach(tab => {
+    const activa = tab.dataset.adminTab === nombre;
+    tab.classList.toggle('activo', activa);
+    tab.setAttribute('aria-selected', String(activa));
+    tab.tabIndex = activa ? 0 : -1;
+  });
+  $$('.admin-panel').forEach(panel => { panel.hidden = panel.id !== `admin-panel-${nombre}`; });
+  const panel = $(`#admin-panel-${nombre}`);
+  panel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 async function manejarAccion(evento) {
   const boton = evento.target.closest('[data-accion]');
   if (!boton) return;
@@ -1112,14 +1212,12 @@ async function manejarAccion(evento) {
     if (['editar-catalogo', 'estado-catalogo', 'eliminar-catalogo'].includes(accion)) {
       const ruta = `/catalogo-materias/${id}`;
       if (accion === 'editar-catalogo') {
-        const nombre = prompt('Nombre de la asignatura:', boton.dataset.nombre);
-        if (nombre === null) return;
-        await api(ruta, { method: 'PUT', body: JSON.stringify({ nombre }) });
+        const actual = (estado.catalogoAdmin || []).find(item => item.id_catalogo_materia === id);
+        return abrirFormularioAdmin('catalogo', { id, nombre: actual?.nombre }, 'Editar asignatura');
       } else if (accion === 'estado-catalogo') {
         await api(`${ruta}/estado`, { method: 'PATCH', body: JSON.stringify({ activo: boton.dataset.activo === 'true' }) });
       } else {
-        if (!confirm('¿Eliminar esta asignatura del catálogo?')) return;
-        await api(ruta, { method: 'DELETE' });
+        return confirmarAdmin('¿Eliminar esta asignatura del catálogo?', { ruta, metodo: 'DELETE', refrescar: 'catalogo' });
       }
       await cargarCatalogoMateriasAdmin(); avisar('Catálogo actualizado.', 'exito');
     }
@@ -1234,65 +1332,54 @@ async function manejarAccion(evento) {
       await api(`/notificaciones/${id}`, { method: 'DELETE' });
       estado.notificaciones = estado.notificaciones.filter(item => item.id_notificacion !== id); renderizarNotificaciones();
     }
+    if (accion === 'editar-usuario') {
+      const fila = boton.closest('tr');
+      const cuenta = estado.cuentasAdmin.find(item => item.id_cuenta === id);
+      fila.classList.add('fila-edicion');
+      fila.querySelector('.cuenta-rol').hidden = true; fila.querySelector('.cuenta-rol-edicion').hidden = false;
+      fila.querySelector('.cuenta-rol-edicion').value = cuenta.rol;
+      fila.querySelector('.cuenta-estado').hidden = true; fila.querySelector('.cuenta-activa-edicion').hidden = false;
+      fila.querySelector('[data-accion="editar-usuario"]').hidden = true;
+      fila.querySelector('[data-accion="guardar-usuario"]').hidden = false;
+      fila.querySelector('[data-accion="cancelar-usuario"]').hidden = false;
+      return;
+    }
+    if (accion === 'cancelar-usuario') return renderizarUsuariosAdmin();
     if (accion === 'guardar-usuario') {
+      const fila = boton.closest('tr');
       const respuesta = await api(`/cuentas/${id}`, { method: 'PUT', body: JSON.stringify({
-        rol: $(`#rol-${id}`).value, activa: $(`#activa-${id}`).checked
+        rol: fila.querySelector('.cuenta-rol-edicion').value, activa: fila.querySelector('.cuenta-activa-edicion input').checked
       }) });
       estado.cuentasAdmin = estado.cuentasAdmin.map(item => item.id_cuenta === id ? respuesta.dato : item);
       renderizarAdministracion(); avisar('Cuenta actualizada.', 'exito');
     }
-    if (accion === 'eliminar-insignia-admin' && confirm('¿Eliminar esta insignia?')) {
-      await api(`/insignias/${id}`, { method: 'DELETE' });
-      estado.insignias = estado.insignias.filter(item => item.id_insignia !== id);
-      renderizarAdministracion(); avisar('Insignia eliminada.', 'exito');
+    if (accion === 'eliminar-insignia-admin') {
+      return confirmarAdmin('¿Eliminar esta insignia?', { ruta: `/insignias/${id}`, metodo: 'DELETE', despues: () => { estado.insignias = estado.insignias.filter(item => item.id_insignia !== id); renderizarAdministracion(); avisar('Insignia eliminada.', 'exito'); } });
     }
-    if (accion === 'eliminar-nivel-admin' && confirm('¿Eliminar este nivel?')) {
-      await api(`/niveles/${id}`, { method: 'DELETE' });
-      estado.niveles = estado.niveles.filter(item => item.id_nivel !== id);
-      renderizarAdministracion(); avisar('Nivel eliminado.', 'exito');
+    if (accion === 'eliminar-nivel-admin') {
+      return confirmarAdmin('¿Eliminar este nivel?', { ruta: `/niveles/${id}`, metodo: 'DELETE', despues: () => { estado.niveles = estado.niveles.filter(item => item.id_nivel !== id); renderizarAdministracion(); avisar('Nivel eliminado.', 'exito'); } });
     }
     if (accion === 'editar-insignia-admin') {
       const actual = estado.insignias.find(item => item.id_insignia === id);
-      const descripcion = prompt('Descripción de la insignia', actual.descripcion);
-      if (descripcion === null) return;
-      const respuesta = await api(`/insignias/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion }) });
-      estado.insignias = estado.insignias.map(item => item.id_insignia === id ? respuesta.dato : item);
-      renderizarAdministracion(); avisar('Insignia actualizada.', 'exito');
+      return abrirFormularioAdmin('insignia', { id, nombre: actual.nombre, descripcion: actual.descripcion, condicion: actual.condicion, icono: actual.icono });
     }
     if (accion === 'editar-nivel-admin') {
       const actual = estado.niveles.find(item => item.id_nivel === id);
-      const descripcion = prompt('Descripción del nivel', actual.descripcion);
-      if (descripcion === null) return;
-      const respuesta = await api(`/niveles/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion }) });
-      estado.niveles = estado.niveles.map(item => item.id_nivel === id ? respuesta.dato : item);
-      renderizarAdministracion(); avisar('Nivel actualizado.', 'exito');
+      return abrirFormularioAdmin('nivel', actual, 'Editar nivel');
     }
     if (accion === 'editar-reto-admin') {
       const actual = estado.retosAdmin.find(item => item.id_reto === id);
-      const descripcion = prompt('Descripción del reto', actual.descripcion);
-      if (descripcion === null) return;
-      const respuesta = await api(`/retos/${id}`, { method: 'PUT', body: JSON.stringify({ descripcion }) });
-      estado.retosAdmin = estado.retosAdmin.map(item => item.id_reto === id ? respuesta.dato : item);
-      renderizarAdministracion(); avisar('Reto actualizado.', 'exito');
+      const [metrica, objetivo] = String(actual.condicion || 'tareas:1').split(':');
+      return abrirFormularioAdmin('reto', { id, descripcion: actual.descripcion, metrica, objetivo, puntos_recompensa: actual.puntos_recompensa, semana: actual.semana, condicion: actual.condicion }, 'Editar reto');
     }
-    if (accion === 'eliminar-reto-admin' && confirm('¿Eliminar este reto?')) {
-      await api(`/retos/${id}`, { method: 'DELETE' });
-      estado.retosAdmin = estado.retosAdmin.filter(item => item.id_reto !== id);
-      renderizarAdministracion(); avisar('Reto eliminado.', 'exito');
+    if (accion === 'eliminar-reto-admin') {
+      return confirmarAdmin('¿Eliminar este reto?', { ruta: `/retos/${id}`, metodo: 'DELETE', despues: () => { estado.retosAdmin = estado.retosAdmin.filter(item => item.id_reto !== id); renderizarAdministracion(); avisar('Reto eliminado.', 'exito'); } });
     }
-    if (accion === 'eliminar-punto-admin' && confirm('Esta corrección elimina el movimiento. ¿Continuar?')) {
-      const motivo = prompt('Motivo obligatorio de la corrección');
-      if (!motivo?.trim()) return avisar('Debes indicar el motivo de la corrección.', 'error');
-      await api(`/puntos/${id}`, { method: 'DELETE', body: JSON.stringify({ motivo: motivo.trim() }) });
-      estado.puntosAdmin = estado.puntosAdmin.filter(item => item.id_punto !== id);
-      renderizarAdministracion(); avisar('Movimiento corregido.', 'exito');
+    if (accion === 'eliminar-punto-admin') {
+      return confirmarAdmin('Esta corrección elimina el movimiento. Indica el motivo para continuar.', { ruta: `/puntos/${id}`, metodo: 'DELETE', requiereMotivo: true, despues: () => { estado.puntosAdmin = estado.puntosAdmin.filter(item => item.id_punto !== id); renderizarAdministracion(); avisar('Movimiento corregido.', 'exito'); } }, true);
     }
-    if (accion === 'revocar-insignia-admin' && confirm('¿Revocar esta insignia asignada?')) {
-      const motivo = prompt('Motivo obligatorio de la revocación');
-      if (!motivo?.trim()) return avisar('Debes indicar el motivo de la corrección.', 'error');
-      await api(`/cuenta-insignias/${boton.dataset.cuenta}/${id}`, { method: 'DELETE', body: JSON.stringify({ motivo: motivo.trim() }) });
-      estado.insigniasCuentaAdmin = estado.insigniasCuentaAdmin.filter(item => item.id_insignia !== id);
-      renderizarAdministracion(); avisar('Insignia revocada.', 'exito');
+    if (accion === 'revocar-insignia-admin') {
+      return confirmarAdmin('Revocar esta insignia asignada. Indica el motivo para continuar.', { ruta: `/cuenta-insignias/${boton.dataset.cuenta}/${id}`, metodo: 'DELETE', requiereMotivo: true, despues: () => { estado.insigniasCuentaAdmin = estado.insigniasCuentaAdmin.filter(item => item.id_insignia !== id); renderizarAdministracion(); avisar('Insignia revocada.', 'exito'); } }, true);
     }
   } catch (error) { boton.disabled = false; avisar(error.message, 'error'); }
 }
@@ -1332,11 +1419,11 @@ function registrarEventos() {
   $('#nav-panel-mas').addEventListener('click', evento => {
     const cerrar = evento.target.closest('.nav-cerrar-mas');
     if (cerrar) return cerrarPanelMas(true);
-    const boton = evento.target.closest('[data-vista]');
+    const boton = evento.target.closest('[data-vista-mobile]');
     if (!boton) return;
-    navegar(boton.dataset.vista);
-    if (boton.dataset.vista === 'estadisticas' && !estado.estadisticas) cargarEstadisticas().catch(error => avisar(error.message, 'error'));
-    if (boton.dataset.vista === 'institucional' && !estado.institucionales) cargarInstitucionales().catch(error => avisar(error.message, 'error'));
+    navegar(boton.dataset.vistaMobile);
+    if (boton.dataset.vistaMobile === 'estadisticas' && !estado.estadisticas) cargarEstadisticas().catch(error => avisar(error.message, 'error'));
+    if (boton.dataset.vistaMobile === 'institucional' && !estado.institucionales) cargarInstitucionales().catch(error => avisar(error.message, 'error'));
   });
   document.addEventListener('keydown', evento => {
     if (evento.key === 'Escape' && !$('#nav-panel-mas').hidden) cerrarPanelMas(true);
@@ -1542,75 +1629,93 @@ function registrarEventos() {
       renderizarAdministracion(); await cargarDetalleAdministrativo(); avisar('Datos administrativos actualizados.', 'exito');
     } catch (error) { avisar(error.message, 'error'); }
   });
+  $$('.admin-tab').forEach(tab => tab.addEventListener('click', () => activarPestanaAdmin(tab.dataset.adminTab)));
+  $('.admin-pestanas').addEventListener('keydown', evento => {
+    const tabs = $$('.admin-tab');
+    const actual = tabs.indexOf(document.activeElement);
+    if (actual < 0 || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(evento.key)) return;
+    evento.preventDefault();
+    const destino = evento.key === 'Home' ? 0 : evento.key === 'End' ? tabs.length - 1 : (actual + (evento.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    activarPestanaAdmin(tabs[destino].dataset.adminTab); tabs[destino].focus();
+  });
+  $$('[data-admin-nuevo]').forEach(boton => boton.addEventListener('click', () => {
+    const tipo = boton.dataset.adminNuevo;
+    if (tipo === 'catalogo') abrirFormularioAdmin('catalogo', {}, 'Nueva asignatura');
+    if (tipo === 'insignia') abrirFormularioAdmin('insignia', {}, 'Nueva insignia');
+    if (tipo === 'nivel') abrirFormularioAdmin('nivel', { orden: Math.max(0, ...estado.niveles.map(item => Number(item.orden) || 0)) + 1 }, 'Nuevo nivel');
+    if (tipo === 'reto') {
+      if (!adminUI.cuentaSeleccionada) return avisar('Selecciona una cuenta activa antes de asignar un reto.', 'error');
+      abrirFormularioAdmin('reto', {}, 'Asignar reto');
+    }
+    if (tipo === 'punto' || tipo === 'asignar-insignia') {
+      if (!adminUI.cuentaSeleccionada) return avisar('Selecciona una cuenta activa en Retos semanales.', 'error');
+      abrirFormularioAdmin(tipo, {}, tipo === 'punto' ? 'Otorgar puntos' : 'Asignar insignia');
+    }
+  }));
+  $('#cerrar-modal-admin').addEventListener('click', cerrarFormularioAdmin);
+  $('#cancelar-confirmar-admin').addEventListener('click', () => $('#modal-admin-confirmar').close());
+  $('#form-confirmar-admin').addEventListener('submit', async evento => {
+    evento.preventDefault();
+    const accion = adminUI.accionConfirmada;
+    if (!accion) return;
+    const motivo = evento.currentTarget.elements.motivo.value.trim();
+    if (accion.requiereMotivo && !motivo) return avisar('Debes indicar el motivo de la corrección.', 'error');
+    try {
+      await api(accion.ruta, { method: accion.metodo, ...(motivo ? { body: JSON.stringify({ motivo }) } : {}) });
+      $('#modal-admin-confirmar').close();
+      if (accion.refrescar === 'catalogo') await cargarCatalogoMateriasAdmin();
+      if (accion.despues) accion.despues();
+      avisar('Acción administrativa completada.', 'exito');
+    } catch (error) { avisar(error.message, 'error'); }
+  });
+  ['buscar-usuario-admin', 'filtro-rol-admin', 'filtro-estado-admin'].forEach(id => $(`#${id}`).addEventListener('input', () => { adminUI.paginaUsuarios = 1; renderizarUsuariosAdmin(); }));
+  $('#mostrar-mas-usuarios').addEventListener('click', () => { adminUI.paginaUsuarios += 1; renderizarUsuariosAdmin(); });
+  $('#lista-usuarios-admin').addEventListener('change', evento => {
+    const fila = evento.target.closest('[data-cuenta-row]');
+    if (!fila) return;
+    const rol = fila.querySelector('.cuenta-rol-edicion').value;
+    const activa = fila.querySelector('.cuenta-activa-edicion input').checked;
+    const guardar = fila.querySelector('[data-accion="guardar-usuario"]');
+    guardar.disabled = rol === fila.dataset.rolOriginal && String(activa) === fila.dataset.activaOriginal;
+  });
+  $('#form-admin-insignia').elements.metrica.addEventListener('change', evento => sincronizarCondicionAdmin(evento.currentTarget.form));
+  $('#form-admin-insignia').elements.objetivo.addEventListener('input', evento => sincronizarCondicionAdmin(evento.currentTarget.form));
+  $('#form-admin-reto').elements.metrica.addEventListener('change', evento => sincronizarCondicionAdmin(evento.currentTarget.form));
+  $('#form-admin-reto').elements.objetivo.addEventListener('input', evento => sincronizarCondicionAdmin(evento.currentTarget.form));
   $('#form-admin-catalogo').addEventListener('submit', evento => {
-    evento.preventDefault(); const f = evento.currentTarget;
+    evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value;
     duranteEnvio(f, async () => {
-      try {
-        await api('/catalogo-materias', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value }) });
-        f.reset(); await cargarCatalogoMateriasAdmin(); avisar('Asignatura creada.', 'exito');
-      } catch (error) { avisar(error.message, 'error'); }
+      try { await api(id ? `/catalogo-materias/${id}` : '/catalogo-materias', { method: id ? 'PUT' : 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value }) }); f.reset(); cerrarFormularioAdmin(); await cargarCatalogoMateriasAdmin(); avisar(id ? 'Asignatura actualizada.' : 'Asignatura creada.', 'exito'); }
+      catch (error) { avisar(error.message, 'error'); }
     });
   });
   $('#form-admin-insignia').addEventListener('submit', evento => {
-    evento.preventDefault(); const f = evento.currentTarget;
+    evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value; sincronizarCondicionAdmin(f);
     duranteEnvio(f, async () => {
-      try {
-        const respuesta = await api('/insignias', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, descripcion: f.elements.descripcion.value, condicion: f.elements.condicion.value, icono: f.elements.icono.value || null }) });
-        estado.insignias.push(respuesta.dato); f.reset(); renderizarAdministracion(); avisar('Insignia creada.', 'exito');
-      } catch (error) { avisar(error.message, 'error'); }
+      try { const respuesta = await api(id ? `/insignias/${id}` : '/insignias', { method: id ? 'PUT' : 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, descripcion: f.elements.descripcion.value, condicion: f.elements.condicion.value, icono: f.elements.icono.value || null }) }); estado.insignias = id ? estado.insignias.map(item => item.id_insignia === id ? respuesta.dato : item) : [...estado.insignias, respuesta.dato]; f.reset(); cerrarFormularioAdmin(); renderizarAdministracion(); avisar(id ? 'Insignia actualizada.' : 'Insignia creada.', 'exito'); } catch (error) { avisar(error.message, 'error'); }
     });
   });
   $('#form-admin-nivel').addEventListener('submit', evento => {
-    evento.preventDefault(); const f = evento.currentTarget;
+    evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value;
     duranteEnvio(f, async () => {
-      try {
-        const respuesta = await api('/niveles', { method: 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, descripcion: f.elements.descripcion.value, puntos_minimos: Number(f.elements.puntos_minimos.value), orden: Number(f.elements.orden.value) }) });
-        estado.niveles.push(respuesta.dato); f.reset(); renderizarAdministracion(); avisar('Nivel creado.', 'exito');
-      } catch (error) { avisar(error.message, 'error'); }
+      try { const respuesta = await api(id ? `/niveles/${id}` : '/niveles', { method: id ? 'PUT' : 'POST', body: JSON.stringify({ nombre: f.elements.nombre.value, descripcion: f.elements.descripcion.value, puntos_minimos: Number(f.elements.puntos_minimos.value), orden: Number(f.elements.orden.value), icono: f.elements.icono.value || null }) }); estado.niveles = id ? estado.niveles.map(item => item.id_nivel === id ? respuesta.dato : item) : [...estado.niveles, respuesta.dato]; f.reset(); cerrarFormularioAdmin(); renderizarAdministracion(); avisar(id ? 'Nivel actualizado.' : 'Nivel creado.', 'exito'); } catch (error) { avisar(error.message, 'error'); }
     });
   });
   $('#form-admin-reto').addEventListener('submit', evento => {
-    evento.preventDefault(); const f = evento.currentTarget;
+    evento.preventDefault(); const f = evento.currentTarget; const id = f.elements.id.value; sincronizarCondicionAdmin(f);
     duranteEnvio(f, async () => {
-      try {
-        await api('/retos', { method: 'POST', body: JSON.stringify({ id_cuenta: f.elements.id_cuenta.value, descripcion: f.elements.descripcion.value, condicion: f.elements.condicion.value, puntos_recompensa: Number(f.elements.puntos_recompensa.value), semana: f.elements.semana.value }) });
-        const idCuenta = f.elements.id_cuenta.value;
-        f.reset(); await cargarDetalleAdministrativo(idCuenta); avisar('Reto semanal asignado.', 'exito');
-      } catch (error) { avisar(error.message, 'error'); }
+      try { const datos = { descripcion: f.elements.descripcion.value, condicion: f.elements.condicion.value, puntos_recompensa: Number(f.elements.puntos_recompensa.value), semana: f.elements.semana.value }; const ruta = id ? `/retos/${id}` : '/retos'; if (!id) datos.id_cuenta = adminUI.cuentaSeleccionada; const respuesta = await api(ruta, { method: id ? 'PUT' : 'POST', body: JSON.stringify(datos) }); f.reset(); cerrarFormularioAdmin(); await cargarDetalleAdministrativo(adminUI.cuentaSeleccionada); avisar(id ? 'Reto actualizado.' : 'Reto semanal asignado.', 'exito'); } catch (error) { avisar(error.message, 'error'); }
     });
   });
   $('#form-admin-punto').addEventListener('submit', evento => {
     evento.preventDefault(); const f = evento.currentTarget;
-    duranteEnvio(f, async () => {
-      try {
-        const idCuenta = $('#admin-correccion-cuenta').value;
-        if (!idCuenta) throw new Error('Selecciona una cuenta para la corrección.');
-        await api('/puntos', { method: 'POST', body: JSON.stringify({
-          id_cuenta: idCuenta, cantidad: Number(f.elements.cantidad.value),
-          origen: f.elements.origen.value, motivo: f.elements.motivo.value.trim()
-        }) });
-        f.reset(); await cargarDetalleAdministrativo(idCuenta);
-        avisar('Puntos registrados y estudiante notificado.', 'exito');
-      } catch (error) { avisar(error.message, 'error'); }
-    });
+    duranteEnvio(f, async () => { try { await api('/puntos', { method: 'POST', body: JSON.stringify({ id_cuenta: adminUI.cuentaSeleccionada, cantidad: Number(f.elements.cantidad.value), origen: f.elements.origen.value, motivo: f.elements.motivo.value.trim() }) }); f.reset(); cerrarFormularioAdmin(); await cargarDetalleAdministrativo(adminUI.cuentaSeleccionada); avisar('Puntos registrados y estudiante notificado.', 'exito'); } catch (error) { avisar(error.message, 'error'); } });
   });
   $('#form-admin-asignar-insignia').addEventListener('submit', evento => {
     evento.preventDefault(); const f = evento.currentTarget;
-    duranteEnvio(f, async () => {
-      try {
-        const idCuenta = $('#admin-correccion-cuenta').value;
-        if (!idCuenta) throw new Error('Selecciona una cuenta para la corrección.');
-        await api('/cuenta-insignias', { method: 'POST', body: JSON.stringify({
-          id_cuenta: idCuenta, id_insignia: f.elements.id_insignia.value,
-          motivo: f.elements.motivo.value.trim()
-        }) });
-        f.reset(); await cargarDetalleAdministrativo(idCuenta);
-        avisar('Insignia asignada y estudiante notificado.', 'exito');
-      } catch (error) { avisar(error.message, 'error'); }
-    });
+    duranteEnvio(f, async () => { try { await api('/cuenta-insignias', { method: 'POST', body: JSON.stringify({ id_cuenta: adminUI.cuentaSeleccionada, id_insignia: f.elements.id_insignia.value, motivo: f.elements.motivo.value.trim() }) }); f.reset(); cerrarFormularioAdmin(); await cargarDetalleAdministrativo(adminUI.cuentaSeleccionada); avisar('Insignia asignada y estudiante notificado.', 'exito'); } catch (error) { avisar(error.message, 'error'); } });
   });
   $('#admin-reto-cuenta').addEventListener('change', evento => cargarDetalleAdministrativo(evento.target.value).catch(error => avisar(error.message, 'error')));
-  $('#admin-correccion-cuenta').addEventListener('change', evento => cargarDetalleAdministrativo(evento.target.value).catch(error => avisar(error.message, 'error')));
 }
 
 /** Punto de entrada del navegador. Intenta restaurar una sesión de la pestaña. */

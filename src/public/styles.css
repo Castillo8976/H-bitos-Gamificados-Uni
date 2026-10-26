@@ -63,6 +63,7 @@ body{margin:0;min-width:320px;background:var(--fondo);color:var(--texto);font:40
 button,input,select,textarea{font:inherit}
 button{cursor:pointer;touch-action:manipulation}
 [hidden]{display:none!important}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
 h1,h2,h3,h4,p{margin-top:0}
 h1,h2,h3,h4{text-wrap:balance;letter-spacing:-.025em}
 h1{margin-bottom:var(--esp-5);font-size:clamp(2.25rem,5vw,3.75rem);line-height:1.1;letter-spacing:-.045em}
@@ -251,9 +252,45 @@ progress::-moz-progress-bar{border-radius:var(--radio-pill);background:var(--pro
 .exportacion{max-width:760px}
 .controles-admin{display:flex;flex-wrap:wrap;gap:var(--esp-2);align-items:center;max-width:100%}
 .controles-admin select{width:auto;max-width:100%;min-width:0;flex:1 1 180px}
-#panel-catalogos{align-items:start}
-#panel-catalogos>.bloque>h3{padding-bottom:var(--esp-4);border-bottom:1px solid var(--borde)}
 #seguridad-correo form{margin-block:var(--esp-5);padding-block:var(--esp-5);border-top:1px solid var(--borde)}
+
+.admin-encabezado{align-items:flex-start}
+.admin-encabezado h2{margin-bottom:var(--esp-2)}
+.admin-pestanas{display:flex;gap:var(--esp-1);margin-bottom:var(--esp-5);overflow-x:auto;border-bottom:1px solid var(--borde);scrollbar-width:thin}
+.admin-tab{flex:none;min-height:44px;border:0;border-bottom:3px solid transparent;border-radius:var(--radio-sm) var(--radio-sm) 0 0;background:transparent;color:var(--texto-suave);padding:var(--esp-2) var(--esp-4);font-size:var(--fs-sm);font-weight:700;white-space:nowrap}
+.admin-tab:hover{background:var(--superficie-2);color:var(--texto)}
+.admin-tab.activo,.admin-tab[aria-selected="true"]{border-bottom-color:var(--primario);background:var(--primario-suave);color:var(--primario)}
+.admin-panel{min-width:0}
+.admin-panel-cabecera{display:flex;align-items:center;justify-content:space-between;gap:var(--esp-4);margin-bottom:var(--esp-5)}
+.admin-panel-cabecera>div{display:flex;align-items:center;gap:var(--esp-3);min-width:0}
+.admin-panel-cabecera h3{margin:0}
+.admin-filtros{display:grid;grid-template-columns:minmax(0,2fr) repeat(2,minmax(150px,1fr));gap:var(--esp-3);align-items:end;margin-bottom:var(--esp-3)}
+.admin-filtros label,.admin-cuenta-selector label{display:grid;gap:var(--esp-2);color:var(--texto);font-size:var(--fs-sm);font-weight:650}
+.admin-tabla{overflow-x:auto;border:1px solid var(--borde);border-radius:var(--radio-md)}
+.admin-tabla table{width:100%;border-collapse:collapse;min-width:620px}
+.admin-tabla th{background:var(--superficie-2);color:var(--texto-suave);font-size:var(--fs-xs);letter-spacing:.08em;text-align:left;text-transform:uppercase}
+.admin-tabla th,.admin-tabla td{border-bottom:1px solid var(--borde);padding:var(--esp-3)}
+.admin-tabla tbody tr:nth-child(even){background:var(--superficie-2)}
+.admin-tabla tr.item{display:table-row;border:0;border-radius:0;background:transparent;padding:0}
+.admin-tabla tbody tr:last-child td{border-bottom:0}
+.admin-tabla td{vertical-align:middle}
+.admin-tabla .acciones{justify-content:flex-end}
+.admin-tabla .fila-edicion select{min-width:160px}
+.admin-tabla .fila-edicion .acciones{justify-content:flex-start}
+.admin-tabla .acciones .boton.peligro{border-color:transparent;background:transparent;color:var(--error)}
+.admin-tabla .acciones .boton.peligro:hover,.admin-tabla .acciones .boton.peligro:focus-visible{border-color:var(--error);background:var(--error-suave)}
+.admin-cuenta-global{display:grid;grid-template-columns:minmax(0,420px);margin-bottom:var(--esp-5)}
+.admin-cuenta-global label{display:grid;gap:var(--esp-2);color:var(--texto);font-size:var(--fs-sm);font-weight:650}
+.admin-acciones-correccion{display:flex;flex-wrap:wrap;gap:var(--esp-2);margin-bottom:var(--esp-5)}
+.modal-admin{width:min(calc(100% - 32px),560px);max-height:calc(100svh - 32px);overflow-y:auto;border:1px solid var(--borde);border-radius:var(--radio-lg);background:var(--superficie);color:var(--texto);box-shadow:var(--sombra-3);padding:0}
+.modal-admin::backdrop{background:var(--velo)}
+.modal-admin-contenido{padding:var(--esp-6)}
+.modal-admin-contenido h2{margin-bottom:0}
+.modal-admin-contenido .titulo-bloque{margin-bottom:var(--esp-5)}
+.admin-form textarea,.modal-admin textarea{min-height:88px;resize:vertical}
+.admin-form code{border-radius:var(--radio-sm);background:var(--superficie-2);padding:var(--esp-1) var(--esp-2);color:var(--primario)}
+.admin-form .acciones-form{justify-content:flex-end}
+.nota{margin-block:0 var(--esp-5)}
 
 /* Avisos y diálogos: foco y lectura independiente de los colores. */
 .avisos{position:fixed;z-index:20;top:var(--esp-4);right:var(--esp-4);display:grid;gap:var(--esp-2);width:min(390px,calc(100% - 32px))}
@@ -328,6 +365,21 @@ progress::-moz-progress-bar{border-radius:var(--radio-pill);background:var(--pro
   .item-fila>div:first-child{flex:auto}
   .item-fila>.acciones{width:100%}
   .avisos{right:var(--esp-3);width:calc(100% - 24px)}
+  .admin-panel{padding:var(--esp-4)}
+  .admin-filtros{grid-template-columns:minmax(0,1fr)}
+  .admin-tabla{overflow:visible;border:0}
+  .admin-tabla table,.admin-tabla thead,.admin-tabla tbody,.admin-tabla tr,.admin-tabla td{display:block;min-width:0;width:100%}
+  .admin-tabla thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .admin-tabla tr{margin-bottom:var(--esp-3);border:1px solid var(--borde);border-radius:var(--radio-md);background:var(--superficie);padding:var(--esp-3)}
+  .admin-tabla tr.item{display:block;border:1px solid var(--borde);border-radius:var(--radio-md);background:var(--superficie);padding:var(--esp-3)}
+  .admin-tabla tr:last-child{margin-bottom:0}
+  .admin-tabla td{display:grid;grid-template-columns:minmax(90px,.45fr) minmax(0,1fr);gap:var(--esp-3);border:0;padding:var(--esp-2)}
+  .admin-tabla td::before{content:attr(data-label);color:var(--texto-suave);font-size:var(--fs-xs);font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+  .admin-tabla td[data-label="Acciones"]{display:flex;justify-content:flex-end;flex-wrap:wrap}
+  .admin-tabla td[data-label="Acciones"]::before{display:none}
+  .admin-tabla .acciones{justify-content:flex-start}
+  .admin-panel-cabecera{align-items:flex-start;flex-direction:column}
+  .admin-panel-cabecera>div{width:100%;justify-content:space-between}
 }
 @media(max-width:400px){
   .acceso{padding:var(--esp-5) var(--esp-4)}

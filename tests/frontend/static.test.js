@@ -47,8 +47,9 @@ async function run() {
   assert.match(pagina.text, /data-seccion="institucional"/);
   assert.match(pagina.text, /id="modal-recompensa"/);
 
-  // RF01/RN26/HU29: bloque administrativo P17 publicado.
-  assert.match(pagina.text, /id="panel-catalogo-materias"/);
+  // RF01/RN26/HU29: administración organizada por pestañas y diálogos.
+  assert.match(pagina.text, /role="tablist" aria-label="Secciones de administración"/);
+  for (const id of ['admin-panel-usuarios', 'admin-panel-asignaturas', 'admin-panel-insignias', 'admin-panel-niveles', 'admin-panel-retos', 'admin-panel-correcciones', 'modal-admin-form', 'modal-admin-confirmar']) assert.match(pagina.text, new RegExp(`id="${id}"`));
   assert.match(pagina.text, /id="form-admin-catalogo"/);
   assert.match(pagina.text, /id="lista-catalogo-materias"/);
   const estilos = await request(app).get('/styles.css').expect(200).expect('Content-Type', /css/);
