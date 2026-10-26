@@ -88,7 +88,12 @@ async function run() {
   assert.match(cliente.text, /mostrarRecompensa/);
   assert.match(cliente.text, /catalogo-materias\?todas=true/);
   for (const accion of ['editar-catalogo', 'estado-catalogo', 'eliminar-catalogo']) assert.ok(cliente.text.includes(accion));
-  assert.doesNotMatch(cliente.text, /localStorage/);
+  assert.match(pagina.text, /id="alternar-navegacion"/);
+  assert.match(pagina.text, /id="nav-mas"/);
+  assert.match(pagina.text, /role="group" aria-labelledby="nav-grupo-principal"/);
+  assert.match(pagina.text, /viewport-fit=cover/);
+  assert.match(cliente.text, /studyquest_nav_colapsada/);
+  assert.equal((cliente.text.match(/localStorage\.(?:setItem|getItem)\(/g) || []).length, 2);
 
   console.log('✅ Frontend: acceso, pantallas, estilos responsive y cliente API publicados');
 }

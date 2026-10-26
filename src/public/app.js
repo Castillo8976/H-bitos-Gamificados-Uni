@@ -113,6 +113,7 @@ function mostrarAplicacion() {
 function navegar(nombre) {
   const destino = $(`#vista-${nombre}`);
   if (!destino || destino.dataset.permitida === 'false') return;
+  cerrarPanelMas();
   $$('.vista').forEach(vista => { vista.hidden = vista.dataset.seccion !== nombre; });
   $$('.nav-item').forEach(item => {
     const activa = item.dataset.vista === nombre;
@@ -242,6 +243,62 @@ function configurarRol() {
     elemento.hidden = !permitida;
     elemento.dataset.permitida = String(permitida);
   });
+  $$('.nav-grupo').forEach(grupo => {
+    const botones = [...grupo.querySelectorAll('.nav-item[data-vista]')];
+    if (botones.length) grupo.hidden = !botones.some(boton => !boton.hidden);
+  });
+  const progreso = $('#nav-progreso');
+  if (progreso) progreso.hidden = rol !== 'Estudiante';
+  configurarPanelMovil();
+}
+
+const CLAVE_NAV_COLAPSADA = 'studyquest_nav_colapsada';
+
+function guardarPreferenciaNav(colapsada) {
+  try { localStorage.setItem(CLAVE_NAV_COLAPSADA, String(colapsada)); } catch (_) { /* La interfaz sigue funcionando sin persistencia. */ }
+}
+
+function leerPreferenciaNav() {
+  try { return localStorage.getItem(CLAVE_NAV_COLAPSADA) === 'true'; } catch (_) { return false; }
+}
+
+function aplicarEstadoNavegacion(colapsada) {
+  const nav = $('.navegacion');
+  const boton = $('#alternar-navegacion');
+  if (!nav || !boton) return;
+  nav.classList.toggle('colapsada', colapsada);
+  boton.setAttribute('aria-expanded', String(!colapsada));
+  boton.setAttribute('aria-label', colapsada ? 'Expandir menú' : 'Contraer menú');
+  nav.dataset.colapsada = String(colapsada);
+}
+
+function cerrarPanelMas(devolverFoco = false) {
+  const panel = $('#nav-panel-mas');
+  const boton = $('#nav-mas');
+  if (!panel || !boton) return;
+  panel.hidden = true;
+  boton.setAttribute('aria-expanded', 'false');
+  if (devolverFoco) boton.focus();
+}
+
+function configurarPanelMovil() {
+  const lista = $('.nav-panel-lista');
+  if (!lista) return;
+  lista.replaceChildren();
+  $$('.nav-contenido > .nav-grupo').slice(1).forEach(grupo => {
+    if (grupo.hidden) return;
+    const copia = grupo.cloneNode(true);
+    copia.querySelectorAll('[hidden]').forEach(elemento => elemento.remove());
+    copia.querySelectorAll('[id]').forEach(elemento => {
+      const idOriginal = elemento.id;
+      const idNuevo = `${idOriginal}-movil`;
+      elemento.id = idNuevo;
+      if (elemento.tagName === 'H2') copia.setAttribute('aria-labelledby', idNuevo);
+    });
+    lista.append(copia);
+  });
+  const botonMas = $('#nav-mas');
+  if (botonMas) botonMas.hidden = !lista.querySelector('[data-vista]');
 }
 
 /** RF11/HU08: calcula el rango inicial del tablero. */
@@ -529,15 +586,27 @@ function renderizarResumen() {
   $('#metrica-sesiones').textContent = estado.sesiones.length;
   $('#gamificacion-puntos').textContent = estado.totalPuntos || 0;
   $('#gamificacion-nivel').textContent = nivel;
-  const nivelBase = [...estado.niveles].sort((a, b) => a.puntos_minimos - b.puntos_minimos).filter(item => item.puntos_minimos <= Number(estado.totalPuntos || 0)).at(-1);
-  const siguiente = [...estado.niveles].sort((a, b) => a.puntos_minimos - b.puntos_minimos).find(item => item.puntos_minimos > Number(estado.totalPuntos || 0));
-  $('#progreso-nivel').value = siguiente && nivelBase ? Math.min(100, Math.round(((estado.totalPuntos - nivelBase.puntos_minimos) / (siguiente.puntos_minimos - nivelBase.puntos_minimos)) * 100)) : 100;
+  const porcentaje = calcularPorcentajeNivel();
+  $('#progreso-nivel').value = porcentaje;
+  if ($('#nav-nivel')) $('#nav-nivel').textContent = nivel;
+  if ($('#nav-puntos')) $('#nav-puntos').textContent = estado.totalPuntos || 0;
+  if ($('#nav-progreso-barra')) $('#nav-progreso-barra').value = porcentaje;
   const proximas = [...pendientes].sort((a, b) => String(a.fecha_entrega).localeCompare(String(b.fecha_entrega))).slice(0, 3);
   $('#dashboard-tareas').innerHTML = proximas.length ? proximas.map(tarea => `
     <div class="item prioridad-${escapar(tarea.prioridad.toLowerCase())}">
       <div class="item-fila"><strong>${escapar(tarea.nombre)}</strong><span class="chip">${escapar(tarea.prioridad)}</span></div>
       <small>${escapar(materiaDe(tarea.id_materia))} · ${escapar(fechaLegible(tarea.fecha_entrega))}</small>
     </div>`).join('') : estadoVacio('No tienes tareas pendientes.');
+}
+
+function calcularPorcentajeNivel() {
+  const puntos = Number(estado.totalPuntos || 0);
+  const niveles = [...estado.niveles].sort((a, b) => a.puntos_minimos - b.puntos_minimos);
+  const nivelBase = niveles.filter(item => item.puntos_minimos <= puntos).at(-1);
+  const siguiente = niveles.find(item => item.puntos_minimos > puntos);
+  return siguiente && nivelBase
+    ? Math.min(100, Math.round(((puntos - nivelBase.puntos_minimos) / (siguiente.puntos_minimos - nivelBase.puntos_minimos)) * 100))
+    : 100;
 }
 
 /** RF02/HU02: genera las opciones de materia para el editor de tareas. */
@@ -1248,6 +1317,34 @@ function registrarEventos() {
     if (boton.dataset.vista === 'estadisticas' && !estado.estadisticas) cargarEstadisticas().catch(error => avisar(error.message, 'error'));
     if (boton.dataset.vista === 'institucional' && !estado.institucionales) cargarInstitucionales().catch(error => avisar(error.message, 'error'));
   }));
+  $('#alternar-navegacion').addEventListener('click', () => {
+    const colapsada = $('.navegacion').dataset.colapsada !== 'true';
+    aplicarEstadoNavegacion(colapsada);
+    guardarPreferenciaNav(colapsada);
+  });
+  $('#nav-mas').addEventListener('click', () => {
+    const panel = $('#nav-panel-mas');
+    const abierto = panel.hidden;
+    panel.hidden = !abierto;
+    $('#nav-mas').setAttribute('aria-expanded', String(abierto));
+    if (abierto) panel.querySelector('.nav-item')?.focus();
+  });
+  $('#nav-panel-mas').addEventListener('click', evento => {
+    const cerrar = evento.target.closest('.nav-cerrar-mas');
+    if (cerrar) return cerrarPanelMas(true);
+    const boton = evento.target.closest('[data-vista]');
+    if (!boton) return;
+    navegar(boton.dataset.vista);
+    if (boton.dataset.vista === 'estadisticas' && !estado.estadisticas) cargarEstadisticas().catch(error => avisar(error.message, 'error'));
+    if (boton.dataset.vista === 'institucional' && !estado.institucionales) cargarInstitucionales().catch(error => avisar(error.message, 'error'));
+  });
+  document.addEventListener('keydown', evento => {
+    if (evento.key === 'Escape' && !$('#nav-panel-mas').hidden) cerrarPanelMas(true);
+  });
+  document.addEventListener('click', evento => {
+    const panel = $('#nav-panel-mas');
+    if (!panel.hidden && !panel.contains(evento.target) && evento.target !== $('#nav-mas')) cerrarPanelMas();
+  });
   // Se envuelve para no pasar el Event como argumento `revocar`.
   $('#boton-salir').addEventListener('click', () => cerrarSesion());
   document.addEventListener('click', manejarAccion);
@@ -1521,6 +1618,7 @@ function registrarEventos() {
 async function iniciar() {
   prepararValidacionVisual();
   inicializarSelectoresHorario();
+  aplicarEstadoNavegacion(leerPreferenciaNav());
   registrarEventos();
   await iniciarCorreoOpcional();
   await cargarCatalogoMaterias();
