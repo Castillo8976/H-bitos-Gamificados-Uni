@@ -1,0 +1,34 @@
+# Demo docente de StudyQuest en Render (plan gratuito). Sin secretos: los valores con sync:false se escriben en el panel.
+services:
+  - type: web
+    name: studyquest-demo
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: node scripts/seed-demo.js && node src/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: HOST
+        value: 0.0.0.0
+      - key: TRUST_PROXY
+        value: "1"
+      # Base efímera, independiente de database.sqlite: se recrea y se resiembra en cada arranque.
+      - key: DATABASE_STORAGE
+        value: /tmp/studyquest-demo.sqlite
+      # El plan gratuito bloquea el SMTP saliente: se desactivan la verificación por correo y el segundo factor.
+      - key: AUTH_EMAIL_VERIFICATION
+        value: "false"
+      - key: AUTH_EMAIL_MFA
+        value: "off"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DEMO_ADMIN_PASSWORD
+        sync: false
+      - key: DEMO_REVISOR_PASSWORD
+        sync: false
+      - key: DEMO_STUDENT_PASSWORD
+        sync: false

@@ -30,6 +30,8 @@ require('./models/Notificacion');
 
 const app = express();
 app.disable('x-powered-by');
+// Detrás del proxy de Render el límite de intentos por IP necesita la IP real del cliente (TRUST_PROXY=1).
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/health', healthRoutes);
